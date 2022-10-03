@@ -13,10 +13,10 @@ internal class KtInventoryImpl(private val handler: KtInventoryHandler, override
     val actions = mutableMapOf<Int, (InventoryClickEvent) -> Unit>()
 
     override fun item(index: Int, itemStack: ItemStack) {
-        if (index in bukkitInventory.contents.indices) {
+        if (index in 0 until bukkitInventory.size) {
             bukkitInventory.setItem(index, itemStack)
         } else {
-            throw IndexOutOfBoundsException("index must be in the range of bukkitInventory#contents")
+            throw IndexOutOfBoundsException("index must be in the range of bukkitInventory")
         }
     }
 
