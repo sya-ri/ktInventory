@@ -2,10 +2,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.7.20"
+    id("org.jmailen.kotlinter") version "3.12.0"
 }
+
+group = "dev.s7a"
+version = "1.0.0-SNAPSHOT"
 
 allprojects {
     apply(plugin = "kotlin")
+    apply(plugin = "org.jmailen.kotlinter")
 
     repositories {
         mavenCentral()
@@ -24,6 +29,3 @@ allprojects {
         kotlinOptions.jvmTarget = "1.8"
     }
 }
-
-group = "dev.s7a"
-version = "1.0.0-SNAPSHOT"
