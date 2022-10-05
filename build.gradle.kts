@@ -27,16 +27,3 @@ allprojects {
 
 group = "dev.s7a"
 version = "1.0.0-SNAPSHOT"
-
-repositories {
-    maven("https://repo.papermc.io/repository/maven-public/")
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.122.0")
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
