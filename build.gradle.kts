@@ -13,7 +13,7 @@ allprojects {
     }
 
     dependencies {
-        compileOnly("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
+        compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     }
 
     tasks.withType<KotlinCompile> {

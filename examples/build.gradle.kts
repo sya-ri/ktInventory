@@ -19,9 +19,18 @@ subprojects {
         main = "dev.s7a.ktinventory.${project.name.replace("-", "")}.Main"
         author = "sya_ri"
         version = rootProject.version.toString()
+        apiVersion = "1.13"
     }
 
     listOf(
+        "8" to "1.8.8",
+        "9" to "1.9.4",
+        "10" to "1.10.2",
+        "11" to "1.11.2",
+        "12" to "1.12.2",
+        "13" to "1.13.2",
+        "14" to "1.14.4",
+        "15" to "1.15.2",
         "16" to "1.16.5",
         "17" to "1.17.1",
         "18" to "1.18.2",
