@@ -12,6 +12,7 @@ subprojects {
     apply(plugin = "dev.s7a.gradle.minecraft.server")
 
     dependencies {
+        compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
         implementation(project(":"))
     }
 

@@ -17,15 +17,15 @@ allprojects {
         maven("https://hub.spigotmc.org/nexus/content/groups/public/")
     }
 
-    dependencies {
-        if (project.hasProperty("USE_SPIGOT_8")) {
-            compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
-        } else {
-            compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
-        }
-    }
-
     tasks.withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    if (project.hasProperty("USE_SPIGOT_8")) {
+        compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
+    } else {
+        compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
     }
 }
