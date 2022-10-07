@@ -23,8 +23,9 @@ class SoundCheckerCommand(private val plugin: JavaPlugin) : CommandExecutor {
     private val lastPage = pagedSounds.lastIndex
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
-        if (sender !is Player) return true
-        openPage(sender, 0)
+        if (sender is Player) {
+            openPage(sender, 0)
+        }
         return true
     }
 
