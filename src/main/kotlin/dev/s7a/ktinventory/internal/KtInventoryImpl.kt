@@ -1,7 +1,6 @@
 package dev.s7a.ktinventory.internal
 
 import dev.s7a.ktinventory.KtInventory
-import dev.s7a.ktinventory.KtInventoryContent
 import org.bukkit.entity.HumanEntity
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
@@ -13,23 +12,20 @@ internal class KtInventoryImpl(private val handler: KtInventoryHandler, override
     var onClose: ((InventoryCloseEvent) -> Unit)? = null
     val actions = mutableMapOf<Int, (InventoryClickEvent) -> Unit>()
 
-    override fun item(index: Int, itemStack: ItemStack): KtInventoryContent {
+    override fun item(index: Int, itemStack: ItemStack) {
         if (index in 0 until bukkitInventory.size) {
-            return KtInventoryContentImpl(this, index).apply {
-                this.itemStack = itemStack
-            }
+            bukkitInventory.setItem(index, itemStack)
         } else {
             throw IndexOutOfBoundsException("index must be in the range of bukkitInventory")
         }
     }
 
-    override fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?): KtInventoryContent {
-        return item(index, itemStack).apply {
-            if (block != null) {
-                actions[index] = block
-            } else {
-                actions.remove(index)
-            }
+    override fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?) {
+        item(index, itemStack)
+        if (block != null) {
+            actions[index] = block
+        } else {
+            actions.remove(index)
         }
     }
 
