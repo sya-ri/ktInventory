@@ -58,10 +58,11 @@ interface KtInventory {
      *
      * @param index Slot number to set.
      * @param itemStack [ItemStack] to set.
+     * @return Slot content with an item placed
      * @throws IndexOutOfBoundsException When placing an item outside the inventory contents.
      * @since 1.0.0
      */
-    fun item(index: Int, itemStack: ItemStack)
+    fun item(index: Int, itemStack: ItemStack): KtInventoryContent
 
     /**
      * Set the item and the action on click.
@@ -69,10 +70,11 @@ interface KtInventory {
      * @param index Slot number to set.
      * @param itemStack [ItemStack] to set.
      * @param block Click action. If null, the action will be removed.
+     * @return Slot content with an item placed
      * @throws IndexOutOfBoundsException When placing an item outside the inventory contents.
      * @since 1.0.0
      */
-    fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?)
+    fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?): KtInventoryContent
 
     /**
      * Change the action that is executed before each action of [item] on click.
