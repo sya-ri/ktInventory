@@ -51,7 +51,6 @@ fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&', 
  * @since 1.0.0
  */
 fun Plugin.ktInventory(title: String, type: InventoryType, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
-    require(type.isCreatable)
     return ktInventory(Bukkit.createInventory(null, type, title.color(altColorChar)), block)
 }
 
