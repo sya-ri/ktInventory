@@ -7,6 +7,7 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.HumanEntity
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
@@ -37,6 +38,21 @@ fun Plugin.ktInventory(bukkitInventory: Inventory, block: KtInventory.() -> Unit
 fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
     require(line in 1..6)
     return ktInventory(Bukkit.createInventory(null, line * 9, title.color(altColorChar)), block)
+}
+
+/**
+ * Create [KtInventory] of specific type [Inventory].
+ *
+ * @receiver [Plugin] that handles events.
+ * @param title Inventory title.
+ * @param type Inventory type.
+ * @param altColorChar Alternate color code character to use for [title]. If null, do nothing. (default: '&')
+ * @param block Processing using [KtInventory].
+ * @since 1.0.0
+ */
+fun Plugin.ktInventory(title: String, type: InventoryType, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
+    require(type.isCreatable)
+    return ktInventory(Bukkit.createInventory(null, type, title.color(altColorChar)), block)
 }
 
 /**
