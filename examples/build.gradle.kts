@@ -1,15 +1,19 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask
 import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask.JarUrl
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 
 plugins {
     id("net.minecrell.plugin-yml.bukkit") version "0.5.2" apply false
     id("dev.s7a.gradle.minecraft.server") version "2.0.0" apply false
+    id("com.github.johnrengelman.shadow") version "7.1.2" apply false
 }
 
 subprojects {
     apply(plugin = "net.minecrell.plugin-yml.bukkit")
     apply(plugin = "dev.s7a.gradle.minecraft.server")
+    apply(plugin = "com.github.johnrengelman.shadow")
 
     dependencies {
         compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
@@ -21,6 +25,10 @@ subprojects {
         author = "sya_ri"
         version = rootProject.version.toString()
         apiVersion = "1.13"
+    }
+
+    tasks.getting(ShadowJar::class) {
+        configurations = listOf(project.configurations.getByName("implementation"))
     }
 
     listOf(
@@ -42,7 +50,7 @@ subprojects {
 
             doFirst {
                 copy {
-                    from(buildDir.resolve("libs/${project.name}.jar"))
+                    from(buildDir.resolve("libs/${project.name}-all.jar"))
                     into(buildDir.resolve("MinecraftServer$name/plugins"))
                 }
             }
@@ -51,5 +59,9 @@ subprojects {
             jarUrl.set(JarUrl.Paper(version))
             agreeEula.set(true)
         }
+    }
+
+    tasks.build {
+        dependsOn("shadowJar")
     }
 }
