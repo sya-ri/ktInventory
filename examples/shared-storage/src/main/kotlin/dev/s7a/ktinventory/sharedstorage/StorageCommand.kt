@@ -21,7 +21,7 @@ class StorageCommand(private val plugin: JavaPlugin, private val config: Storage
         onClick {}
         onClose {
             if (it.inventory.viewers.singleOrNull() != null) {
-                config.contents = it.inventory.contents.filterNotNull()
+                config.contents = it.inventory.contents.toList()
             }
         }
         bukkitInventory.contents = config.contents.toTypedArray()
