@@ -17,12 +17,36 @@ import org.bukkit.plugin.Plugin
  *
  * @receiver [Plugin] that handles events.
  * @param bukkitInventory [Inventory] used to generate [KtInventory].
+ * @since 1.0.0
+ */
+fun Plugin.ktInventory(bukkitInventory: Inventory): KtInventory {
+    return KtInventoryImpl(KtInventoryHandler.get(this), bukkitInventory)
+}
+
+/**
+ * Create [KtInventory] from [Inventory].
+ *
+ * @receiver [Plugin] that handles events.
+ * @param bukkitInventory [Inventory] used to generate [KtInventory].
  * @param block Processing using [KtInventory].
  * @since 1.0.0
  */
-fun Plugin.ktInventory(bukkitInventory: Inventory, block: KtInventory.() -> Unit): KtInventory {
-    val handler = KtInventoryHandler.get(this)
-    return KtInventoryImpl(handler, bukkitInventory).apply(block)
+inline fun Plugin.ktInventory(bukkitInventory: Inventory, block: KtInventory.() -> Unit): KtInventory {
+    return ktInventory(bukkitInventory).apply(block)
+}
+
+/**
+ * Create [KtInventory] of chest type [Inventory].
+ *
+ * @receiver [Plugin] that handles events.
+ * @param title Inventory title.
+ * @param line Inventory size (must be 1-6).
+ * @param altColorChar Alternate color code character to use for [title]. If null, do nothing. (default: '&')
+ * @since 1.0.0
+ */
+fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&'): KtInventory {
+    require(line in 1..6)
+    return ktInventory(Bukkit.createInventory(null, line * 9, title.color(altColorChar)))
 }
 
 /**
@@ -35,9 +59,21 @@ fun Plugin.ktInventory(bukkitInventory: Inventory, block: KtInventory.() -> Unit
  * @param block Processing using [KtInventory].
  * @since 1.0.0
  */
-fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
-    require(line in 1..6)
-    return ktInventory(Bukkit.createInventory(null, line * 9, title.color(altColorChar)), block)
+inline fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
+    return ktInventory(title, line, altColorChar).apply(block)
+}
+
+/**
+ * Create [KtInventory] of specific type [Inventory].
+ *
+ * @receiver [Plugin] that handles events.
+ * @param title Inventory title.
+ * @param type Inventory type.
+ * @param altColorChar Alternate color code character to use for [title]. If null, do nothing. (default: '&')
+ * @since 1.0.0
+ */
+fun Plugin.ktInventory(title: String, type: InventoryType, altColorChar: Char? = '&'): KtInventory {
+    return ktInventory(Bukkit.createInventory(null, type, title.color(altColorChar)))
 }
 
 /**
@@ -50,8 +86,8 @@ fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&', 
  * @param block Processing using [KtInventory].
  * @since 1.0.0
  */
-fun Plugin.ktInventory(title: String, type: InventoryType, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
-    return ktInventory(Bukkit.createInventory(null, type, title.color(altColorChar)), block)
+inline fun Plugin.ktInventory(title: String, type: InventoryType, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
+    return ktInventory(title, type, altColorChar).apply(block)
 }
 
 /**
