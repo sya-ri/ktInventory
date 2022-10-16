@@ -46,6 +46,7 @@ internal class KtInventoryHandler(plugin: Plugin) : Listener {
     companion object {
         private val handlers = mutableMapOf<Plugin, KtInventoryHandler>()
 
+        @Synchronized
         fun get(plugin: Plugin) = handlers.getOrPut(plugin) { KtInventoryHandler(plugin) }
     }
 }
