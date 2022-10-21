@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: ${{ matrix.java-version }}
+          java-version: 17
       - name: Dokka
         run: ./gradlew dokkaHtml
       - name: Upload pages artifact
