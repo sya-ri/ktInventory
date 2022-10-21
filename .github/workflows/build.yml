@@ -18,3 +18,22 @@ jobs:
         run: ./gradlew build
       - name: Build (1.8.8)
         run: ./gradlew build -PUSE_SPIGOT_8=true
+      - name: Dokka
+        run: ./gradlew dokkaHtml
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: build/dokka/html
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
