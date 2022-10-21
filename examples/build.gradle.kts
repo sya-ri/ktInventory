@@ -4,7 +4,6 @@ import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask.JarUrl
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 
 plugins {
-    id("net.minecrell.plugin-yml.bukkit") version "0.5.2" apply false
     id("dev.s7a.gradle.minecraft.server") version "2.0.0" apply false
     id("com.github.johnrengelman.shadow") version "7.1.2" apply false
 }
