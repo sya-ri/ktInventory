@@ -1,30 +1,9 @@
 # ktInventory
 
-## Installation
+> **Warning**
+> This library is under development, so you can't use it.
 
-### build.gradle
-
-```groovy
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation 'dev.s7a:ktInventory:1.0.0'
-}
-```
-
-### build.gradle.kts
-
-```kotlin
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("dev.s7a:ktInventory:1.0.0")
-}
-```
+Spigot library for Kotlin for easy inventory creation and event handling
 
 ## Usage
 
