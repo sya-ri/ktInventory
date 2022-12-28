@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.8.0"
     id("net.minecrell.plugin-yml.bukkit") version "0.5.2" apply false
     id("org.jetbrains.dokka") version "1.7.20"
     id("org.jmailen.kotlinter") version "3.12.0"
