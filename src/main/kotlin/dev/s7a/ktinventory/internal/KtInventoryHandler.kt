@@ -9,35 +9,35 @@ import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.plugin.Plugin
 import java.util.UUID
 
-internal class KtInventoryHandler(plugin: Plugin) : Listener {
-    private val players = mutableMapOf<UUID, KtInventoryImpl>()
+internal class KtInventoryHandler(private val plugin: Plugin) : Listener {
+    private val preOpenInventories = mutableMapOf<UUID, KtInventoryImpl>()
+    private val openInventories = mutableMapOf<UUID, KtInventoryImpl>()
 
     init {
         plugin.server.pluginManager.registerEvents(this, plugin)
     }
 
     fun open(player: HumanEntity, inventory: KtInventoryImpl) {
+        preOpenInventories[player.uniqueId] = inventory
         player.openInventory(inventory.bukkitInventory)
-        players[player.uniqueId] = inventory
+        openInventories[player.uniqueId] = inventory
     }
 
     @EventHandler
     fun on(event: InventoryOpenEvent) {
         val player = event.player
-        val inventory = players[player.uniqueId] ?: return
-        if (inventory.bukkitInventory !== event.inventory) {
-            players.remove(player.uniqueId)
-            return
+        val inventory = preOpenInventories.remove(player.uniqueId) ?: return
+        if (inventory.bukkitInventory === event.inventory) {
+            inventory.onOpen?.invoke(event)
         }
-        inventory.onOpen?.invoke(event)
     }
 
     @EventHandler
     fun on(event: InventoryClickEvent) {
         val player = event.whoClicked
-        val inventory = players[player.uniqueId] ?: return
+        val inventory = openInventories[player.uniqueId] ?: return
         if (inventory.bukkitInventory !== event.inventory) {
-            players.remove(player.uniqueId)
+            openInventories.remove(player.uniqueId)
             return
         }
         inventory.onClick?.invoke(event)
@@ -49,7 +49,7 @@ internal class KtInventoryHandler(plugin: Plugin) : Listener {
     @EventHandler
     fun on(event: InventoryCloseEvent) {
         val player = event.player
-        val inventory = players.remove(player.uniqueId) ?: return
+        val inventory = openInventories.remove(player.uniqueId) ?: return
         if (inventory.bukkitInventory === event.inventory) {
             inventory.onClose?.invoke(event)
         }
