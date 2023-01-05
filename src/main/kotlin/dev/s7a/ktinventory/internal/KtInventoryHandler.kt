@@ -6,6 +6,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
+import org.bukkit.event.server.PluginDisableEvent
 import org.bukkit.plugin.Plugin
 import java.util.UUID
 
@@ -52,6 +53,13 @@ internal class KtInventoryHandler(private val plugin: Plugin) : Listener {
         val inventory = openInventories.remove(player.uniqueId) ?: return
         if (inventory.bukkitInventory === event.inventory) {
             inventory.onClose?.invoke(event)
+        }
+    }
+
+    @EventHandler
+    fun on(event: PluginDisableEvent) {
+        if (plugin === event.plugin) {
+            handlers.remove(plugin)
         }
     }
 
