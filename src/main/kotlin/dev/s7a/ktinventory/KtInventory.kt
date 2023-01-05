@@ -7,6 +7,7 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.HumanEntity
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
@@ -124,6 +125,14 @@ interface KtInventory {
      * @since 1.0.0
      */
     fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?)
+
+    /**
+     * Change the action on opened.
+     *
+     * @param block Open action
+     * @since 1.0.0
+     */
+    fun onOpen(block: ((InventoryOpenEvent) -> Unit)?)
 
     /**
      * Change the action that is executed before each action of [item] on click.
