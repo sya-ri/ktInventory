@@ -24,10 +24,20 @@ allprojects {
     }
 }
 
+repositories {
+    maven("https://repo.papermc.io/repository/maven-public/")
+}
+
 dependencies {
     if (project.hasProperty("USE_SPIGOT_8")) {
         compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     } else {
         compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
     }
+    testImplementation(kotlin("test"))
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.143.0")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
