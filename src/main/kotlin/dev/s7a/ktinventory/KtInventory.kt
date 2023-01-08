@@ -116,6 +116,14 @@ interface KtInventory {
     fun item(index: Int, itemStack: ItemStack)
 
     /**
+     * Set the action on click.
+     * @param index Slot number to set.
+     * @param block Click action. If null, the action will be removed.
+     * @since 1.0.0
+     */
+    fun onClick(index: Int, block: ((InventoryClickEvent) -> Unit)?)
+
+    /**
      * Set the item and the action on click.
      *
      * @param index Slot number to set.

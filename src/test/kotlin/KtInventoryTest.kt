@@ -100,6 +100,11 @@ class KtInventoryTest {
         assertEquals(2, clickCount.get())
         inventory.item(2, ItemStack(Material.DIRT), null)
         assertEquals(2, clickCount.get())
+        inventory.onClick(2) {
+            clickCount.incrementAndGet()
+        }
+        player.simulateInventoryClick(2)
+        assertEquals(3, clickCount.get())
     }
 
     @Test

@@ -22,13 +22,17 @@ internal class KtInventoryImpl(private val handler: KtInventoryHandler, override
         }
     }
 
-    override fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?) {
-        item(index, itemStack)
+    override fun onClick(index: Int, block: ((InventoryClickEvent) -> Unit)?) {
         if (block != null) {
             actions[index] = block
         } else {
             actions.remove(index)
         }
+    }
+
+    override fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?) {
+        item(index, itemStack)
+        onClick(index, block)
     }
 
     override fun onOpen(block: ((InventoryOpenEvent) -> Unit)?) {
