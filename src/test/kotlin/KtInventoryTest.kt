@@ -3,7 +3,6 @@ import be.seeseemelk.mockbukkit.MockPlugin
 import be.seeseemelk.mockbukkit.ServerMock
 import dev.s7a.ktinventory.ktInventory
 import org.bukkit.Material
-import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.ItemStack
 import java.util.concurrent.atomic.AtomicInteger
@@ -113,10 +112,8 @@ class KtInventoryTest {
         }
         val player = server.addPlayer()
         inventory.open(player)
-        InventoryOpenEvent(player.openInventory).callEvent()
         player.closeInventory()
         inventory.open(player)
-        InventoryOpenEvent(player.openInventory).callEvent()
         assertEquals(2, openCount.get())
     }
 
