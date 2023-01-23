@@ -36,7 +36,7 @@ dependencies {
         compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
     }
     testImplementation(kotlin("test"))
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.144.4")
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.144.5")
 }
 
 tasks.test {
