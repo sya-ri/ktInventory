@@ -1,6 +1,8 @@
 package dev.s7a.ktinventory.internal
 
+import org.bukkit.Bukkit
 import org.bukkit.entity.HumanEntity
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -59,6 +61,7 @@ internal class KtInventoryHandler(private val plugin: Plugin) : Listener {
     @EventHandler
     fun on(event: PluginDisableEvent) {
         if (plugin === event.plugin) {
+            openInventories.keys.mapNotNull(Bukkit::getPlayer).forEach(Player::closeInventory)
             handlers.remove(plugin)
         }
     }
