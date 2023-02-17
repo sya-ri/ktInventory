@@ -6,6 +6,8 @@ plugins {
     id("org.jetbrains.kotlinx.kover") version "0.6.1"
     id("org.jetbrains.dokka") version "1.7.20"
     id("org.jmailen.kotlinter") version "3.13.0"
+    `maven-publish`
+    signing
 }
 
 group = "dev.s7a"
@@ -42,3 +44,61 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+val sourceJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets["main"].allSource)
+}
+
+publishing {
+    repositories {
+        maven {
+            url = uri(
+                if (version.toString().endsWith("SNAPSHOT")) {
+                    "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                } else {
+                    "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                },
+            )
+            credentials {
+                username = project.properties["credentials.username"].toString()
+                password = project.properties["credentials.password"].toString()
+            }
+        }
+    }
+    publications {
+        register<MavenPublication>("maven") {
+            groupId = "dev.s7a"
+            artifactId = "ktInventory"
+            from(components["kotlin"])
+            artifact(sourceJar.get())
+            pom {
+                name.set("ktInventory")
+                description.set("Spigot library for Kotlin for easy inventory creation and event handling")
+                url.set("https://github.com/sya-ri/ktInventory")
+
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://github.com/sya-ri/ktInventory/blob/master/LICENSE")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("sya-ri")
+                        name.set("sya-ri")
+                        email.set("contact@s7a.dev")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/sya-ri/ktInventory")
+                }
+            }
+        }
+    }
+}
+
+signing {
+    sign(publishing.publications["maven"])
+}
+
