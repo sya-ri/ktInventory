@@ -4,7 +4,6 @@ import be.seeseemelk.mockbukkit.ServerMock
 import be.seeseemelk.mockbukkit.WorldMock
 import dev.s7a.ktinventory.ktInventory
 import org.bukkit.Material
-import org.bukkit.block.BlastFurnace
 import org.bukkit.block.Chest
 import org.bukkit.block.Container
 import org.bukkit.block.Dispenser
