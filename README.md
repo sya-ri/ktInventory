@@ -40,7 +40,7 @@ In such cases you can use Provider instead of DSL.
 
 ```kotlin
 class SimpleMenu(provider: KtInventoryProvider) {
-    private val inventory = provider.get("&0&lSelect where to teleport", 1) {
+    private val inventory = provider.create("&0&lSelect where to teleport", 1) {
         item(3, ItemStack(Material.RED_BED)) {
             val player = it.whoClicked as? Player ?: return@item
             val bedSpawnLocation = player.bedSpawnLocation
