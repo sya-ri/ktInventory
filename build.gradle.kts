@@ -1,11 +1,11 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-    kotlin("jvm") version "1.9.22"
-    id("net.minecrell.plugin-yml.bukkit") version "0.6.0" apply false
-    id("org.jetbrains.kotlinx.kover") version "0.7.5"
-    id("org.jetbrains.dokka") version "1.9.10"
-    id("org.jmailen.kotlinter") version "4.2.0"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kover)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.kotlinter)
+    alias(libs.plugins.pluginYml.bukkit) apply false
+    alias(libs.plugins.minecraftServer) apply false
+    alias(libs.plugins.shadow) apply false
     `maven-publish`
     signing
 }
@@ -26,7 +26,7 @@ allprojects {
         targetCompatibility = "1.8"
     }
 
-    tasks.withType<KotlinCompile> {
+    tasks.compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
     }
 }
@@ -37,12 +37,12 @@ repositories {
 
 dependencies {
     if (project.hasProperty("USE_SPIGOT_8")) {
-        compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
+        compileOnly(libs.spigot8)
     } else {
-        compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
+        compileOnly(libs.spigotLatest)
     }
     testImplementation(kotlin("test"))
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.20:3.66.0")
+    testImplementation(libs.mockBukkit)
 }
 
 tasks.test {
@@ -66,8 +66,8 @@ publishing {
                     },
                 )
             credentials {
-                username = project.properties["credentials.username"].toString()
-                password = project.properties["credentials.password"].toString()
+                username = properties["sonatypeUsername"].toString()
+                password = properties["sonatypePassword"].toString()
             }
         }
     }
@@ -79,7 +79,7 @@ publishing {
             artifact(sourceJar.get())
             pom {
                 name.set("ktInventory")
-                description.set("Spigot library for Kotlin for easy inventory creation and event handling")
+                description.set("Spigot inventory library for Kotlin. Easy to create and handle")
                 url.set("https://github.com/sya-ri/ktInventory")
 
                 licenses {
@@ -104,5 +104,9 @@ publishing {
 }
 
 signing {
+    val key = properties["signingKey"]?.toString()?.replace("\\n", "\n")
+    val password = properties["signingPassword"]?.toString()
+
+    useInMemoryPgpKeys(key, password)
     sign(publishing.publications["maven"])
 }

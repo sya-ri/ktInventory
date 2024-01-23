@@ -3,18 +3,15 @@ import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask
 import dev.s7a.gradle.minecraft.server.tasks.LaunchMinecraftServerTask.JarUrl
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 
-plugins {
-    id("dev.s7a.gradle.minecraft.server") version "2.0.0" apply false
-    id("com.github.johnrengelman.shadow") version "7.1.2" apply false
-}
-
 subprojects {
     apply(plugin = "net.minecrell.plugin-yml.bukkit")
     apply(plugin = "dev.s7a.gradle.minecraft.server")
     apply(plugin = "com.github.johnrengelman.shadow")
 
+    val libs = rootProject.libs
+
     dependencies {
-        compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
+        compileOnly(libs.spigotLatest)
         implementation(project(":"))
     }
 
@@ -49,12 +46,12 @@ subprojects {
 
             doFirst {
                 copy {
-                    from(buildDir.resolve("libs/${project.name}-all.jar"))
-                    into(buildDir.resolve("MinecraftServer$name/plugins"))
+                    from(layout.buildDirectory.get().asFile.resolve("libs/${project.name}-all.jar"))
+                    into(layout.buildDirectory.get().asFile.resolve("MinecraftServer$name/plugins"))
                 }
             }
 
-            serverDirectory.set(buildDir.resolve("MinecraftServer$name"))
+            serverDirectory.set(layout.buildDirectory.get().asFile.resolve("MinecraftServer$name").absolutePath)
             jarUrl.set(JarUrl.Paper(version))
             agreeEula.set(true)
         }
