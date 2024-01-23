@@ -7,9 +7,40 @@ Spigot library for Kotlin for easy inventory creation and event handling
 
 ## Usage
 
+### DSL
+
+You can easily generate inventory. Basically, use this.
+
 ```kotlin
-class SimpleMenu(plugin: JavaPlugin) {
-    private val inventory = plugin.ktInventory("&0&lSelect where to teleport", 1) {
+fun openSimpleMenu(plugin: JavaPlugin, player: HumanEntity) {
+    plugin.ktInventory("&0&lSelect where to teleport", 1) {
+        item(3, ItemStack(Material.RED_BED)) {
+            val player = it.whoClicked as? Player ?: return@item
+            val bedSpawnLocation = player.bedSpawnLocation
+            if (bedSpawnLocation != null) {
+                player.teleport(bedSpawnLocation)
+            } else {
+                player.sendMessage("Not found bedSpawnLocation")
+            }
+            player.closeInventory()
+        }
+        item(5, ItemStack(Material.COMPASS)) {
+            val player = it.whoClicked as? Player ?: return@item
+            player.teleport(player.world.spawnLocation)
+            player.closeInventory()
+        }
+    }.open(player)
+}
+```
+
+### Provider
+
+Passing a plugin instance as a property makes the dependencies between classes a little complicated.
+In such cases you can use Provider instead of DSL.
+
+```kotlin
+class SimpleMenu(provider: KtInventoryProvider) {
+    private val inventory = provider.get("&0&lSelect where to teleport", 1) {
         item(3, ItemStack(Material.RED_BED)) {
             val player = it.whoClicked as? Player ?: return@item
             val bedSpawnLocation = player.bedSpawnLocation

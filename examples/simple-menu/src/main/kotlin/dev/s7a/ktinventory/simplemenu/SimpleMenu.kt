@@ -1,5 +1,6 @@
 package dev.s7a.ktinventory.simplemenu
 
+import dev.s7a.ktinventory.KtInventoryProvider
 import dev.s7a.ktinventory.ktInventory
 import org.bukkit.Material
 import org.bukkit.entity.HumanEntity
@@ -7,8 +8,8 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 
-class SimpleMenu(plugin: JavaPlugin) {
-    private val inventory = plugin.ktInventory("&0&lSelect where to teleport", 1) {
+class SimpleMenu(provider: KtInventoryProvider) {
+    private val inventory = provider.get("&0&lSelect where to teleport", 1) {
         item(3, ItemStack(Material.RED_BED)) {
             val player = it.whoClicked as? Player ?: return@item
             val bedSpawnLocation = player.bedSpawnLocation
