@@ -19,7 +19,7 @@ class SoundCheckerCommand(private val plugin: JavaPlugin) : CommandExecutor {
         }
     }
 
-    private val pagedSounds = Sound.values().toList().chunked(45)
+    private val pagedSounds = Sound.entries.chunked(45)
     private val lastPage = pagedSounds.lastIndex
 
     override fun onCommand(
