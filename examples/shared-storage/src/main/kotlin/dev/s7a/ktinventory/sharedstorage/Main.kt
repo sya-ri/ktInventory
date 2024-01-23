@@ -5,7 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin
 @Suppress("unused")
 class Main : JavaPlugin() {
     override fun onEnable() {
-        val config = StorageConfig(this)
+        val config = StorageConfigProvider(this)
         StorageCommand(this, config).register()
     }
 }
