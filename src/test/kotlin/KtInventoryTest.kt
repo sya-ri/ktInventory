@@ -5,6 +5,7 @@ import dev.s7a.ktinventory.ktInventory
 import org.bukkit.Material
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.ItemStack
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -19,7 +20,7 @@ class KtInventoryTest {
     @BeforeTest
     fun setup() {
         server = MockBukkit.mock()
-        plugin = MockBukkit.createMockPlugin()
+        plugin = MockBukkit.createMockPlugin(UUID.randomUUID().toString())
     }
 
     @AfterTest

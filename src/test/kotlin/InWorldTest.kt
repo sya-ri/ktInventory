@@ -10,6 +10,7 @@ import org.bukkit.block.Dispenser
 import org.bukkit.block.Dropper
 import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.ItemStack
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -25,7 +26,7 @@ class InWorldTest {
     @BeforeTest
     fun setup() {
         server = MockBukkit.mock()
-        plugin = MockBukkit.createMockPlugin()
+        plugin = MockBukkit.createMockPlugin(UUID.randomUUID().toString())
         world = server.addSimpleWorld("test_world")
     }
 
