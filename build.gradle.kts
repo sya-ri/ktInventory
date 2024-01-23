@@ -22,6 +22,10 @@ allprojects {
         maven("https://hub.spigotmc.org/nexus/content/groups/public/")
     }
 
+    tasks.compileJava {
+        targetCompatibility = "1.8"
+    }
+
     tasks.withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
     }
