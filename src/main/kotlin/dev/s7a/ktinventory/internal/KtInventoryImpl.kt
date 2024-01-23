@@ -14,7 +14,10 @@ internal class KtInventoryImpl(private val handler: KtInventoryHandler, override
     var onClose: ((InventoryCloseEvent) -> Unit)? = null
     val actions = mutableMapOf<Int, (InventoryClickEvent) -> Unit>()
 
-    override fun item(index: Int, itemStack: ItemStack) {
+    override fun item(
+        index: Int,
+        itemStack: ItemStack,
+    ) {
         if (index in 0 until bukkitInventory.size) {
             bukkitInventory.setItem(index, itemStack)
         } else {
@@ -22,7 +25,10 @@ internal class KtInventoryImpl(private val handler: KtInventoryHandler, override
         }
     }
 
-    override fun onClick(index: Int, block: ((InventoryClickEvent) -> Unit)?) {
+    override fun onClick(
+        index: Int,
+        block: ((InventoryClickEvent) -> Unit)?,
+    ) {
         if (block != null) {
             actions[index] = block
         } else {
@@ -30,7 +36,11 @@ internal class KtInventoryImpl(private val handler: KtInventoryHandler, override
         }
     }
 
-    override fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?) {
+    override fun item(
+        index: Int,
+        itemStack: ItemStack,
+        block: ((InventoryClickEvent) -> Unit)?,
+    ) {
         item(index, itemStack)
         onClick(index, block)
     }

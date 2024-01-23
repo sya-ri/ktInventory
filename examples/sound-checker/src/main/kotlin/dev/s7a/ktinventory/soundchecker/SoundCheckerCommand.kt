@@ -22,14 +22,22 @@ class SoundCheckerCommand(private val plugin: JavaPlugin) : CommandExecutor {
     private val pagedSounds = Sound.values().toList().chunked(45)
     private val lastPage = pagedSounds.lastIndex
 
-    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+    override fun onCommand(
+        sender: CommandSender,
+        command: Command,
+        label: String,
+        args: Array<out String>,
+    ): Boolean {
         if (sender is Player) {
             openPage(sender, 0)
         }
         return true
     }
 
-    private fun openPage(player: Player, page: Int) {
+    private fun openPage(
+        player: Player,
+        page: Int,
+    ) {
         when {
             page < 0 -> openPage(player, 0)
             lastPage < page -> openPage(player, lastPage)

@@ -20,7 +20,10 @@ internal class KtInventoryHandler(private val plugin: Plugin) : Listener {
         plugin.server.pluginManager.registerEvents(this, plugin)
     }
 
-    fun open(player: HumanEntity, inventory: KtInventoryImpl) {
+    fun open(
+        player: HumanEntity,
+        inventory: KtInventoryImpl,
+    ) {
         preOpenInventories[player.uniqueId] = inventory
         player.openInventory(inventory.bukkitInventory)
         openInventories[player.uniqueId] = inventory

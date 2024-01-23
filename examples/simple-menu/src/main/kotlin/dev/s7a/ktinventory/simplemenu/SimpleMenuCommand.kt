@@ -16,7 +16,12 @@ class SimpleMenuCommand(private val plugin: JavaPlugin, private val menu: Simple
         }
     }
 
-    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+    override fun onCommand(
+        sender: CommandSender,
+        command: Command,
+        label: String,
+        args: Array<out String>,
+    ): Boolean {
         if (sender is Player) {
             menu.open(sender)
         }

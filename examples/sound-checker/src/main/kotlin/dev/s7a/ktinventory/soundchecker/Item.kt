@@ -10,13 +10,20 @@ private fun String.color(altColorChar: Char): String = ChatColor.translateAltern
 
 private fun String.color(altColorChar: Char?): String = altColorChar?.let(::color) ?: this
 
-fun KtInventory.item(index: Int, type: Material, displayName: String, altColorChar: Char? = '&', block: (InventoryClickEvent) -> Unit) {
+fun KtInventory.item(
+    index: Int,
+    type: Material,
+    displayName: String,
+    altColorChar: Char? = '&',
+    block: (InventoryClickEvent) -> Unit,
+) {
     item(
         index,
         ItemStack(type).apply {
-            itemMeta = itemMeta?.apply {
-                setDisplayName(displayName.color(altColorChar))
-            }
+            itemMeta =
+                itemMeta?.apply {
+                    setDisplayName(displayName.color(altColorChar))
+                }
         },
         block,
     )

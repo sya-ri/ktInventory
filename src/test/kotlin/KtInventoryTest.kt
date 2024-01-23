@@ -42,9 +42,10 @@ class KtInventoryTest {
 
     @Test
     fun place_item() {
-        val inventory = plugin.ktInventory("test") {
-            item(2, ItemStack(Material.STONE))
-        }
+        val inventory =
+            plugin.ktInventory("test") {
+                item(2, ItemStack(Material.STONE))
+            }
         val player = server.addPlayer()
         inventory.open(player)
         player.assertInventoryView(InventoryType.CHEST) {
@@ -54,9 +55,10 @@ class KtInventoryTest {
 
     @Test
     fun update_item() {
-        val inventory = plugin.ktInventory("test") {
-            item(2, ItemStack(Material.STONE))
-        }
+        val inventory =
+            plugin.ktInventory("test") {
+                item(2, ItemStack(Material.STONE))
+            }
         val player = server.addPlayer()
         inventory.open(player)
         player.assertInventoryView(InventoryType.CHEST) {
@@ -71,11 +73,12 @@ class KtInventoryTest {
     @Test
     fun click_item() {
         val clickCount = AtomicInteger()
-        val inventory = plugin.ktInventory("test") {
-            item(2, ItemStack(Material.STONE)) {
-                clickCount.incrementAndGet()
+        val inventory =
+            plugin.ktInventory("test") {
+                item(2, ItemStack(Material.STONE)) {
+                    clickCount.incrementAndGet()
+                }
             }
-        }
         val player = server.addPlayer()
         inventory.open(player)
         player.simulateInventoryClick(2)
@@ -86,11 +89,12 @@ class KtInventoryTest {
     @Test
     fun update_item_click_action() {
         val clickCount = AtomicInteger()
-        val inventory = plugin.ktInventory("test") {
-            item(2, ItemStack(Material.STONE)) {
-                clickCount.incrementAndGet()
+        val inventory =
+            plugin.ktInventory("test") {
+                item(2, ItemStack(Material.STONE)) {
+                    clickCount.incrementAndGet()
+                }
             }
-        }
         val player = server.addPlayer()
         inventory.open(player)
         player.simulateInventoryClick(2)
@@ -110,11 +114,12 @@ class KtInventoryTest {
     @Test
     fun open_event() {
         val openCount = AtomicInteger()
-        val inventory = plugin.ktInventory("test") {
-            onOpen {
-                openCount.incrementAndGet()
+        val inventory =
+            plugin.ktInventory("test") {
+                onOpen {
+                    openCount.incrementAndGet()
+                }
             }
-        }
         val player = server.addPlayer()
         inventory.open(player)
         player.closeInventory()
@@ -125,11 +130,12 @@ class KtInventoryTest {
     @Test
     fun click_event() {
         val clickCount = AtomicInteger()
-        val inventory = plugin.ktInventory("test") {
-            onClick {
-                clickCount.incrementAndGet()
+        val inventory =
+            plugin.ktInventory("test") {
+                onClick {
+                    clickCount.incrementAndGet()
+                }
             }
-        }
         val player = server.addPlayer()
         inventory.open(player)
         player.simulateInventoryClick(2)
@@ -140,11 +146,12 @@ class KtInventoryTest {
     @Test
     fun close_event() {
         val closeCount = AtomicInteger()
-        val inventory = plugin.ktInventory("test") {
-            onClose {
-                closeCount.incrementAndGet()
+        val inventory =
+            plugin.ktInventory("test") {
+                onClose {
+                    closeCount.incrementAndGet()
+                }
             }
-        }
         val player = server.addPlayer()
         inventory.open(player)
         player.closeInventory()

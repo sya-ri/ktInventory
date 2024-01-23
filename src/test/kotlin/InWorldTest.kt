@@ -49,7 +49,10 @@ class InWorldTest {
         block_test<Dropper>(Material.DROPPER, InventoryType.DROPPER)
     }
 
-    private inline fun <reified T : Container> block_test(material: Material, inventoryType: InventoryType) {
+    private inline fun <reified T : Container> block_test(
+        material: Material,
+        inventoryType: InventoryType,
+    ) {
         val block = world.getBlockAt(0, 0, 0)
         block.type = material
         val container = assertIs<T>(block.state)
@@ -64,11 +67,12 @@ class InWorldTest {
         }
 
         // Place the item by ktInventory
-        val ktInventory = plugin.ktInventory(container.inventory) {
-            item(0, ItemStack(Material.STONE)) {
-                clickCount.incrementAndGet()
+        val ktInventory =
+            plugin.ktInventory(container.inventory) {
+                item(0, ItemStack(Material.STONE)) {
+                    clickCount.incrementAndGet()
+                }
             }
-        }
         player1.assertInventoryView(inventoryType) {
             it.getItem(0) == ItemStack(Material.STONE)
         }

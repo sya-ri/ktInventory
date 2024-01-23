@@ -32,7 +32,10 @@ fun Plugin.ktInventory(bukkitInventory: Inventory): KtInventory {
  * @param block Processing using [KtInventory].
  * @since 1.0.0
  */
-inline fun Plugin.ktInventory(bukkitInventory: Inventory, block: KtInventory.() -> Unit): KtInventory {
+inline fun Plugin.ktInventory(
+    bukkitInventory: Inventory,
+    block: KtInventory.() -> Unit,
+): KtInventory {
     return ktInventory(bukkitInventory).apply(block)
 }
 
@@ -45,7 +48,11 @@ inline fun Plugin.ktInventory(bukkitInventory: Inventory, block: KtInventory.() 
  * @param altColorChar Alternate color code character to use for [title]. If null, do nothing. (default: '&')
  * @since 1.0.0
  */
-fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&'): KtInventory {
+fun Plugin.ktInventory(
+    title: String,
+    line: Int = 3,
+    altColorChar: Char? = '&',
+): KtInventory {
     require(line in 1..6)
     return ktInventory(Bukkit.createInventory(null, line * 9, title.color(altColorChar)))
 }
@@ -60,7 +67,12 @@ fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&'):
  * @param block Processing using [KtInventory].
  * @since 1.0.0
  */
-inline fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
+inline fun Plugin.ktInventory(
+    title: String,
+    line: Int = 3,
+    altColorChar: Char? = '&',
+    block: KtInventory.() -> Unit,
+): KtInventory {
     return ktInventory(title, line, altColorChar).apply(block)
 }
 
@@ -73,7 +85,11 @@ inline fun Plugin.ktInventory(title: String, line: Int = 3, altColorChar: Char? 
  * @param altColorChar Alternate color code character to use for [title]. If null, do nothing. (default: '&')
  * @since 1.0.0
  */
-fun Plugin.ktInventory(title: String, type: InventoryType, altColorChar: Char? = '&'): KtInventory {
+fun Plugin.ktInventory(
+    title: String,
+    type: InventoryType,
+    altColorChar: Char? = '&',
+): KtInventory {
     return ktInventory(Bukkit.createInventory(null, type, title.color(altColorChar)))
 }
 
@@ -87,7 +103,12 @@ fun Plugin.ktInventory(title: String, type: InventoryType, altColorChar: Char? =
  * @param block Processing using [KtInventory].
  * @since 1.0.0
  */
-inline fun Plugin.ktInventory(title: String, type: InventoryType, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
+inline fun Plugin.ktInventory(
+    title: String,
+    type: InventoryType,
+    altColorChar: Char? = '&',
+    block: KtInventory.() -> Unit,
+): KtInventory {
     return ktInventory(title, type, altColorChar).apply(block)
 }
 
@@ -113,7 +134,10 @@ interface KtInventory {
      * @throws IndexOutOfBoundsException When placing an item outside the inventory contents.
      * @since 1.0.0
      */
-    fun item(index: Int, itemStack: ItemStack)
+    fun item(
+        index: Int,
+        itemStack: ItemStack,
+    )
 
     /**
      * Set the action on click.
@@ -121,7 +145,10 @@ interface KtInventory {
      * @param block Click action. If null, the action will be removed.
      * @since 1.0.0
      */
-    fun onClick(index: Int, block: ((InventoryClickEvent) -> Unit)?)
+    fun onClick(
+        index: Int,
+        block: ((InventoryClickEvent) -> Unit)?,
+    )
 
     /**
      * Set the item and the action on click.
@@ -132,7 +159,11 @@ interface KtInventory {
      * @throws IndexOutOfBoundsException When placing an item outside the inventory contents.
      * @since 1.0.0
      */
-    fun item(index: Int, itemStack: ItemStack, block: ((InventoryClickEvent) -> Unit)?)
+    fun item(
+        index: Int,
+        itemStack: ItemStack,
+        block: ((InventoryClickEvent) -> Unit)?,
+    )
 
     /**
      * Change the action on opened.

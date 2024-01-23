@@ -30,7 +30,10 @@ class KtInventoryProvider(private val plugin: Plugin) {
      * @param block Processing using [KtInventory].
      * @since 1.0.0
      */
-    inline fun create(bukkitInventory: Inventory, block: KtInventory.() -> Unit): KtInventory {
+    inline fun create(
+        bukkitInventory: Inventory,
+        block: KtInventory.() -> Unit,
+    ): KtInventory {
         return create(bukkitInventory).apply(block)
     }
 
@@ -42,7 +45,11 @@ class KtInventoryProvider(private val plugin: Plugin) {
      * @param altColorChar Alternate color code character to use for [title]. If null, do nothing. (default: '&')
      * @since 1.0.0
      */
-    fun create(title: String, line: Int = 3, altColorChar: Char? = '&'): KtInventory {
+    fun create(
+        title: String,
+        line: Int = 3,
+        altColorChar: Char? = '&',
+    ): KtInventory {
         require(line in 1..6)
         return create(Bukkit.createInventory(null, line * 9, title.color(altColorChar)))
     }
@@ -56,7 +63,12 @@ class KtInventoryProvider(private val plugin: Plugin) {
      * @param block Processing using [KtInventory].
      * @since 1.0.0
      */
-    inline fun create(title: String, line: Int = 3, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
+    inline fun create(
+        title: String,
+        line: Int = 3,
+        altColorChar: Char? = '&',
+        block: KtInventory.() -> Unit,
+    ): KtInventory {
         return create(title, line, altColorChar).apply(block)
     }
 
@@ -68,7 +80,11 @@ class KtInventoryProvider(private val plugin: Plugin) {
      * @param altColorChar Alternate color code character to use for [title]. If null, do nothing. (default: '&')
      * @since 1.0.0
      */
-    fun create(title: String, type: InventoryType, altColorChar: Char? = '&'): KtInventory {
+    fun create(
+        title: String,
+        type: InventoryType,
+        altColorChar: Char? = '&',
+    ): KtInventory {
         return create(Bukkit.createInventory(null, type, title.color(altColorChar)))
     }
 
@@ -81,7 +97,12 @@ class KtInventoryProvider(private val plugin: Plugin) {
      * @param block Processing using [KtInventory].
      * @since 1.0.0
      */
-    inline fun create(title: String, type: InventoryType, altColorChar: Char? = '&', block: KtInventory.() -> Unit): KtInventory {
+    inline fun create(
+        title: String,
+        type: InventoryType,
+        altColorChar: Char? = '&',
+        block: KtInventory.() -> Unit,
+    ): KtInventory {
         return create(title, type, altColorChar).apply(block)
     }
 }

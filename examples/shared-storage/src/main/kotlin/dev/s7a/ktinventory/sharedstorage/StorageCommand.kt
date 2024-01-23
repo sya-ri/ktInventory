@@ -16,7 +16,12 @@ class StorageCommand(private val plugin: JavaPlugin, private val provider: Stora
         }
     }
 
-    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+    override fun onCommand(
+        sender: CommandSender,
+        command: Command,
+        label: String,
+        args: Array<out String>,
+    ): Boolean {
         if (sender is Player) {
             provider.open(sender)
         }
