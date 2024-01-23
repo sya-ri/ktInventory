@@ -1,6 +1,6 @@
 # ktInventory
 
-> **Warning**
+> [!WARNING]
 > This library is under development, so you can't use it.
 
 Spigot library for Kotlin for easy inventory creation and event handling
