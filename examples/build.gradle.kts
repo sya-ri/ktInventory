@@ -14,7 +14,7 @@ subprojects {
     apply(plugin = "com.github.johnrengelman.shadow")
 
     dependencies {
-        compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
+        compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
         implementation(project(":"))
     }
 
@@ -41,7 +41,8 @@ subprojects {
         "16" to "1.16.5",
         "17" to "1.17.1",
         "18" to "1.18.2",
-        "19" to "1.19.2"
+        "19" to "1.19.2",
+        "20" to "1.20.4",
     ).forEach { (name, version) ->
         task<LaunchMinecraftServerTask>("testPlugin$name") {
             dependsOn("build")

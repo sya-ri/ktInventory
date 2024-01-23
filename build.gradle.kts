@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.8.10"
-    id("net.minecrell.plugin-yml.bukkit") version "0.5.2" apply false
-    id("org.jetbrains.kotlinx.kover") version "0.6.1"
-    id("org.jetbrains.dokka") version "1.7.20"
-    id("org.jmailen.kotlinter") version "3.13.0"
+    kotlin("jvm") version "1.9.22"
+    id("net.minecrell.plugin-yml.bukkit") version "0.6.0" apply false
+    id("org.jetbrains.kotlinx.kover") version "0.7.5"
+    id("org.jetbrains.dokka") version "1.9.10"
+    id("org.jmailen.kotlinter") version "3.16.0"
     `maven-publish`
     signing
 }
@@ -35,10 +35,10 @@ dependencies {
     if (project.hasProperty("USE_SPIGOT_8")) {
         compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     } else {
-        compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
+        compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
     }
     testImplementation(kotlin("test"))
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.19:2.145.0")
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.20:3.66.0")
 }
 
 tasks.test {
@@ -53,13 +53,14 @@ val sourceJar by tasks.registering(Jar::class) {
 publishing {
     repositories {
         maven {
-            url = uri(
-                if (version.toString().endsWith("SNAPSHOT")) {
-                    "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-                } else {
-                    "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-                },
-            )
+            url =
+                uri(
+                    if (version.toString().endsWith("SNAPSHOT")) {
+                        "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                    } else {
+                        "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                    },
+                )
             credentials {
                 username = project.properties["credentials.username"].toString()
                 password = project.properties["credentials.password"].toString()
@@ -101,4 +102,3 @@ publishing {
 signing {
     sign(publishing.publications["maven"])
 }
-

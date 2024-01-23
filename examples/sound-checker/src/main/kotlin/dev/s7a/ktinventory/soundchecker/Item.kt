@@ -18,6 +18,6 @@ fun KtInventory.item(index: Int, type: Material, displayName: String, altColorCh
                 setDisplayName(displayName.color(altColorChar))
             }
         },
-        block
+        block,
     )
 }
