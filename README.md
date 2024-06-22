@@ -1,9 +1,20 @@
 # ktInventory
 
-> [!WARNING]
-> This library is under development, so you can't use it.
-
 Spigot library for Kotlin for easy inventory creation and event handling
+
+## Installation
+
+### build.gradle.kts
+
+```kotlin
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("dev.s7a:ktInventory:1.0.0")
+}
+```
 
 ## Usage
 
