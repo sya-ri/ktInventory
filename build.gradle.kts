@@ -54,6 +54,10 @@ val sourceJar by tasks.registering(Jar::class) {
     from(sourceSets["main"].allSource)
 }
 
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+}
+
 publishing {
     repositories {
         maven {
@@ -77,6 +81,7 @@ publishing {
             artifactId = "ktInventory"
             from(components["kotlin"])
             artifact(sourceJar.get())
+            artifact(javadocJar.get())
             pom {
                 name.set("ktInventory")
                 description.set("Spigot inventory library for Kotlin. Easy to create and handle")
