@@ -1,6 +1,6 @@
 # ktInventory
 
-Spigot library for Kotlin for easy inventory creation and event handling
+Spigot library with Kotlin for easy inventory creation and event handling
 
 ## Installation
 
