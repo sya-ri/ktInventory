@@ -12,7 +12,7 @@ class SoundCheckInventory(
     plugin: Plugin,
 ) : KtInventory.Paginated(plugin, 6) {
     override val entries =
-        Sound.entries.map { sound ->
+        Sound.values().map { sound ->
             KtInventoryItem<Entry>(
                 itemStack(Material.GRAY_DYE, "&6${sound.key.key}"),
             ) { event, _ ->
