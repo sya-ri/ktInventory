@@ -9,7 +9,9 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
-class SoundCheckerCommand(private val plugin: JavaPlugin) : CommandExecutor {
+class SoundCheckerCommand(
+    private val plugin: JavaPlugin,
+) : CommandExecutor {
     fun register() {
         val command = plugin.getCommand("sound-checker")
         if (command != null) {
@@ -19,7 +21,7 @@ class SoundCheckerCommand(private val plugin: JavaPlugin) : CommandExecutor {
         }
     }
 
-    private val pagedSounds = Sound.entries.chunked(45)
+    private val pagedSounds = Sound.values().toList().chunked(45)
     private val lastPage = pagedSounds.lastIndex
 
     override fun onCommand(
@@ -42,19 +44,20 @@ class SoundCheckerCommand(private val plugin: JavaPlugin) : CommandExecutor {
             page < 0 -> openPage(player, 0)
             lastPage < page -> openPage(player, lastPage)
             else -> {
-                plugin.ktInventory("&0&lSound checker (${page + 1}/${lastPage + 1})", 6) {
-                    pagedSounds[page].forEachIndexed { index, sound ->
-                        item(index, Material.GRAY_DYE, "&6${sound.key.key}") {
-                            player.playSound(player.location, sound, 1F, 1F)
+                plugin
+                    .ktInventory("&0&lSound checker (${page + 1}/${lastPage + 1})", 6) {
+                        pagedSounds[page].forEachIndexed { index, sound ->
+                            item(index, Material.GRAY_DYE, "&6${sound.key.key}") {
+                                player.playSound(player.location, sound, 1F, 1F)
+                            }
                         }
-                    }
-                    item(45, Material.ARROW, "&d<<") {
-                        openPage(player, page - 1)
-                    }
-                    item(53, Material.ARROW, "&d>>") {
-                        openPage(player, page + 1)
-                    }
-                }.open(player)
+                        item(45, Material.ARROW, "&d<<") {
+                            openPage(player, page - 1)
+                        }
+                        item(53, Material.ARROW, "&d>>") {
+                            openPage(player, page + 1)
+                        }
+                    }.open(player)
             }
         }
     }
