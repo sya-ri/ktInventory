@@ -6,7 +6,10 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
-class SimpleMenuCommand(private val plugin: JavaPlugin, private val menu: SimpleMenu) : CommandExecutor {
+class SimpleMenuCommand(
+    private val plugin: JavaPlugin,
+    private val menu: SimpleMenu,
+) : CommandExecutor {
     fun register() {
         val command = plugin.getCommand("simple-menu")
         if (command != null) {
