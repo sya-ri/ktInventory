@@ -11,7 +11,6 @@ shadow = "8.1.1"
 # Libraries
 spigot8 = "1.8.8-R0.1-SNAPSHOT"
 spigotLatest = "1.21.4-R0.1-SNAPSHOT"
-mockBukkit = "3.88.1"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -25,4 +24,3 @@ shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 [libraries]
 spigot8 = { group = "org.spigotmc", name = "spigot-api", version.ref = "spigot8" }
 spigotLatest = { group = "org.spigotmc", name = "spigot-api", version.ref = "spigotLatest" }
-mockBukkit = { group = "com.github.seeseemelk", name = "MockBukkit-v1.20", version.ref = "mockBukkit" }

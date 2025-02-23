@@ -14,25 +14,25 @@ Spigot library with Kotlin for easy inventory creation and event handling
 
 ```kotlin
 repositories {
-    mavenCentral()
+    maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots/")
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:1.0.0")
+    implementation("dev.s7a:ktInventory:2.0.0-SNAPSHOT")
 }
 ```
 
 ## Usage
 
-### DSL
-
-You can easily generate inventory. Basically, use this.
-
 ```kotlin
-fun openSimpleMenu(plugin: JavaPlugin, player: HumanEntity) {
-    plugin.ktInventory("&0&lSelect where to teleport", 1) {
-        item(3, ItemStack(Material.RED_BED)) {
-            val player = it.whoClicked as? Player ?: return@item
+class SimpleMenu(
+    plugin: Plugin,
+) : KtInventory(plugin, 1) {
+    override fun title() = "&0&lSelect where to teleport"
+
+    init {
+        button(3, ItemStack(Material.RED_BED)) { event, _ ->
+            val player = event.whoClicked as? Player ?: return@button
             val respawnLocation = player.respawnLocation
             if (respawnLocation != null) {
                 player.teleport(respawnLocation)
@@ -41,42 +41,11 @@ fun openSimpleMenu(plugin: JavaPlugin, player: HumanEntity) {
             }
             player.closeInventory()
         }
-        item(5, ItemStack(Material.COMPASS)) {
-            val player = it.whoClicked as? Player ?: return@item
+        button(5, ItemStack(Material.COMPASS)) { event, _ ->
+            val player = event.whoClicked as? Player ?: return@button
             player.teleport(player.world.spawnLocation)
             player.closeInventory()
         }
-    }.open(player)
-}
-```
-
-### Provider
-
-Passing a plugin instance as a property makes the dependencies between classes a little complicated.
-In such cases you can use Provider instead of DSL.
-
-```kotlin
-class SimpleMenu(provider: KtInventoryProvider) {
-    private val inventory = provider.create("&0&lSelect where to teleport", 1) {
-        item(3, ItemStack(Material.RED_BED)) {
-            val player = it.whoClicked as? Player ?: return@item
-            val respawnLocation = player.respawnLocation
-            if (respawnLocation != null) {
-                player.teleport(respawnLocation)
-            } else {
-                player.sendMessage("Not found respawnLocation")
-            }
-            player.closeInventory()
-        }
-        item(5, ItemStack(Material.COMPASS)) {
-            val player = it.whoClicked as? Player ?: return@item
-            player.teleport(player.world.spawnLocation)
-            player.closeInventory()
-        }
-    }
-
-    fun open(player: HumanEntity) {
-        inventory.open(player)
     }
 }
 ```

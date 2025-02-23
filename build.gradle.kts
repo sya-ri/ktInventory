@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "dev.s7a"
-version = "1.0.0"
+version = "2.0.0-SNAPSHOT"
 
 allprojects {
     apply(plugin = "kotlin")
@@ -41,12 +41,6 @@ dependencies {
     } else {
         compileOnly(libs.spigotLatest)
     }
-    testImplementation(kotlin("test"))
-    testImplementation(libs.mockBukkit)
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 val sourceJar by tasks.registering(Jar::class) {
