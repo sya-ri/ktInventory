@@ -1,22 +1,22 @@
 package dev.s7a.ktinventory.soundchecker
 
-import dev.s7a.ktinventory.KtInventory
-import dev.s7a.ktinventory.KtInventoryItem
+import dev.s7a.ktinventory.KtInventoryButton
+import dev.s7a.ktinventory.KtInventoryPaginated
 import dev.s7a.ktinventory.soundchecker.utils.itemStack
 import org.bukkit.Material
-import org.bukkit.Sound
+import org.bukkit.Registry
 import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 
 class SoundCheckInventory(
     plugin: Plugin,
-) : KtInventory.Paginated(plugin, 6) {
+) : KtInventoryPaginated(plugin, 6) {
     override val entries =
-        Sound.values().map { sound ->
-            KtInventoryItem<Entry>(
+        Registry.SOUNDS.map { sound ->
+            KtInventoryButton<Entry>(
                 itemStack(Material.GRAY_DYE, "&6${sound.key.key}"),
             ) { event, _ ->
-                val player = event.whoClicked as? Player ?: return@KtInventoryItem
+                val player = event.whoClicked as? Player ?: return@KtInventoryButton
                 player.playSound(player.location, sound, 1F, 1F)
             }
         }
@@ -29,6 +29,6 @@ class SoundCheckInventory(
     init {
         paginateSlot(0 until 45)
         previousPageButton(45, itemStack(Material.ARROW, "&d<<"))
-        nextPageButton(45, itemStack(Material.ARROW, "&d<<"))
+        nextPageButton(53, itemStack(Material.ARROW, "&d>>"))
     }
 }
