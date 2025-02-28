@@ -13,7 +13,10 @@ abstract class KtInventoryBase(
         require(line in 1..6) { "line must be between 1 and 6" }
     }
 
-    protected val buttons = mutableMapOf<Int, KtInventoryButton<KtInventoryBase>>()
+    private val _buttons = mutableMapOf<Int, KtInventoryButton<KtInventoryBase>>()
+
+    val buttons
+        get() = _buttons.toMap()
 
     fun button(
         slot: Int,
@@ -28,7 +31,7 @@ abstract class KtInventoryBase(
         item: KtInventoryButton<KtInventoryBase>,
     ) {
         require(slot in 0 until line * 9) { "slot must be between 0 and ${line * 9}" }
-        buttons[slot] = item
+        _buttons[slot] = item
     }
 
     open fun onOpen(event: InventoryOpenEvent) {}

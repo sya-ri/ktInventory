@@ -98,6 +98,7 @@ abstract class KtInventoryPaginated(
                 lastPage < page -> return open(player, lastPage)
                 else -> chunked[page]
             }
+        val buttons = this.buttons
         Entry(this, page, lastPage)
             .apply {
                 slots.forEachIndexed { index, slot ->
@@ -105,7 +106,7 @@ abstract class KtInventoryPaginated(
                         button(slot, it)
                     }
                 }
-                this@KtInventoryPaginated.buttons.forEach { (slot, item) ->
+                buttons.forEach { (slot, item) ->
                     button(slot, item)
                 }
             }.open(player)
