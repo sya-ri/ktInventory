@@ -28,14 +28,13 @@ internal class KtInventoryHandler(
     @EventHandler
     fun on(event: InventoryClickEvent) {
         val inventory = event.inventory.holder as? KtInventory ?: return
-        val slot = event.slot
 
         if (inventory.inventory === event.clickedInventory) {
-            if (inventory.isCancelClick(slot)) {
+            if (inventory.isCancelClick(event.slot)) {
                 event.isCancelled = true
             }
 
-            inventory.onClick(slot, event)
+            inventory.onClick(event)
         }
     }
 

@@ -1,7 +1,6 @@
 package dev.s7a.ktinventory
 
 import org.bukkit.entity.HumanEntity
-import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.inventory.ItemStack
@@ -38,7 +37,7 @@ abstract class KtInventoryPaginated(
     fun nextPageButton(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (InventoryClickEvent, Entry) -> Unit = { _, _ -> },
+        onClick: (KtInventoryButton.ClickState<Entry>) -> Unit = {},
     ) {
         nextPageButton(slot, createButton(itemStack, onClick))
     }
@@ -49,8 +48,8 @@ abstract class KtInventoryPaginated(
     ) {
         button(
             slot,
-            item.join { event, inventory ->
-                inventory.openNextPage(event.whoClicked)
+            item.join { (inventory, player) ->
+                inventory.openNextPage(player)
             },
         )
     }
@@ -58,7 +57,7 @@ abstract class KtInventoryPaginated(
     fun previousPageButton(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (InventoryClickEvent, Entry) -> Unit = { _, _ -> },
+        onClick: (KtInventoryButton.ClickState<Entry>) -> Unit = {},
     ) {
         previousPageButton(slot, createButton(itemStack, onClick))
     }
@@ -69,8 +68,8 @@ abstract class KtInventoryPaginated(
     ) {
         button(
             slot,
-            item.join { event, inventory ->
-                inventory.openPreviousPage(event.whoClicked)
+            item.join { (inventory, player) ->
+                inventory.openPreviousPage(player)
             },
         )
     }
@@ -81,7 +80,7 @@ abstract class KtInventoryPaginated(
 
     fun createButton(
         itemStack: ItemStack,
-        onClick: (InventoryClickEvent, Entry) -> Unit,
+        onClick: (KtInventoryButton.ClickState<Entry>) -> Unit,
     ) = KtInventoryButton(itemStack, onClick)
 
     fun open(

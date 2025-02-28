@@ -12,8 +12,8 @@ class SimpleMenu(
     override fun title() = "&0&lSelect where to teleport"
 
     init {
-        button(3, ItemStack(Material.RED_BED)) { event, _ ->
-            val player = event.whoClicked as? Player ?: return@button
+        button(3, ItemStack(Material.RED_BED)) { state ->
+            val player = state.player as? Player ?: return@button
             val respawnLocation = player.respawnLocation
             if (respawnLocation != null) {
                 player.teleport(respawnLocation)
@@ -22,8 +22,8 @@ class SimpleMenu(
             }
             player.closeInventory()
         }
-        button(5, ItemStack(Material.COMPASS)) { event, _ ->
-            val player = event.whoClicked as? Player ?: return@button
+        button(5, ItemStack(Material.COMPASS)) { state ->
+            val player = state.player as? Player ?: return@button
             player.teleport(player.world.spawnLocation)
             player.closeInventory()
         }
