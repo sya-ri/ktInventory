@@ -36,15 +36,12 @@ abstract class KtInventoryBase(
 
     open fun onOpen(event: InventoryOpenEvent) {}
 
-    open fun onClick(event: InventoryClickEvent) {}
-
     fun onClick(
         slot: Int,
         event: InventoryClickEvent,
     ) {
         val item = buttons[slot] ?: return
         item.onClick(event, this)
-        event.isCancelled = true
     }
 
     open fun onClose(event: InventoryCloseEvent) {}

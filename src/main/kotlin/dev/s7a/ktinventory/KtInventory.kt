@@ -71,6 +71,8 @@ abstract class KtInventory(
         player.openInventory(bukkitInventory)
     }
 
+    fun isStorableSlot(slot: Int) = storables.keys.flatten().contains(slot)
+
     fun saveStorable() {
         storables.forEach { (slots, save) ->
             save(slots.map(bukkitInventory::getItem))
