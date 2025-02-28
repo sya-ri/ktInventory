@@ -40,18 +40,35 @@ subprojects {
         "18" to "1.18.2",
         "19" to "1.19.2",
         "20" to "1.20.4",
+        "21" to "1.21.4",
     ).forEach { (name, version) ->
         task<LaunchMinecraftServerTask>("testPlugin$name") {
             dependsOn("build")
 
             doFirst {
                 copy {
-                    from(layout.buildDirectory.get().asFile.resolve("libs/${project.name}-all.jar"))
-                    into(layout.buildDirectory.get().asFile.resolve("MinecraftServer$name/plugins"))
+                    from(
+                        layout.buildDirectory
+                            .get()
+                            .asFile
+                            .resolve("libs/${project.name}-all.jar"),
+                    )
+                    into(
+                        layout.buildDirectory
+                            .get()
+                            .asFile
+                            .resolve("MinecraftServer$name/plugins"),
+                    )
                 }
             }
 
-            serverDirectory.set(layout.buildDirectory.get().asFile.resolve("MinecraftServer$name").absolutePath)
+            serverDirectory.set(
+                layout.buildDirectory
+                    .get()
+                    .asFile
+                    .resolve("MinecraftServer$name")
+                    .absolutePath,
+            )
             jarUrl.set(JarUrl.Paper(version))
             agreeEula.set(true)
         }
