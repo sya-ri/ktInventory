@@ -1,7 +1,6 @@
 [versions]
 # Plugins
 kotlin = "2.1.10"
-kover = "0.9.1"
 dokka = "2.0.0"
 kotlinter = "5.0.1"
 pluginYml = "0.6.0"
@@ -14,7 +13,6 @@ spigotLatest = "1.20.4-R0.1-SNAPSHOT"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
 pluginYml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml" }

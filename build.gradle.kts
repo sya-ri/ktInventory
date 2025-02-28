@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kover)
     alias(libs.plugins.dokka)
     alias(libs.plugins.kotlinter)
     alias(libs.plugins.pluginYml.bukkit) apply false
