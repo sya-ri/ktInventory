@@ -18,6 +18,9 @@ abstract class KtInventoryBase(
     val buttons
         get() = _buttons.toMap()
 
+    val size: Int
+        get() = line * 9
+
     fun button(
         slot: Int,
         itemStack: ItemStack,
@@ -30,7 +33,7 @@ abstract class KtInventoryBase(
         slot: Int,
         item: KtInventoryButton<KtInventoryBase>,
     ) {
-        require(slot in 0 until line * 9) { "slot must be between 0 and ${line * 9}" }
+        require(slot in 0 until size) { "slot must be between 0 and $size" }
         _buttons[slot] = item
     }
 

@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.server.PluginDisableEvent
 import org.bukkit.plugin.Plugin
@@ -18,17 +19,31 @@ internal class KtInventoryHandler(
         inventory.onOpen(event)
     }
 
+    private fun KtInventory.isCancelClick(slot: Int): Boolean {
+        if (size <= slot) return false
+
+        return isStorableSlot(slot).not()
+    }
+
     @EventHandler
     fun on(event: InventoryClickEvent) {
         val inventory = event.inventory.holder as? KtInventory ?: return
         val slot = event.slot
 
         if (inventory.inventory === event.clickedInventory) {
-            if (inventory.isStorableSlot(slot).not()) {
+            if (inventory.isCancelClick(slot)) {
                 event.isCancelled = true
             }
 
             inventory.onClick(slot, event)
+        }
+    }
+
+    @EventHandler
+    fun on(event: InventoryDragEvent) {
+        val inventory = event.inventory.holder as? KtInventory ?: return
+        if (event.rawSlots.any { inventory.isCancelClick(it) }) {
+            event.isCancelled = true
         }
     }
 
