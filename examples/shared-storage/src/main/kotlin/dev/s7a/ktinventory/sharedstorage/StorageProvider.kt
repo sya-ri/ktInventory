@@ -12,6 +12,8 @@ abstract class StorageProvider(
     abstract var contents: List<ItemStack?>
 
     init {
-        // FIXME storage
+        storable(::contents) { items ->
+            contents = items
+        }
     }
 }
