@@ -37,7 +37,7 @@ abstract class KtInventoryPaginated(
     fun nextPageButton(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickState<Entry>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<Entry>) -> Unit = {},
     ) {
         nextPageButton(slot, createButton(itemStack, onClick))
     }
@@ -57,7 +57,7 @@ abstract class KtInventoryPaginated(
     fun previousPageButton(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickState<Entry>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<Entry>) -> Unit = {},
     ) {
         previousPageButton(slot, createButton(itemStack, onClick))
     }
@@ -80,7 +80,7 @@ abstract class KtInventoryPaginated(
 
     fun createButton(
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickState<Entry>) -> Unit,
+        onClick: (KtInventoryButton.ClickEvent<Entry>) -> Unit,
     ) = KtInventoryButton(itemStack, onClick)
 
     fun open(

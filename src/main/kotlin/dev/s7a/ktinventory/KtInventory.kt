@@ -22,7 +22,7 @@ abstract class KtInventory(
 
     fun createButton(
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickState<KtInventory>) -> Unit,
+        onClick: (KtInventoryButton.ClickEvent<KtInventory>) -> Unit,
     ) = KtInventoryButton(itemStack, onClick)
 
     final override fun button(

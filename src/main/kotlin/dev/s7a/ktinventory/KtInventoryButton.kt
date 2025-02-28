@@ -8,16 +8,16 @@ import org.bukkit.persistence.PersistentDataType
 
 class KtInventoryButton<out T : KtInventoryBase> internal constructor(
     val itemStack: ItemStack,
-    val onClick: (ClickState<@UnsafeVariance T>) -> Unit,
+    val onClick: (ClickEvent<@UnsafeVariance T>) -> Unit,
 ) {
-    data class ClickState<out T : KtInventoryBase>(
+    data class ClickEvent<out T : KtInventoryBase>(
         val inventory: T,
         val player: HumanEntity,
         val click: ClickType,
         val cursor: ItemStack?,
     )
 
-    fun join(onClick: (ClickState<@UnsafeVariance T>) -> Unit) =
+    fun join(onClick: (ClickEvent<@UnsafeVariance T>) -> Unit) =
         KtInventoryButton(itemStack) { state ->
             this.onClick(state)
             onClick(state)

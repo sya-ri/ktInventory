@@ -24,7 +24,7 @@ abstract class KtInventoryBase(
     fun button(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickState<KtInventory>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<KtInventory>) -> Unit = {},
     ) {
         button(slot, KtInventoryButton(itemStack, onClick))
     }
@@ -46,7 +46,7 @@ abstract class KtInventoryBase(
             val player = event.whoClicked
             val click = event.click
             val cursor = event.cursor
-            button.onClick(KtInventoryButton.ClickState(this, player, click, cursor))
+            button.onClick(KtInventoryButton.ClickEvent(this, player, click, cursor))
         }
     }
 

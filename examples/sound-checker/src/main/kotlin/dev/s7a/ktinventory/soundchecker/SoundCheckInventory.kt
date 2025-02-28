@@ -14,8 +14,8 @@ class SoundCheckInventory(
         Registry.SOUNDS.map { sound ->
             createButton(
                 itemStack(Material.GRAY_DYE, "&6${sound.key.key}"),
-            ) { event, _ ->
-                val player = event.whoClicked as? Player ?: return@createButton
+            ) { event ->
+                val player = event.player as? Player ?: return@createButton
                 player.playSound(player.location, sound, 1F, 1F)
             }
         }
