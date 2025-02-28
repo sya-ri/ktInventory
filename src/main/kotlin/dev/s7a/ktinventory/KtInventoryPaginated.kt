@@ -11,7 +11,7 @@ abstract class KtInventoryPaginated(
     private val plugin: Plugin,
     line: Int,
 ) : KtInventoryBase(line) {
-    private val slots = mutableListOf<Int>()
+    private val paginates = mutableListOf<Int>()
 
     abstract val entries: List<KtInventoryButton<Entry>>
 
@@ -27,12 +27,12 @@ abstract class KtInventoryPaginated(
         super.button(slot, item)
     }
 
-    fun paginateSlot(vararg slot: Int) {
-        paginateSlot(slot.toList())
+    fun paginateSlot(vararg slots: Int) {
+        paginateSlot(slots.toList())
     }
 
-    fun paginateSlot(slot: Iterable<Int>) {
-        slots.addAll(slot)
+    fun paginateSlot(slots: Iterable<Int>) {
+        this.paginates.addAll(slots)
     }
 
     fun nextPageButton(
@@ -88,7 +88,7 @@ abstract class KtInventoryPaginated(
         player: HumanEntity,
         page: Int,
     ) {
-        val slots = this.slots
+        val slots = this.paginates
         val chunked = entries.chunked(slots.size)
         val lastPage = chunked.lastIndex
         val chunk =
