@@ -1,6 +1,5 @@
 package dev.s7a.ktinventory.soundchecker
 
-import dev.s7a.ktinventory.KtInventoryButton
 import dev.s7a.ktinventory.KtInventoryPaginated
 import dev.s7a.ktinventory.soundchecker.utils.itemStack
 import org.bukkit.Material
@@ -13,10 +12,10 @@ class SoundCheckInventory(
 ) : KtInventoryPaginated(plugin, 6) {
     override val entries =
         Registry.SOUNDS.map { sound ->
-            KtInventoryButton<Entry>(
+            createButton(
                 itemStack(Material.GRAY_DYE, "&6${sound.key.key}"),
             ) { event, _ ->
-                val player = event.whoClicked as? Player ?: return@KtInventoryButton
+                val player = event.whoClicked as? Player ?: return@createButton
                 player.playSound(player.location, sound, 1F, 1F)
             }
         }

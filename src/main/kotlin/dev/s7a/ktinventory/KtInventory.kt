@@ -2,7 +2,9 @@ package dev.s7a.ktinventory
 
 import org.bukkit.ChatColor
 import org.bukkit.entity.HumanEntity
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.InventoryHolder
+import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 
 abstract class KtInventory(
@@ -15,6 +17,11 @@ abstract class KtInventory(
     private val bukkitInventory by lazy {
         plugin.server.createInventory(this, line * 9, ChatColor.translateAlternateColorCodes('&', title()))
     }
+
+    fun createButton(
+        itemStack: ItemStack,
+        onClick: (InventoryClickEvent, KtInventory) -> Unit,
+    ) = KtInventoryButton(itemStack, onClick)
 
     final override fun button(
         slot: Int,
