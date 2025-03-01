@@ -71,9 +71,7 @@ abstract class KtInventoryBase(
         }
     }
 
-    open fun onOpen(event: InventoryOpenEvent) {}
-
-    fun onClick(event: InventoryClickEvent) {
+    fun handleClick(event: InventoryClickEvent) {
         val slot = event.slot
         val button = buttons[slot]
         if (button != null) {
@@ -83,6 +81,10 @@ abstract class KtInventoryBase(
             button.onClick(KtInventoryButton.ClickEvent(this, player, click, cursor))
         }
     }
+
+    open fun onOpen(event: InventoryOpenEvent) {}
+
+    open fun onClick(event: InventoryClickEvent) {}
 
     open fun onClose(event: InventoryCloseEvent) {}
 

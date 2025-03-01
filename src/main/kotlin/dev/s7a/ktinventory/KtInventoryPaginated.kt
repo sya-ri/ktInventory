@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory
 
 import org.bukkit.entity.HumanEntity
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.inventory.ItemStack
@@ -127,6 +128,8 @@ abstract class KtInventoryPaginated(
         }
 
         override fun onOpen(event: InventoryOpenEvent) = paginated.onOpen(event)
+
+        override fun onClick(event: InventoryClickEvent) = paginated.onClick(event)
 
         override fun onClose(event: InventoryCloseEvent) = paginated.onClose(event)
     }

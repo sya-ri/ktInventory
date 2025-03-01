@@ -34,6 +34,7 @@ internal class KtInventoryHandler(
                 event.isCancelled = true
             }
 
+            inventory.handleClick(event)
             inventory.onClick(event)
         }
     }
