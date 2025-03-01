@@ -3,5 +3,6 @@ rootProject.name = "ktInventory"
 include(
     ":examples:shared-storage",
     ":examples:simple-menu",
-    ":examples:sound-checker"
+    ":examples:complex-menu",
+    ":examples:sound-checker",
 )
