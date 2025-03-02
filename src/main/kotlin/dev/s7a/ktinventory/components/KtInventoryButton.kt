@@ -1,5 +1,6 @@
-package dev.s7a.ktinventory
+package dev.s7a.ktinventory.components
 
+import dev.s7a.ktinventory.KtInventoryBase
 import org.bukkit.entity.HumanEntity
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.inventory.ItemStack

@@ -1,5 +1,6 @@
 package dev.s7a.ktinventory
 
+import dev.s7a.ktinventory.components.KtInventoryButton
 import org.bukkit.entity.HumanEntity
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent

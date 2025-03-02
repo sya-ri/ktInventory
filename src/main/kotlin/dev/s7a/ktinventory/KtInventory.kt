@@ -1,5 +1,7 @@
 package dev.s7a.ktinventory
 
+import dev.s7a.ktinventory.components.KtInventoryButton
+import dev.s7a.ktinventory.components.KtInventoryStorable
 import org.bukkit.ChatColor
 import org.bukkit.entity.HumanEntity
 import org.bukkit.event.inventory.InventoryCloseEvent

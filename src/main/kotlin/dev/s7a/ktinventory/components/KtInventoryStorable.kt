@@ -1,5 +1,6 @@
-package dev.s7a.ktinventory
+package dev.s7a.ktinventory.components
 
+import dev.s7a.ktinventory.KtInventory
 import org.bukkit.inventory.ItemStack
 
 class KtInventoryStorable(
