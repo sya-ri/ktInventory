@@ -29,6 +29,9 @@ abstract class KtInventoryPaginated(
         item: KtInventoryButton<KtInventoryBase>,
     ) {
         super.button(slot, item)
+        pages.values.forEach { page ->
+            page.button(slot, item)
+        }
     }
 
     fun paginateSlot(vararg slots: Int) {
