@@ -1,4 +1,4 @@
-package dev.s7a.ktinventory.complexmenu.utils
+package dev.s7a.ktinventory.example
 
 import org.bukkit.ChatColor
 import org.bukkit.Material

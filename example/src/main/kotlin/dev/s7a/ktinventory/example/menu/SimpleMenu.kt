@@ -1,9 +1,9 @@
-package dev.s7a.ktinventory.simplemenu
+package dev.s7a.ktinventory.example.menu
 
 import dev.s7a.ktinventory.KtInventory
+import dev.s7a.ktinventory.example.itemStack
 import org.bukkit.Material
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 
 class SimpleMenu(
@@ -12,7 +12,7 @@ class SimpleMenu(
     override fun title() = "&0&lSelect where to teleport"
 
     init {
-        button(3, ItemStack(Material.RED_BED)) { event ->
+        button(3, itemStack(Material.RED_BED, "&cRespawn")) { event ->
             val player = event.player as? Player ?: return@button
             val respawnLocation = player.respawnLocation
             if (respawnLocation != null) {
@@ -22,7 +22,7 @@ class SimpleMenu(
             }
             player.closeInventory()
         }
-        button(5, ItemStack(Material.COMPASS)) { event ->
+        button(5, itemStack(Material.COMPASS, "&bWorldSpawn")) { event ->
             val player = event.player as? Player ?: return@button
             player.teleport(player.world.spawnLocation)
             player.closeInventory()

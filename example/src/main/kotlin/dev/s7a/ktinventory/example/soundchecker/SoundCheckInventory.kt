@@ -1,7 +1,7 @@
-package dev.s7a.ktinventory.soundchecker
+package dev.s7a.ktinventory.example.soundchecker
 
 import dev.s7a.ktinventory.KtInventoryPaginated
-import dev.s7a.ktinventory.soundchecker.utils.itemStack
+import dev.s7a.ktinventory.example.itemStack
 import org.bukkit.Material
 import org.bukkit.Registry
 import org.bukkit.entity.Player
