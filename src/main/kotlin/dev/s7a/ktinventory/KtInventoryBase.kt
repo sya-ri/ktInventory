@@ -90,4 +90,6 @@ abstract class KtInventoryBase(
     open fun onClose(event: InventoryCloseEvent) {}
 
     abstract fun open(player: HumanEntity)
+
+    abstract fun refresh()
 }
