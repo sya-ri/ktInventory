@@ -7,6 +7,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
+import java.util.concurrent.ConcurrentHashMap
 
 abstract class KtInventoryPaginated(
     private val plugin: Plugin,
@@ -15,6 +16,8 @@ abstract class KtInventoryPaginated(
     private val paginates = mutableListOf<Int>()
 
     abstract val entries: List<KtInventoryButton<Entry>>
+
+    private val pages = ConcurrentHashMap<Int, Entry>()
 
     abstract fun title(
         page: Int,
@@ -89,28 +92,31 @@ abstract class KtInventoryPaginated(
         player: HumanEntity,
         page: Int,
     ) {
-        val slots = this.paginates
-        val chunked = entries.chunked(slots.size)
+        val chunked = entries.chunked(this.paginates.size)
         val lastPage = chunked.lastIndex
-        val chunk =
-            when {
-                page == 0 && chunked.isEmpty() -> emptyList()
-                page < 0 -> return open(player, 0)
-                lastPage < page -> return open(player, lastPage)
-                else -> chunked[page]
+        when {
+            page < 0 -> open(player, 0)
+            page != 0 && lastPage < page -> open(player, lastPage)
+            else -> {
+                pages
+                    .computeIfAbsent(page) {
+                        val slots = this.paginates
+                        val buttons = this.buttons
+                        Entry(this, page, lastPage)
+                            .apply {
+                                val chunk = chunked.getOrNull(page).orEmpty()
+                                slots.forEachIndexed { index, slot ->
+                                    chunk.getOrNull(index)?.let {
+                                        button(slot, it)
+                                    }
+                                }
+                                buttons.forEach { (slot, item) ->
+                                    button(slot, item)
+                                }
+                            }
+                    }.open(player)
             }
-        val buttons = this.buttons
-        Entry(this, page, lastPage)
-            .apply {
-                slots.forEachIndexed { index, slot ->
-                    chunk.getOrNull(index)?.let {
-                        button(slot, it)
-                    }
-                }
-                buttons.forEach { (slot, item) ->
-                    button(slot, item)
-                }
-            }.open(player)
+        }
     }
 
     class Entry(
