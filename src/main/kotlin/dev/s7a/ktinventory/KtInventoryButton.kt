@@ -15,7 +15,7 @@ class KtInventoryButton<out T : KtInventoryBase> internal constructor(
         val cursor: ItemStack?,
     )
 
-    fun join(onClick: (ClickEvent<@UnsafeVariance T>) -> Unit) =
+    fun join(onClick: (ClickEvent<T>) -> Unit) =
         KtInventoryButton(itemStack) { state ->
             this.onClick(state)
             onClick(state)
