@@ -61,30 +61,31 @@ abstract class KtInventory(
 
     fun storable(
         initialize: () -> List<ItemStack?> = { emptyList() },
+        canEdit: Boolean = true,
         save: (List<ItemStack?>) -> Unit,
     ) {
-        storable(0 until line * 9, initialize, save)
+        storable(0 until line * 9, initialize, canEdit, save)
     }
 
     fun storable(
         vararg slots: Int,
         initialize: () -> List<ItemStack?> = { emptyList() },
+        canEdit: Boolean = true,
         save: (List<ItemStack?>) -> Unit,
     ) {
-        storable(slots.toList(), initialize, save)
+        storable(slots.toList(), initialize, canEdit, save)
     }
 
     fun storable(
         slots: Iterable<Int>,
         initialize: () -> List<ItemStack?> = { emptyList() },
+        canEdit: Boolean = true,
         save: (List<ItemStack?>) -> Unit,
-    ) = KtInventoryStorable(this, slots.toList(), save)
+    ) = KtInventoryStorable(this, slots.toList(), canEdit, save)
         .apply {
             update(initialize())
             _storables.add(this)
         }
-
-    fun isStorableSlot(slot: Int) = _storables.any { it.contains(slot) }
 
     fun saveStorables() {
         _storables.forEach(KtInventoryStorable::save)

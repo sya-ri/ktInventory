@@ -6,6 +6,7 @@ import org.bukkit.inventory.ItemStack
 class KtInventoryStorable internal constructor(
     val inventory: KtInventory,
     val slots: List<Int>,
+    var canEdit: Boolean,
     private val save: (List<ItemStack?>) -> Unit,
 ) {
     fun contains(slot: Int) = slots.contains(slot)

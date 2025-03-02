@@ -42,6 +42,11 @@ abstract class KtInventoryPaginated(
         this.paginates.addAll(slots)
     }
 
+    fun createButton(
+        itemStack: ItemStack,
+        onClick: (KtInventoryButton.ClickEvent<Entry>) -> Unit,
+    ) = KtInventoryButton(itemStack, onClick)
+
     fun nextPageButton(
         slot: Int,
         itemStack: ItemStack,
@@ -85,11 +90,6 @@ abstract class KtInventoryPaginated(
     final override fun open(player: HumanEntity) {
         open(player, 0)
     }
-
-    fun createButton(
-        itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<Entry>) -> Unit,
-    ) = KtInventoryButton(itemStack, onClick)
 
     fun open(
         player: HumanEntity,
