@@ -14,13 +14,13 @@ abstract class KtInventoryBase(
         require(line in 1..6) { "line must be between 1 and 6" }
     }
 
+    val size: Int
+        get() = line * 9
+
     private val _buttons = mutableMapOf<Int, KtInventoryButton<KtInventoryBase>>()
 
     val buttons
         get() = _buttons.toMap()
-
-    val size: Int
-        get() = line * 9
 
     fun button(
         vararg slot: Int,

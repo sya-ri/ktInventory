@@ -51,8 +51,8 @@ internal class KtInventoryHandler(
     fun on(event: InventoryCloseEvent) {
         val inventory = event.inventory.holder as? KtInventory ?: return
         inventory.onClose(event)
-        if (inventory.storableType.allowSave(event)) {
-            inventory.saveStorable()
+        if (inventory.storableOption.allowSave(event)) {
+            inventory.saveStorables()
         }
     }
 

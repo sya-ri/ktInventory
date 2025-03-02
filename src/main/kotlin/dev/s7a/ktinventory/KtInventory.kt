@@ -2,9 +2,9 @@ package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryStorable
+import dev.s7a.ktinventory.options.KtInventoryStorableOption
 import org.bukkit.ChatColor
 import org.bukkit.entity.HumanEntity
-import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
@@ -19,8 +19,6 @@ abstract class KtInventory(
     private val bukkitInventory by lazy {
         plugin.server.createInventory(this, line * 9, ChatColor.translateAlternateColorCodes('&', title()))
     }
-
-    private val storables = mutableSetOf<KtInventoryStorable>()
 
     fun getItem(slot: Int) = bukkitInventory.getItem(slot)
 
@@ -42,7 +40,17 @@ abstract class KtInventory(
         bukkitInventory.setItem(slot, item.itemStack)
     }
 
-    open val storableType: StorableType = StorableType.Default
+    final override fun open(player: HumanEntity) {
+        KtInventoryHandler.register(plugin)
+        player.openInventory(bukkitInventory)
+    }
+
+    private val _storables = mutableSetOf<KtInventoryStorable>()
+
+    val storables
+        get() = _storables.toSet()
+
+    open val storableOption: KtInventoryStorableOption = KtInventoryStorableOption.Default
 
     fun storable(
         initialize: () -> List<ItemStack?> = { emptyList() },
@@ -66,27 +74,14 @@ abstract class KtInventory(
     ) = KtInventoryStorable(this, slots.toList(), save)
         .apply {
             update(initialize())
-            storables.add(this)
+            _storables.add(this)
         }
 
-    final override fun open(player: HumanEntity) {
-        KtInventoryHandler.register(plugin)
-        player.openInventory(bukkitInventory)
-    }
+    fun isStorableSlot(slot: Int) = _storables.any { it.contains(slot) }
 
-    fun isStorableSlot(slot: Int) = storables.any { it.contains(slot) }
-
-    fun saveStorable() {
-        storables.forEach(KtInventoryStorable::save)
+    fun saveStorables() {
+        _storables.forEach(KtInventoryStorable::save)
     }
 
     final override fun getInventory() = bukkitInventory
-
-    interface StorableType {
-        fun allowSave(event: InventoryCloseEvent): Boolean
-
-        data object Default : StorableType {
-            override fun allowSave(event: InventoryCloseEvent) = event.viewers.size == 1
-        }
-    }
 }
