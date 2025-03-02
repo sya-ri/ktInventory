@@ -18,7 +18,14 @@ abstract class KtInventory(
         plugin.server.createInventory(this, line * 9, ChatColor.translateAlternateColorCodes('&', title()))
     }
 
-    private val storables = mutableSetOf<Storable>()
+    private val storables = mutableSetOf<KtInventoryStorable>()
+
+    fun getItem(slot: Int) = bukkitInventory.getItem(slot)
+
+    fun setItem(
+        slot: Int,
+        item: ItemStack?,
+    ) = bukkitInventory.setItem(slot, item)
 
     fun createButton(
         itemStack: ItemStack,
@@ -54,7 +61,7 @@ abstract class KtInventory(
         slots: Iterable<Int>,
         initialize: () -> List<ItemStack?> = { emptyList() },
         save: (List<ItemStack?>) -> Unit,
-    ) = Storable(this, slots.toList(), save)
+    ) = KtInventoryStorable(this, slots.toList(), save)
         .apply {
             update(initialize())
             storables.add(this)
@@ -68,36 +75,10 @@ abstract class KtInventory(
     fun isStorableSlot(slot: Int) = storables.any { it.contains(slot) }
 
     fun saveStorable() {
-        storables.forEach(Storable::save)
+        storables.forEach(KtInventoryStorable::save)
     }
 
     final override fun getInventory() = bukkitInventory
-
-    class Storable(
-        val inventory: KtInventory,
-        val slots: List<Int>,
-        private val save: (List<ItemStack?>) -> Unit,
-    ) {
-        fun contains(slot: Int) = slots.contains(slot)
-
-        fun update(items: List<ItemStack?>): List<ItemStack?> {
-            slots.forEachIndexed { index, slot ->
-                val item = items.getOrNull(index)
-                inventory.bukkitInventory.setItem(slot, item)
-            }
-            return items.drop(slots.size)
-        }
-
-        fun clear() {
-            update(emptyList())
-        }
-
-        fun get() = slots.map(inventory.bukkitInventory::getItem)
-
-        fun save() {
-            save(get())
-        }
-    }
 
     interface StorableType {
         fun allowSave(event: InventoryCloseEvent): Boolean
