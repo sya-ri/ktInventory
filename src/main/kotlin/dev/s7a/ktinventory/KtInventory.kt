@@ -57,7 +57,7 @@ abstract class KtInventory(
     val storables
         get() = _storables.toSet()
 
-    open val storableOption: KtInventoryStorableOption = KtInventoryStorableOption.Default
+    open val storableOption = KtInventoryStorableOption.Default
 
     fun storable(
         initialize: () -> List<ItemStack?> = { emptyList() },

@@ -21,7 +21,7 @@ internal class KtInventoryHandler(
 
     private fun KtInventory.isCancelClick(slot: Int): Boolean {
         if (size <= slot) return false
-
+        if (storableOption.viewOnly) return true
         return isStorableSlot(slot).not()
     }
 
