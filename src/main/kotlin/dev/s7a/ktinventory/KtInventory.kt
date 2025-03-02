@@ -30,7 +30,7 @@ abstract class KtInventory(
         item: KtInventoryButton<KtInventoryBase>,
     ) {
         super.button(slot, item)
-        bukkitInventory.setItem(slot, item.icon)
+        bukkitInventory.setItem(slot, item.itemStack)
     }
 
     open val storableType: StorableType = StorableType.Default
