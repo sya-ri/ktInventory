@@ -11,7 +11,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 
 abstract class KtInventory(
-    protected val plugin: Plugin,
+    private val plugin: Plugin,
     line: Int,
 ) : KtInventoryBase(line),
     InventoryHolder {
@@ -62,7 +62,7 @@ abstract class KtInventory(
     fun storable(
         initialize: () -> List<ItemStack?> = { emptyList() },
         canEdit: Boolean = true,
-        save: (List<ItemStack?>) -> Unit,
+        save: (List<ItemStack?>) -> Unit = {},
     ) {
         storable(0 until line * 9, initialize, canEdit, save)
     }
@@ -71,7 +71,7 @@ abstract class KtInventory(
         vararg slots: Int,
         initialize: () -> List<ItemStack?> = { emptyList() },
         canEdit: Boolean = true,
-        save: (List<ItemStack?>) -> Unit,
+        save: (List<ItemStack?>) -> Unit = {},
     ) {
         storable(slots.toList(), initialize, canEdit, save)
     }
@@ -80,7 +80,7 @@ abstract class KtInventory(
         slots: Iterable<Int>,
         initialize: () -> List<ItemStack?> = { emptyList() },
         canEdit: Boolean = true,
-        save: (List<ItemStack?>) -> Unit,
+        save: (List<ItemStack?>) -> Unit = {},
     ) = KtInventoryStorable(this, slots.toList(), canEdit, save)
         .apply {
             update(initialize())
