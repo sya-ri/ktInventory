@@ -3,7 +3,6 @@ package dev.s7a.ktinventory
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryStorable
 import dev.s7a.ktinventory.options.KtInventoryStorableOption
-import dev.s7a.ktinventory.util.resetableLazy
 import org.bukkit.ChatColor
 import org.bukkit.entity.HumanEntity
 import org.bukkit.inventory.InventoryHolder
@@ -17,12 +16,9 @@ abstract class KtInventory(
     InventoryHolder {
     abstract fun title(): String
 
-    private val bukkitInventoryRef =
-        resetableLazy {
-            plugin.server.createInventory(this, size, ChatColor.translateAlternateColorCodes('&', title()))
-        }
-
-    private val bukkitInventory by bukkitInventoryRef
+    private val bukkitInventory by lazy {
+        plugin.server.createInventory(this, size, ChatColor.translateAlternateColorCodes('&', title()))
+    }
 
     val viewers: List<HumanEntity>
         get() = bukkitInventory.viewers
@@ -89,14 +85,6 @@ abstract class KtInventory(
 
     fun saveStorables() {
         _storables.forEach(KtInventoryStorable::save)
-    }
-
-    override fun refresh() {
-        val viewers = this.viewers
-        bukkitInventoryRef.reset()
-        viewers.forEach { player ->
-            open(player)
-        }
     }
 
     final override fun getInventory() = bukkitInventory

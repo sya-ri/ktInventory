@@ -122,12 +122,6 @@ abstract class KtInventoryPaginated(
         }
     }
 
-    override fun refresh() {
-        val lastPages = pages.values.toList()
-        pages.clear()
-        lastPages.forEach(Entry::refresh)
-    }
-
     class Entry(
         private val paginated: KtInventoryPaginated,
         private val page: Int,
@@ -141,12 +135,6 @@ abstract class KtInventoryPaginated(
 
         fun openPreviousPage(player: HumanEntity) {
             paginated.open(player, page - 1)
-        }
-
-        override fun refresh() {
-            viewers.forEach { player ->
-                paginated.open(player, page)
-            }
         }
 
         override fun onOpen(event: InventoryOpenEvent) = paginated.onOpen(event)
