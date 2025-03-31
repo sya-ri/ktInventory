@@ -123,9 +123,9 @@ abstract class KtInventoryPaginated(
     }
 
     class Entry(
-        private val paginated: KtInventoryPaginated,
-        private val page: Int,
-        private val lastPage: Int,
+        val paginated: KtInventoryPaginated,
+        val page: Int,
+        val lastPage: Int,
     ) : KtInventory(paginated.plugin, paginated.line) {
         override fun title() = paginated.title(page, lastPage)
 
