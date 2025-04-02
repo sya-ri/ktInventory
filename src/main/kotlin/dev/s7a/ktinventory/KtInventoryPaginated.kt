@@ -1,13 +1,17 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
+import dev.s7a.ktinventory.util.getAllViewersPaginated
+import dev.s7a.ktinventory.util.getOpenInventoryPaginated
 import org.bukkit.entity.HumanEntity
+import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 
 abstract class KtInventoryPaginated(
     private val plugin: Plugin,
@@ -142,5 +146,48 @@ abstract class KtInventoryPaginated(
         override fun onClick(event: InventoryClickEvent) = paginated.onClick(event)
 
         override fun onClose(event: InventoryCloseEvent) = paginated.onClose(event)
+    }
+
+    abstract class Refreshable<T : KtInventoryPaginated>(
+        val clazz: KClass<T>,
+    ) {
+        open val refreshBehavior = RefreshBehavior.OpenFirst
+
+        abstract fun createNew(
+            player: Player,
+            inventory: Entry<T>,
+        ): T?
+
+        fun refresh(player: Player): Boolean {
+            val inventory = getOpenInventoryPaginated(clazz, player) ?: return false
+            refresh(player, inventory)
+            return true
+        }
+
+        fun refresh(
+            player: Player,
+            inventory: Entry<T>,
+        ) {
+            val newInventory = createNew(player, inventory)
+            if (newInventory != null) {
+                val page =
+                    when (refreshBehavior) {
+                        RefreshBehavior.Keep -> inventory.page
+                        RefreshBehavior.OpenFirst -> 0
+                    }
+                newInventory.open(player, page)
+            } else {
+                player.closeInventory()
+            }
+        }
+
+        fun refreshAll() {
+            getAllViewersPaginated(clazz).forEach(::refresh)
+        }
+
+        enum class RefreshBehavior {
+            Keep,
+            OpenFirst,
+        }
     }
 }

@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory.example
 
 import dev.s7a.ktinventory.example.menu.SimpleMenu
+import dev.s7a.ktinventory.example.settings.SettingsInventory
 import dev.s7a.ktinventory.example.soundchecker.SoundCheckInventory
 import dev.s7a.ktinventory.example.storage.StorageInventory
 import org.bukkit.command.Command
@@ -20,6 +21,10 @@ class ExamplePlugin : JavaPlugin() {
             when (args.getOrNull(0)) {
                 "menu" -> {
                     SimpleMenu(this).open(sender)
+                    return true
+                }
+                "settings" -> {
+                    SettingsInventory(this).open(sender)
                     return true
                 }
                 "sound" -> {
@@ -42,7 +47,7 @@ class ExamplePlugin : JavaPlugin() {
         args: Array<out String>,
     ): List<String>? =
         when (args.size) {
-            1 -> listOf("menu", "sound", "storage").filter { it.startsWith(args[0]) }
+            1 -> listOf("menu", "settings", "sound", "storage").filter { it.startsWith(args[0]) }
             else -> null
         }
 }

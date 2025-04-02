@@ -3,11 +3,15 @@ package dev.s7a.ktinventory
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryStorable
 import dev.s7a.ktinventory.options.KtInventoryStorableOption
+import dev.s7a.ktinventory.util.getAllViewers
+import dev.s7a.ktinventory.util.getOpenInventory
 import org.bukkit.ChatColor
 import org.bukkit.entity.HumanEntity
+import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
+import kotlin.reflect.KClass
 
 abstract class KtInventory(
     private val plugin: Plugin,
@@ -88,4 +92,35 @@ abstract class KtInventory(
     }
 
     final override fun getInventory() = bukkitInventory
+
+    abstract class Refreshable<T : KtInventory>(
+        val clazz: KClass<T>,
+    ) {
+        abstract fun createNew(
+            player: Player,
+            inventory: T,
+        ): T?
+
+        fun refresh(player: Player): Boolean {
+            val inventory = getOpenInventory(clazz, player) ?: return false
+            refresh(player, inventory)
+            return true
+        }
+
+        fun refresh(
+            player: Player,
+            inventory: T,
+        ) {
+            val newInventory = createNew(player, inventory)
+            if (newInventory != null) {
+                newInventory.open(player)
+            } else {
+                player.closeInventory()
+            }
+        }
+
+        fun refreshAll() {
+            getAllViewers(clazz).forEach(::refresh)
+        }
+    }
 }
