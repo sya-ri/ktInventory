@@ -22,13 +22,20 @@ fun getTopInventory(viewer: HumanEntity) =
         throw RuntimeException(e)
     }
 
-inline fun <reified T : KtInventory> getAllViewers(): List<Player> =
-    Bukkit.getOnlinePlayers().filter {
-        getTopInventory(it).holder is T
-    }
+inline fun <reified T : KtInventory> getAllViewers(): Map<Player, T> =
+    Bukkit
+        .getOnlinePlayers()
+        .mapNotNull { player ->
+            val inventory = getTopInventory(player).holder as? T ?: return@mapNotNull null
+            player to inventory
+        }.toMap()
 
-inline fun <reified T : KtInventoryPaginated> getAllViewers(page: Int? = null): List<Player> =
-    Bukkit.getOnlinePlayers().filter {
-        val entry = getTopInventory(it).holder as? KtInventoryPaginated.Entry ?: return@filter false
-        entry.paginated is T && (page?.let { it == entry.page } != false)
-    }
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T : KtInventoryPaginated> getAllViewersPaginated(): Map<Player, KtInventoryPaginated.Entry<T>> =
+    Bukkit
+        .getOnlinePlayers()
+        .mapNotNull { player ->
+            val inventory = getTopInventory(player).holder as? KtInventoryPaginated.Entry<*> ?: return@mapNotNull null
+            if (inventory.paginated !is T) return@mapNotNull null
+            player to (inventory as KtInventoryPaginated.Entry<T>)
+        }.toMap()

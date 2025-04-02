@@ -15,9 +15,9 @@ abstract class KtInventoryPaginated(
 ) : KtInventoryBase(line) {
     private val paginates = mutableListOf<Int>()
 
-    abstract val entries: List<KtInventoryButton<Entry>>
+    abstract val entries: List<KtInventoryButton<Entry<KtInventoryPaginated>>>
 
-    private val pages = ConcurrentHashMap<Int, Entry>()
+    private val pages = ConcurrentHashMap<Int, Entry<KtInventoryPaginated>>()
 
     abstract fun title(
         page: Int,
@@ -44,20 +44,20 @@ abstract class KtInventoryPaginated(
 
     fun createButton(
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<Entry>) -> Unit,
+        onClick: (KtInventoryButton.ClickEvent<Entry<KtInventoryPaginated>>) -> Unit,
     ) = KtInventoryButton(itemStack, onClick)
 
     fun nextPageButton(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<Entry>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<Entry<KtInventoryPaginated>>) -> Unit = {},
     ) {
         nextPageButton(slot, createButton(itemStack, onClick))
     }
 
     fun nextPageButton(
         slot: Int,
-        item: KtInventoryButton<Entry>,
+        item: KtInventoryButton<Entry<KtInventoryPaginated>>,
     ) {
         button(
             slot,
@@ -70,14 +70,14 @@ abstract class KtInventoryPaginated(
     fun previousPageButton(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<Entry>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<Entry<KtInventoryPaginated>>) -> Unit = {},
     ) {
         previousPageButton(slot, createButton(itemStack, onClick))
     }
 
     fun previousPageButton(
         slot: Int,
-        item: KtInventoryButton<Entry>,
+        item: KtInventoryButton<Entry<KtInventoryPaginated>>,
     ) {
         button(
             slot,
@@ -122,8 +122,8 @@ abstract class KtInventoryPaginated(
         }
     }
 
-    class Entry(
-        val paginated: KtInventoryPaginated,
+    class Entry<T : KtInventoryPaginated>(
+        val paginated: T,
         val page: Int,
         val lastPage: Int,
     ) : KtInventory(paginated.plugin, paginated.line) {
