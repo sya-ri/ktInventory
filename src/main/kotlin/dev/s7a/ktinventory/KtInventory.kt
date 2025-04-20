@@ -111,7 +111,7 @@ abstract class KtInventory(
             return true
         }
 
-        private fun refresh(
+        fun refresh(
             player: HumanEntity,
             inventory: T,
         ) {

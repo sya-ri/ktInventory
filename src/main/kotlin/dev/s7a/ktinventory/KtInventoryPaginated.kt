@@ -167,7 +167,7 @@ abstract class KtInventoryPaginated(
             return true
         }
 
-        private fun refresh(
+        fun refresh(
             player: HumanEntity,
             inventory: Entry<T>,
             behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
