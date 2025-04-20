@@ -151,27 +151,31 @@ abstract class KtInventoryPaginated(
     abstract class Refreshable<T : KtInventoryPaginated>(
         val clazz: KClass<T>,
     ) {
-        open val refreshBehavior = RefreshBehavior.OpenFirst
-
         abstract fun createNew(
             player: Player,
             inventory: Entry<T>,
         ): T?
 
-        fun refresh(player: Player): Boolean {
+        fun refresh(
+            player: Player,
+            behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
+            predicate: (Entry<T>) -> Boolean = { true },
+        ): Boolean {
             val inventory = getOpenInventoryPaginated(clazz, player) ?: return false
-            refresh(player, inventory)
+            if (predicate(inventory).not()) return false
+            refresh(player, inventory, behavior)
             return true
         }
 
-        fun refresh(
+        private fun refresh(
             player: Player,
             inventory: Entry<T>,
+            behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
         ) {
             val newInventory = createNew(player, inventory)
             if (newInventory != null) {
                 val page =
-                    when (refreshBehavior) {
+                    when (behavior) {
                         RefreshBehavior.Keep -> inventory.page
                         RefreshBehavior.OpenFirst -> 0
                     }
@@ -181,8 +185,16 @@ abstract class KtInventoryPaginated(
             }
         }
 
-        fun refreshAll() {
-            getAllViewersPaginated(clazz).forEach(::refresh)
+        fun refreshAll(
+            behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
+            predicate: (Player, Entry<T>) -> Boolean = { _, _ -> true },
+        ) {
+            getAllViewersPaginated(clazz)
+                .filter { (player, inventory) ->
+                    predicate(player, inventory)
+                }.forEach { (player, inventory) ->
+                    refresh(player, inventory, behavior)
+                }
         }
 
         enum class RefreshBehavior {

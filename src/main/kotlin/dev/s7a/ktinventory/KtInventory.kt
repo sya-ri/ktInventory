@@ -101,13 +101,17 @@ abstract class KtInventory(
             inventory: T,
         ): T?
 
-        fun refresh(player: Player): Boolean {
+        fun refresh(
+            player: Player,
+            predicate: (T) -> Boolean = { true },
+        ): Boolean {
             val inventory = getOpenInventory(clazz, player) ?: return false
+            if (predicate(inventory).not()) return false
             refresh(player, inventory)
             return true
         }
 
-        fun refresh(
+        private fun refresh(
             player: Player,
             inventory: T,
         ) {
@@ -119,8 +123,13 @@ abstract class KtInventory(
             }
         }
 
-        fun refreshAll() {
-            getAllViewers(clazz).forEach(::refresh)
+        fun refreshAll(predicate: (Player, T) -> Boolean = { _, _ -> true }) {
+            getAllViewers(clazz)
+                .filter { (player, inventory) ->
+                    predicate(player, inventory)
+                }.forEach { (player, inventory) ->
+                    refresh(player, inventory)
+                }
         }
     }
 }
