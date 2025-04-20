@@ -3,7 +3,7 @@ package dev.s7a.ktinventory.example.settings
 import dev.s7a.ktinventory.KtInventory
 import dev.s7a.ktinventory.example.itemStack
 import org.bukkit.Material
-import org.bukkit.entity.Player
+import org.bukkit.entity.HumanEntity
 import org.bukkit.plugin.Plugin
 
 class SettingsInventory(
@@ -26,7 +26,7 @@ class SettingsInventory(
         private var count = 0
 
         override fun createNew(
-            player: Player,
+            player: HumanEntity,
             inventory: SettingsInventory,
         ) = SettingsInventory(inventory.plugin)
     }

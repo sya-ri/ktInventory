@@ -152,12 +152,12 @@ abstract class KtInventoryPaginated(
         val clazz: KClass<T>,
     ) {
         abstract fun createNew(
-            player: Player,
+            player: HumanEntity,
             inventory: Entry<T>,
         ): T?
 
         fun refresh(
-            player: Player,
+            player: HumanEntity,
             behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
             predicate: (Entry<T>) -> Boolean = { true },
         ): Boolean {
@@ -168,7 +168,7 @@ abstract class KtInventoryPaginated(
         }
 
         private fun refresh(
-            player: Player,
+            player: HumanEntity,
             inventory: Entry<T>,
             behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
         ) {

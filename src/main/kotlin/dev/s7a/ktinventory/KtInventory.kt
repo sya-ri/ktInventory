@@ -97,12 +97,12 @@ abstract class KtInventory(
         val clazz: KClass<T>,
     ) {
         abstract fun createNew(
-            player: Player,
+            player: HumanEntity,
             inventory: T,
         ): T?
 
         fun refresh(
-            player: Player,
+            player: HumanEntity,
             predicate: (T) -> Boolean = { true },
         ): Boolean {
             val inventory = getOpenInventory(clazz, player) ?: return false
@@ -112,7 +112,7 @@ abstract class KtInventory(
         }
 
         private fun refresh(
-            player: Player,
+            player: HumanEntity,
             inventory: T,
         ) {
             val newInventory = createNew(player, inventory)

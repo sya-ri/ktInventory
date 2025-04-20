@@ -3,7 +3,6 @@ package dev.s7a.ktinventory.util
 import dev.s7a.ktinventory.KtInventory
 import dev.s7a.ktinventory.KtInventoryPaginated
 import org.bukkit.entity.HumanEntity
-import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
@@ -25,19 +24,19 @@ private fun getTopInventory(viewer: HumanEntity) =
 
 fun <T : KtInventory> getOpenInventory(
     clazz: KClass<T>,
-    player: Player,
+    player: HumanEntity,
 ): T? = clazz.safeCast(getTopInventory(player).holder)
 
-inline fun <reified T : KtInventory> getOpenInventory(player: Player) = getOpenInventory(T::class, player)
+inline fun <reified T : KtInventory> getOpenInventory(player: HumanEntity) = getOpenInventory(T::class, player)
 
 @Suppress("UNCHECKED_CAST")
 fun <T : KtInventoryPaginated> getOpenInventoryPaginated(
     clazz: KClass<T>,
-    player: Player,
+    player: HumanEntity,
 ): KtInventoryPaginated.Entry<T>? {
     val inventory = getTopInventory(player).holder as? KtInventoryPaginated.Entry<*> ?: return null
     if (clazz.isInstance(inventory.paginated)) return null
     return inventory as KtInventoryPaginated.Entry<T>
 }
 
-inline fun <reified T : KtInventoryPaginated> getOpenInventoryPaginated(player: Player) = getOpenInventoryPaginated(T::class, player)
+inline fun <reified T : KtInventoryPaginated> getOpenInventoryPaginated(player: HumanEntity) = getOpenInventoryPaginated(T::class, player)
