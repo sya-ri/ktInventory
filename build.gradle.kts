@@ -20,7 +20,7 @@ allprojects {
 
     repositories {
         mavenCentral()
-        maven("https://hub.spigotmc.org/nexus/content/groups/public/")
+        maven("https://repo.papermc.io/repository/maven-public/")
     }
 
     tasks.compileJava {
@@ -34,16 +34,8 @@ allprojects {
     }
 }
 
-repositories {
-    maven("https://repo.papermc.io/repository/maven-public/")
-}
-
 dependencies {
-    if (project.hasProperty("USE_SPIGOT_8")) {
-        compileOnly(libs.spigot8)
-    } else {
-        compileOnly(libs.spigotLatest)
-    }
+    compileOnly(libs.paper)
 }
 
 val sourceJar by tasks.registering(Jar::class) {

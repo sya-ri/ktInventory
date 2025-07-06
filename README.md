@@ -24,11 +24,41 @@ dependencies {
 
 ## Usage
 
+### For spigot servers
+
 ```kotlin
 class SimpleMenu(
     plugin: Plugin,
 ) : KtInventory(plugin, 1) {
     override fun title() = "&0&lSelect where to teleport"
+
+    init {
+        button(3, ItemStack(Material.RED_BED)) { event, _ ->
+            val player = event.whoClicked as? Player ?: return@button
+            val respawnLocation = player.respawnLocation
+            if (respawnLocation != null) {
+                player.teleport(respawnLocation)
+            } else {
+                player.sendMessage("Not found respawnLocation")
+            }
+            player.closeInventory()
+        }
+        button(5, ItemStack(Material.COMPASS)) { event, _ ->
+            val player = event.whoClicked as? Player ?: return@button
+            player.teleport(player.world.spawnLocation)
+            player.closeInventory()
+        }
+    }
+}
+```
+
+### For paper servers
+
+```kotlin
+class SimpleMenu(
+    plugin: Plugin,
+) : KtInventoryAdventure(plugin, 1) {
+    override fun title() = Component.text("Select where to teleport").color(NamedTextColor.BLACK).decorate(TextDecoration.BOLD)
 
     init {
         button(3, ItemStack(Material.RED_BED)) { event, _ ->

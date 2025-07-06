@@ -1,10 +1,10 @@
 package dev.s7a.ktinventory.components
 
-import dev.s7a.ktinventory.KtInventory
+import dev.s7a.ktinventory.AbstractKtInventory
 import org.bukkit.inventory.ItemStack
 
 class KtInventoryStorable internal constructor(
-    val inventory: KtInventory,
+    val inventory: AbstractKtInventory,
     val slots: List<Int>,
     var canEdit: Boolean,
     private val save: (List<ItemStack?>) -> Unit,

@@ -4,8 +4,6 @@ import dev.s7a.ktinventory.KtInventory
 import org.bukkit.Bukkit
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
-import kotlin.text.orEmpty
-import kotlin.text.set
 
 class StorageInventory(
     plugin: Plugin,

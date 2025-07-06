@@ -15,11 +15,11 @@ internal class KtInventoryHandler(
 ) : Listener {
     @EventHandler
     fun on(event: InventoryOpenEvent) {
-        val inventory = event.inventory.holder as? KtInventory ?: return
+        val inventory = event.inventory.holder as? AbstractKtInventory ?: return
         inventory.onOpen(event)
     }
 
-    private fun KtInventory.isCancelClick(slot: Int): Boolean {
+    private fun AbstractKtInventory.isCancelClick(slot: Int): Boolean {
         if (size <= slot) return false
         val storable = storables.firstOrNull { it.contains(slot) } ?: return true
         return storable.canEdit.not()
@@ -27,7 +27,7 @@ internal class KtInventoryHandler(
 
     @EventHandler
     fun on(event: InventoryClickEvent) {
-        val inventory = event.inventory.holder as? KtInventory ?: return
+        val inventory = event.inventory.holder as? AbstractKtInventory ?: return
 
         if (inventory.inventory === event.clickedInventory) {
             if (inventory.isCancelClick(event.slot)) {
@@ -41,7 +41,7 @@ internal class KtInventoryHandler(
 
     @EventHandler
     fun on(event: InventoryDragEvent) {
-        val inventory = event.inventory.holder as? KtInventory ?: return
+        val inventory = event.inventory.holder as? AbstractKtInventory ?: return
         if (event.rawSlots.any { inventory.isCancelClick(it) }) {
             event.isCancelled = true
         }
@@ -49,7 +49,7 @@ internal class KtInventoryHandler(
 
     @EventHandler
     fun on(event: InventoryCloseEvent) {
-        val inventory = event.inventory.holder as? KtInventory ?: return
+        val inventory = event.inventory.holder as? AbstractKtInventory ?: return
         inventory.onClose(event)
         if (inventory.storableOption.allowSave(event)) {
             inventory.saveStorables()
@@ -61,7 +61,7 @@ internal class KtInventoryHandler(
         if (plugin === event.plugin) {
             Bukkit.getOnlinePlayers().forEach { player ->
                 val inventory = player.openInventory.topInventory
-                if (inventory.holder !is KtInventory) return@forEach
+                if (inventory.holder !is AbstractKtInventory) return@forEach
                 player.closeInventory()
             }
             handlers.remove(plugin)

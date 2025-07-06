@@ -1,7 +1,7 @@
 package dev.s7a.ktinventory.util
 
-import dev.s7a.ktinventory.KtInventory
-import dev.s7a.ktinventory.KtInventoryPaginated
+import dev.s7a.ktinventory.AbstractKtInventory
+import dev.s7a.ktinventory.AbstractKtInventoryPaginated
 import org.bukkit.entity.HumanEntity
 import org.bukkit.inventory.Inventory
 import kotlin.reflect.KClass
@@ -22,21 +22,22 @@ private fun getTopInventory(viewer: HumanEntity) =
         throw RuntimeException(e)
     }
 
-fun <T : KtInventory> getOpenInventory(
+fun <T : AbstractKtInventory> getOpenInventory(
     clazz: KClass<T>,
     player: HumanEntity,
 ): T? = clazz.safeCast(getTopInventory(player).holder)
 
-inline fun <reified T : KtInventory> getOpenInventory(player: HumanEntity) = getOpenInventory(T::class, player)
+inline fun <reified T : AbstractKtInventory> getOpenInventory(player: HumanEntity) = getOpenInventory(T::class, player)
 
 @Suppress("UNCHECKED_CAST")
-fun <T : KtInventoryPaginated> getOpenInventoryPaginated(
+fun <T : AbstractKtInventoryPaginated<*>> getOpenInventoryPaginated(
     clazz: KClass<T>,
     player: HumanEntity,
-): KtInventoryPaginated.Entry<T>? {
-    val inventory = getTopInventory(player).holder as? KtInventoryPaginated.Entry<*> ?: return null
+): AbstractKtInventoryPaginated.Entry<T>? {
+    val inventory = getTopInventory(player).holder as? AbstractKtInventoryPaginated.Entry<*> ?: return null
     if (clazz.isInstance(inventory.paginated)) return null
-    return inventory as KtInventoryPaginated.Entry<T>
+    return inventory as AbstractKtInventoryPaginated.Entry<T>
 }
 
-inline fun <reified T : KtInventoryPaginated> getOpenInventoryPaginated(player: HumanEntity) = getOpenInventoryPaginated(T::class, player)
+inline fun <reified T : AbstractKtInventoryPaginated<*>> getOpenInventoryPaginated(player: HumanEntity) =
+    getOpenInventoryPaginated(T::class, player)

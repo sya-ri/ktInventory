@@ -1,6 +1,8 @@
 package dev.s7a.ktinventory.example
 
 import dev.s7a.ktinventory.example.menu.SimpleMenu
+import dev.s7a.ktinventory.example.paper.menu.SimpleMenuPaper
+import dev.s7a.ktinventory.example.paper.soundchecker.SoundCheckInventoryPaper
 import dev.s7a.ktinventory.example.settings.SettingsInventory
 import dev.s7a.ktinventory.example.soundchecker.SoundCheckInventory
 import dev.s7a.ktinventory.example.storage.StorageInventory
@@ -23,12 +25,20 @@ class ExamplePlugin : JavaPlugin() {
                     SimpleMenu(this).open(sender)
                     return true
                 }
+                "paper-menu" -> {
+                    SimpleMenuPaper(this).open(sender)
+                    return true
+                }
                 "settings" -> {
                     SettingsInventory(this).open(sender)
                     return true
                 }
                 "sound" -> {
                     SoundCheckInventory(this).open(sender)
+                    return true
+                }
+                "sound-paper" -> {
+                    SoundCheckInventoryPaper(this).open(sender)
                     return true
                 }
                 "storage" -> {

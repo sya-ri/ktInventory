@@ -25,7 +25,7 @@ abstract class KtInventoryBase(
     fun button(
         vararg slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<KtInventory>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<AbstractKtInventory>) -> Unit = {},
     ) {
         button(slot.toList(), itemStack, onClick)
     }
@@ -33,7 +33,7 @@ abstract class KtInventoryBase(
     fun button(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<KtInventory>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<AbstractKtInventory>) -> Unit = {},
     ) {
         button(slot, KtInventoryButton(itemStack, onClick))
     }
@@ -41,7 +41,7 @@ abstract class KtInventoryBase(
     fun button(
         slots: Iterable<Int>,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<KtInventory>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<AbstractKtInventory>) -> Unit = {},
     ) {
         slots.forEach { slot ->
             button(slot, KtInventoryButton(itemStack, onClick))

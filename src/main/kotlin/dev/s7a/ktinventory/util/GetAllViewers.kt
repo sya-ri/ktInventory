@@ -1,12 +1,12 @@
 package dev.s7a.ktinventory.util
 
-import dev.s7a.ktinventory.KtInventory
-import dev.s7a.ktinventory.KtInventoryPaginated
+import dev.s7a.ktinventory.AbstractKtInventory
+import dev.s7a.ktinventory.AbstractKtInventoryPaginated
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import kotlin.reflect.KClass
 
-fun <T : KtInventory> getAllViewers(clazz: KClass<T>): Map<Player, T> =
+fun <T : AbstractKtInventory> getAllViewers(clazz: KClass<T>): Map<Player, T> =
     Bukkit
         .getOnlinePlayers()
         .mapNotNull { player ->
@@ -14,9 +14,9 @@ fun <T : KtInventory> getAllViewers(clazz: KClass<T>): Map<Player, T> =
             player to inventory
         }.toMap()
 
-inline fun <reified T : KtInventory> getAllViewers() = getAllViewers(T::class)
+inline fun <reified T : AbstractKtInventory> getAllViewers() = getAllViewers(T::class)
 
-fun <T : KtInventoryPaginated> getAllViewersPaginated(clazz: KClass<T>): Map<Player, KtInventoryPaginated.Entry<T>> =
+fun <T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(clazz: KClass<T>): Map<Player, AbstractKtInventoryPaginated.Entry<T>> =
     Bukkit
         .getOnlinePlayers()
         .mapNotNull { player ->
@@ -24,4 +24,4 @@ fun <T : KtInventoryPaginated> getAllViewersPaginated(clazz: KClass<T>): Map<Pla
             player to (inventory)
         }.toMap()
 
-inline fun <reified T : KtInventoryPaginated> getAllViewersPaginated() = getAllViewersPaginated(T::class)
+inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated() = getAllViewersPaginated(T::class)
