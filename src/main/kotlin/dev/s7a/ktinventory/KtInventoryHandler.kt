@@ -36,12 +36,15 @@ internal class KtInventoryHandler(
 
             inventory.handleClick(event)
             inventory.onClick(event)
+        } else {
+            inventory.onClickBottom(event)
         }
     }
 
     @EventHandler
     fun on(event: InventoryDragEvent) {
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
+        inventory.onDrag(event)
         if (event.rawSlots.any { inventory.isCancelClick(it) }) {
             event.isCancelled = true
         }

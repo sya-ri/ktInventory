@@ -4,6 +4,7 @@ import dev.s7a.ktinventory.components.KtInventoryButton
 import org.bukkit.entity.HumanEntity
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.inventory.ItemStack
 
@@ -86,6 +87,10 @@ abstract class KtInventoryBase(
     open fun onOpen(event: InventoryOpenEvent) {}
 
     open fun onClick(event: InventoryClickEvent) {}
+
+    open fun onClickBottom(event: InventoryClickEvent) {}
+
+    open fun onDrag(event: InventoryDragEvent) {}
 
     open fun onClose(event: InventoryCloseEvent) {}
 
