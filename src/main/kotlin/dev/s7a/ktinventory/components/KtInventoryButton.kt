@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack
 class KtInventoryButton<out T : KtInventoryBase> internal constructor(
     val itemStack: ItemStack,
     val onClick: (ClickEvent<@UnsafeVariance T>) -> Unit,
-) {
+) : KtInventoryComponent() {
     class ClickEvent<out T : KtInventoryBase>(
         val inventory: T,
         private val event: InventoryClickEvent,
@@ -18,14 +18,26 @@ class KtInventoryButton<out T : KtInventoryBase> internal constructor(
         val player
             get() = event.whoClicked
 
-        val click
-            get() = event.click
+        val slotType
+            get() = event.slotType
+
+        val cursor
+            get() = event.cursor
+
+        val currentItem
+            get() = event.currentItem
+
+        val slot
+            get() = event.slot
 
         val hotbarButton
             get() = event.hotbarButton
 
-        val slot
-            get() = event.slot
+        val action
+            get() = event.action
+
+        val click
+            get() = event.click
     }
 
     fun join(onClick: (ClickEvent<T>) -> Unit) =

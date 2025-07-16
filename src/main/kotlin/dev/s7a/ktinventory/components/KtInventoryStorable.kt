@@ -13,7 +13,7 @@ class KtInventoryStorable internal constructor(
     val onPreDrag: (DragEvent) -> EventResult,
     val onDrag: (DragEvent) -> Unit,
     private val save: (List<ItemStack?>) -> Unit,
-) {
+) : KtInventoryComponent() {
     fun contains(slot: Int) = slots.contains(slot)
 
     fun update(items: List<ItemStack?>): List<ItemStack?> {
@@ -43,14 +43,26 @@ class KtInventoryStorable internal constructor(
         val player
             get() = event.whoClicked
 
-        val click
-            get() = event.click
+        val slotType
+            get() = event.slotType
+
+        val cursor
+            get() = event.cursor
+
+        val currentItem
+            get() = event.currentItem
+
+        val slot
+            get() = event.slot
 
         val hotbarButton
             get() = event.hotbarButton
 
-        val slot
-            get() = event.slot
+        val action
+            get() = event.action
+
+        val click
+            get() = event.click
     }
 
     class DragEvent(
@@ -62,17 +74,23 @@ class KtInventoryStorable internal constructor(
         val player
             get() = event.whoClicked
 
-        val slots
-            get() = event.rawSlots
-
         val newItems
             get() = event.newItems
+
+        val rawSlots
+            get() = event.rawSlots
+
+        val slots
+            get() = event.inventorySlots
 
         val cursor
             get() = event.cursor
 
         val oldCursor
             get() = event.oldCursor
+
+        val type
+            get() = event.type
     }
 
     enum class EventResult {
