@@ -30,15 +30,15 @@ internal class KtInventoryHandler(
             val storableClickEvent = KtInventoryStorable.ClickEvent(event)
             if (storables.isEmpty() || storables.map { it.onPreClick(storableClickEvent) }.contains(KtInventoryStorable.EventResult.Deny)) {
                 event.isCancelled = true
+            } else {
+                // Storable OnClick
+                storables.forEach { storable ->
+                    storable.onClick(storableClickEvent)
+                }
             }
 
             // Button
             inventory.handleClick(event)
-
-            // Storable OnClick
-            storables.forEach { storable ->
-                storable.onClick(storableClickEvent)
-            }
 
             // Inventory OnClick
             inventory.onClick(event)
@@ -56,11 +56,11 @@ internal class KtInventoryHandler(
         val storableDragEvent = KtInventoryStorable.DragEvent(event)
         if (storables.isEmpty() || storables.map { it.onPreDrag(storableDragEvent) }.contains(KtInventoryStorable.EventResult.Deny)) {
             event.isCancelled = true
-        }
-
-        // Storable Drag
-        storables.forEach { storable ->
-            storable.onDrag(storableDragEvent)
+        } else {
+            // Storable Drag
+            storables.forEach { storable ->
+                storable.onDrag(storableDragEvent)
+            }
         }
 
         // Inventory OnDrag
