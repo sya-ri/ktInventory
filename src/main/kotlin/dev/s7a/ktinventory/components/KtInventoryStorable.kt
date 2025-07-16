@@ -1,12 +1,14 @@
 package dev.s7a.ktinventory.components
 
 import dev.s7a.ktinventory.AbstractKtInventory
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 
 class KtInventoryStorable internal constructor(
     val inventory: AbstractKtInventory,
     val slots: List<Int>,
     var canEdit: Boolean,
+    val onClick: (InventoryClickEvent) -> Unit,
     private val save: (List<ItemStack?>) -> Unit,
 ) {
     fun contains(slot: Int) = slots.contains(slot)

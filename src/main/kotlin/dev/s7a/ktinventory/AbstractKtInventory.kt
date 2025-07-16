@@ -7,6 +7,7 @@ import dev.s7a.ktinventory.util.getAllViewers
 import dev.s7a.ktinventory.util.getOpenInventory
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
@@ -55,26 +56,29 @@ abstract class AbstractKtInventory(
     fun storable(
         initialize: () -> List<ItemStack?> = { emptyList() },
         canEdit: Boolean = true,
+        onClick: (InventoryClickEvent) -> Unit = {},
         save: (List<ItemStack?>) -> Unit = {},
     ) {
-        storable(0 until line * 9, initialize, canEdit, save)
+        storable(0 until line * 9, initialize, canEdit, onClick, save)
     }
 
     fun storable(
         vararg slots: Int,
         initialize: () -> List<ItemStack?> = { emptyList() },
         canEdit: Boolean = true,
+        onClick: (InventoryClickEvent) -> Unit = {},
         save: (List<ItemStack?>) -> Unit = {},
     ) {
-        storable(slots.toList(), initialize, canEdit, save)
+        storable(slots.toList(), initialize, canEdit, onClick, save)
     }
 
     fun storable(
         slots: Iterable<Int>,
         initialize: () -> List<ItemStack?> = { emptyList() },
         canEdit: Boolean = true,
+        onClick: (InventoryClickEvent) -> Unit = {},
         save: (List<ItemStack?>) -> Unit = {},
-    ) = KtInventoryStorable(this, slots.toList(), canEdit, save)
+    ) = KtInventoryStorable(this, slots.toList(), canEdit, onClick, save)
         .apply {
             update(initialize())
             _storables.add(this)

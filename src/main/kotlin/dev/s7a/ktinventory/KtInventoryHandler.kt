@@ -1,5 +1,6 @@
 package dev.s7a.ktinventory
 
+import dev.s7a.ktinventory.components.KtInventoryStorable
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -21,8 +22,7 @@ internal class KtInventoryHandler(
 
     private fun AbstractKtInventory.isCancelClick(slot: Int): Boolean {
         if (size <= slot) return false
-        val storable = storables.firstOrNull { it.contains(slot) } ?: return true
-        return storable.canEdit.not()
+        return storables.filter { it.contains(slot) }.all(KtInventoryStorable::canEdit).not()
     }
 
     @EventHandler
@@ -30,11 +30,17 @@ internal class KtInventoryHandler(
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
 
         if (inventory.inventory === event.clickedInventory) {
-            if (inventory.isCancelClick(event.slot)) {
+            val slot = event.slot
+            if (inventory.isCancelClick(slot)) {
                 event.isCancelled = true
             }
 
             inventory.handleClick(event)
+            inventory.storables.forEach { storable ->
+                if (storable.contains(slot)) {
+                    storable.onClick(event)
+                }
+            }
             inventory.onClick(event)
         } else {
             inventory.onClickBottom(event)
