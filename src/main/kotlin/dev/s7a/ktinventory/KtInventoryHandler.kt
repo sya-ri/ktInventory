@@ -20,27 +20,29 @@ internal class KtInventoryHandler(
         inventory.onOpen(event)
     }
 
-    private fun AbstractKtInventory.isCancelClick(slot: Int): Boolean {
-        if (size <= slot) return false
-        return storables.filter { it.contains(slot) }.all(KtInventoryStorable::canEdit).not()
-    }
-
     @EventHandler
     fun on(event: InventoryClickEvent) {
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
 
         if (inventory.inventory === event.clickedInventory) {
             val slot = event.slot
-            if (inventory.isCancelClick(slot)) {
+
+            // Storable OnPreClick
+            val storables = inventory.getStorables(slot)
+            val storableClickEvent = KtInventoryStorable.ClickEvent(event.whoClicked, event.click, event.currentItem, slot)
+            if (storables.map { it.onPreClick(storableClickEvent) }.contains(KtInventoryStorable.EventResult.Deny)) {
                 event.isCancelled = true
             }
 
+            // Button
             inventory.handleClick(event)
-            inventory.storables.forEach { storable ->
-                if (storable.contains(slot)) {
-                    storable.onClick(event)
-                }
+
+            // Storable OnClick
+            storables.forEach { storable ->
+                storable.onClick(storableClickEvent)
             }
+
+            // Inventory OnClick
             inventory.onClick(event)
         } else {
             inventory.onClickBottom(event)
@@ -50,19 +52,35 @@ internal class KtInventoryHandler(
     @EventHandler
     fun on(event: InventoryDragEvent) {
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
-        inventory.onDrag(event)
-        if (event.rawSlots.any { inventory.isCancelClick(it) }) {
+
+        // Storable PreDrag
+        val slots = event.rawSlots
+        val storables = inventory.getStorables(slots)
+        val storableDragEvent = KtInventoryStorable.DragEvent(event.whoClicked, event.cursor, event.oldCursor, slots)
+        if (storables.map { it.onPreDrag(storableDragEvent) }.contains(KtInventoryStorable.EventResult.Deny)) {
             event.isCancelled = true
         }
+
+        // Storable Drag
+        storables.forEach { storable ->
+            storable.onDrag(storableDragEvent)
+        }
+
+        // Inventory OnDrag
+        inventory.onDrag(event)
     }
 
     @EventHandler
     fun on(event: InventoryCloseEvent) {
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
-        inventory.onClose(event)
+
+        // Storable Save
         if (inventory.storableOption.allowSave(event)) {
             inventory.saveStorables()
         }
+
+        // Inventory OnClose
+        inventory.onClose(event)
     }
 
     @EventHandler

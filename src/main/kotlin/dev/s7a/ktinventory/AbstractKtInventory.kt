@@ -7,7 +7,6 @@ import dev.s7a.ktinventory.util.getAllViewers
 import dev.s7a.ktinventory.util.getOpenInventory
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
-import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
@@ -51,34 +50,44 @@ abstract class AbstractKtInventory(
     val storables
         get() = _storables.toSet()
 
+    fun getStorables(slot: Int) = storables.filter { it.slots.contains(slot) }
+
+    fun getStorables(slots: Iterable<Int>) = storables.filter { it.slots.any(slots::contains) }.distinct()
+
     open val storableOption = KtInventoryStorableOption.Default
 
     fun storable(
         initialize: () -> List<ItemStack?> = { emptyList() },
-        canEdit: Boolean = true,
-        onClick: (InventoryClickEvent) -> Unit = {},
+        onPreClick: (KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = { KtInventoryStorable.EventResult.Allow },
+        onClick: (KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: (KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = { KtInventoryStorable.EventResult.Allow },
+        onDrag: (KtInventoryStorable.DragEvent) -> Unit = {},
         save: (List<ItemStack?>) -> Unit = {},
     ) {
-        storable(0 until line * 9, initialize, canEdit, onClick, save)
+        storable(0 until line * 9, initialize, onPreClick, onClick, onPreDrag, onDrag, save)
     }
 
     fun storable(
         vararg slots: Int,
         initialize: () -> List<ItemStack?> = { emptyList() },
-        canEdit: Boolean = true,
-        onClick: (InventoryClickEvent) -> Unit = {},
+        onPreClick: (KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = { KtInventoryStorable.EventResult.Allow },
+        onClick: (KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: (KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = { KtInventoryStorable.EventResult.Allow },
+        onDrag: (KtInventoryStorable.DragEvent) -> Unit = {},
         save: (List<ItemStack?>) -> Unit = {},
     ) {
-        storable(slots.toList(), initialize, canEdit, onClick, save)
+        storable(slots.toList(), initialize, onPreClick, onClick, onPreDrag, onDrag, save)
     }
 
     fun storable(
         slots: Iterable<Int>,
         initialize: () -> List<ItemStack?> = { emptyList() },
-        canEdit: Boolean = true,
-        onClick: (InventoryClickEvent) -> Unit = {},
+        onPreClick: (KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = { KtInventoryStorable.EventResult.Allow },
+        onClick: (KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: (KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = { KtInventoryStorable.EventResult.Allow },
+        onDrag: (KtInventoryStorable.DragEvent) -> Unit = {},
         save: (List<ItemStack?>) -> Unit = {},
-    ) = KtInventoryStorable(this, slots.toList(), canEdit, onClick, save)
+    ) = KtInventoryStorable(this, slots.toList(), onPreClick, onClick, onPreDrag, onDrag, save)
         .apply {
             update(initialize())
             _storables.add(this)

@@ -1,14 +1,17 @@
 package dev.s7a.ktinventory.components
 
 import dev.s7a.ktinventory.AbstractKtInventory
-import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.entity.HumanEntity
+import org.bukkit.event.inventory.ClickType
 import org.bukkit.inventory.ItemStack
 
 class KtInventoryStorable internal constructor(
     val inventory: AbstractKtInventory,
     val slots: List<Int>,
-    var canEdit: Boolean,
-    val onClick: (InventoryClickEvent) -> Unit,
+    val onPreClick: (ClickEvent) -> EventResult,
+    val onClick: (ClickEvent) -> Unit,
+    val onPreDrag: (DragEvent) -> EventResult,
+    val onDrag: (DragEvent) -> Unit,
     private val save: (List<ItemStack?>) -> Unit,
 ) {
     fun contains(slot: Int) = slots.contains(slot)
@@ -29,5 +32,24 @@ class KtInventoryStorable internal constructor(
 
     fun save() {
         save(get())
+    }
+
+    data class ClickEvent(
+        val player: HumanEntity,
+        val click: ClickType,
+        val cursor: ItemStack?,
+        val slot: Int,
+    )
+
+    data class DragEvent(
+        val player: HumanEntity,
+        val cursor: ItemStack?,
+        val oldCursor: ItemStack,
+        val slots: Set<Int>,
+    )
+
+    enum class EventResult {
+        Allow,
+        Deny,
     }
 }
