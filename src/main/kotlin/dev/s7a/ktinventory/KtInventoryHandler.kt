@@ -52,7 +52,7 @@ internal class KtInventoryHandler(
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
 
         // Storable PreDrag
-        val storables = inventory.getStorables(event.rawSlots)
+        val storables = inventory.getStorables(event.inventorySlots)
         val storableDragEvent = KtInventoryStorable.DragEvent(event)
         if (storables.map { it.onPreDrag(storableDragEvent) }.contains(KtInventoryStorable.EventResult.Deny)) {
             event.isCancelled = true
