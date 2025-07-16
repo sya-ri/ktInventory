@@ -77,10 +77,7 @@ abstract class KtInventoryBase(
         val slot = event.slot
         val button = buttons[slot]
         if (button != null) {
-            val player = event.whoClicked
-            val click = event.click
-            val cursor = event.cursor
-            button.onClick(KtInventoryButton.ClickEvent(this, player, click, cursor))
+            button.onClick(KtInventoryButton.ClickEvent(this, event))
         }
     }
 

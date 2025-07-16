@@ -65,8 +65,8 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
     ) {
         button(
             slot,
-            item.join { (inventory, player) ->
-                inventory.openNextPage(player)
+            item.join { event ->
+                event.inventory.openNextPage(event.player)
             },
         )
     }
@@ -85,8 +85,8 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
     ) {
         button(
             slot,
-            item.join { (inventory, player) ->
-                inventory.openPreviousPage(player)
+            item.join { event ->
+                event.inventory.openPreviousPage(event.player)
             },
         )
     }

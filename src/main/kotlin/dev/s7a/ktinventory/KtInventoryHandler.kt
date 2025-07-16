@@ -25,11 +25,9 @@ internal class KtInventoryHandler(
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
 
         if (inventory.inventory === event.clickedInventory) {
-            val slot = event.slot
-
             // Storable OnPreClick
-            val storables = inventory.getStorables(slot)
-            val storableClickEvent = KtInventoryStorable.ClickEvent(event.whoClicked, event.click, event.currentItem, slot)
+            val storables = inventory.getStorables(event.slot)
+            val storableClickEvent = KtInventoryStorable.ClickEvent(event)
             if (storables.map { it.onPreClick(storableClickEvent) }.contains(KtInventoryStorable.EventResult.Deny)) {
                 event.isCancelled = true
             }
@@ -54,9 +52,8 @@ internal class KtInventoryHandler(
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
 
         // Storable PreDrag
-        val slots = event.rawSlots
-        val storables = inventory.getStorables(slots)
-        val storableDragEvent = KtInventoryStorable.DragEvent(event.whoClicked, event.cursor, event.oldCursor, slots)
+        val storables = inventory.getStorables(event.rawSlots)
+        val storableDragEvent = KtInventoryStorable.DragEvent(event)
         if (storables.map { it.onPreDrag(storableDragEvent) }.contains(KtInventoryStorable.EventResult.Deny)) {
             event.isCancelled = true
         }

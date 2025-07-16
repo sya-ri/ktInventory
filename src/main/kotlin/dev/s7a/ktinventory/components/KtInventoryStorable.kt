@@ -1,8 +1,8 @@
 package dev.s7a.ktinventory.components
 
 import dev.s7a.ktinventory.AbstractKtInventory
-import org.bukkit.entity.HumanEntity
-import org.bukkit.event.inventory.ClickType
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.inventory.ItemStack
 
 class KtInventoryStorable internal constructor(
@@ -34,19 +34,46 @@ class KtInventoryStorable internal constructor(
         save(get())
     }
 
-    data class ClickEvent(
-        val player: HumanEntity,
-        val click: ClickType,
-        val cursor: ItemStack?,
-        val slot: Int,
-    )
+    class ClickEvent(
+        private val event: InventoryClickEvent,
+    ) {
+        @Deprecated("Use wrapper")
+        fun unsafe() = event
 
-    data class DragEvent(
-        val player: HumanEntity,
-        val cursor: ItemStack?,
-        val oldCursor: ItemStack,
-        val slots: Set<Int>,
-    )
+        val player
+            get() = event.whoClicked
+
+        val click
+            get() = event.click
+
+        val hotbarButton
+            get() = event.hotbarButton
+
+        val slot
+            get() = event.slot
+    }
+
+    class DragEvent(
+        private val event: InventoryDragEvent,
+    ) {
+        @Deprecated("Use wrapper")
+        fun unsafe() = event
+
+        val player
+            get() = event.whoClicked
+
+        val slots
+            get() = event.rawSlots
+
+        val newItems
+            get() = event.newItems
+
+        val cursor
+            get() = event.cursor
+
+        val oldCursor
+            get() = event.oldCursor
+    }
 
     enum class EventResult {
         Allow,
