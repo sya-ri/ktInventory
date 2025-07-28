@@ -14,7 +14,7 @@ Spigot library with Kotlin for easy inventory creation and event handling
 
 ```kotlin
 repositories {
-    maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
 }
 
 dependencies {
