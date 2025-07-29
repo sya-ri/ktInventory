@@ -8,6 +8,8 @@ inline fun buildStorableOption(block: KtInventoryStorableOption.Builder.() -> Un
 interface KtInventoryStorableOption {
     fun allowSave(event: InventoryCloseEvent): Boolean
 
+    fun onSave()
+
     companion object {
         val Default = buildStorableOption {}
     }
@@ -17,13 +19,21 @@ interface KtInventoryStorableOption {
             event.viewers.size == 1
         }
 
+        private var onSave: () -> Unit = {}
+
         fun allowSave(block: (event: InventoryCloseEvent) -> Boolean) {
             this.allowSave = block
+        }
+
+        fun onSave(block: () -> Unit) {
+            this.onSave = block
         }
 
         fun build() =
             object : KtInventoryStorableOption {
                 override fun allowSave(event: InventoryCloseEvent) = this@Builder.allowSave(event)
+
+                override fun onSave() = this@Builder.onSave()
             }
     }
 }

@@ -95,6 +95,7 @@ abstract class AbstractKtInventory(
 
     fun saveStorables() {
         _storables.forEach(KtInventoryStorable::save)
+        storableOption.onSave()
     }
 
     abstract class Refreshable<T : AbstractKtInventory>(
