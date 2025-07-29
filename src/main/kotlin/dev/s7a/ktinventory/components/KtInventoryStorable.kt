@@ -28,7 +28,11 @@ class KtInventoryStorable internal constructor(
         update(emptyList())
     }
 
-    fun get() = slots.map(inventory::getItem)
+    fun get() =
+        slots.map(inventory::getItem).map {
+            // AIR -> null
+            it?.takeUnless { it.type.isAir }
+        }
 
     fun save() {
         save(get())
