@@ -270,7 +270,7 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
      */
     abstract class Refreshable<T : AbstractKtInventoryPaginated<*>>(
         val clazz: KClass<T>,
-    ) {
+    ) : RefreshableInventory<Entry<T>> {
         /**
          * Creates new inventory instance
          *
@@ -284,6 +284,16 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
             inventory: Entry<T>,
         ): T?
 
+        final override fun refresh(
+            player: HumanEntity,
+            predicate: (Entry<T>) -> Boolean,
+        ) = refresh(player, RefreshBehavior.OpenFirst, predicate)
+
+        final override fun refresh(
+            player: HumanEntity,
+            inventory: Entry<T>,
+        ) = refresh(player, inventory, RefreshBehavior.OpenFirst)
+
         /**
          * Refreshes inventory for a player if predicate matches
          *
@@ -295,7 +305,7 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
          */
         fun refresh(
             player: HumanEntity,
-            behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
+            behavior: RefreshBehavior,
             predicate: (Entry<T>) -> Boolean = { true },
         ): Boolean {
             val inventory = getOpenInventoryPaginated(clazz, player) ?: return false
@@ -329,6 +339,8 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
                 player.closeInventory()
             }
         }
+
+        final override fun refreshAll(predicate: (Player, Entry<T>) -> Boolean) = refreshAll(RefreshBehavior.OpenFirst, predicate)
 
         /**
          * Refreshes inventory for all matching viewers

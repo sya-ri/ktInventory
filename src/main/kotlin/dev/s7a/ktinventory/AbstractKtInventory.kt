@@ -205,7 +205,7 @@ abstract class AbstractKtInventory(
      */
     abstract class Refreshable<T : AbstractKtInventory>(
         val clazz: KClass<T>,
-    ) {
+    ) : RefreshableInventory<T> {
         /**
          * Creates a new instance of the inventory for refreshing.
          *
@@ -219,17 +219,9 @@ abstract class AbstractKtInventory(
             inventory: T,
         ): T?
 
-        /**
-         * Refreshes the inventory for a player if it matches the predicate.
-         *
-         * @param player The player whose inventory to refresh
-         * @param predicate Optional predicate to check if refresh should occur
-         * @return True if refresh occurred, false otherwise
-         * @since 2.0.0
-         */
-        fun refresh(
+        final override fun refresh(
             player: HumanEntity,
-            predicate: (T) -> Boolean = { true },
+            predicate: (T) -> Boolean,
         ): Boolean {
             val inventory = getOpenInventory(clazz, player) ?: return false
             if (predicate(inventory).not()) return false
@@ -237,14 +229,7 @@ abstract class AbstractKtInventory(
             return true
         }
 
-        /**
-         * Refreshes a specific inventory instance for a player.
-         *
-         * @param player The player whose inventory to refresh
-         * @param inventory The inventory instance to refresh
-         * @since 2.0.0
-         */
-        fun refresh(
+        final override fun refresh(
             player: HumanEntity,
             inventory: T,
         ) {
@@ -256,13 +241,7 @@ abstract class AbstractKtInventory(
             }
         }
 
-        /**
-         * Refreshes the inventory for all players viewing it.
-         *
-         * @param predicate Optional predicate to filter which players/inventories to refresh
-         * @since 2.0.0
-         */
-        fun refreshAll(predicate: (Player, T) -> Boolean = { _, _ -> true }) {
+        final override fun refreshAll(predicate: (Player, T) -> Boolean) {
             getAllViewers(clazz)
                 .filter { (player, inventory) ->
                     predicate(player, inventory)
