@@ -2,6 +2,9 @@ package dev.s7a.ktinventory.util
 
 import dev.s7a.ktinventory.AbstractKtInventory
 import dev.s7a.ktinventory.AbstractKtInventoryPaginated
+import dev.s7a.ktinventory.HasParentInventory
+import dev.s7a.ktinventory.KtInventory
+import dev.s7a.ktinventory.ParentInventory
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import kotlin.reflect.KClass
@@ -55,3 +58,24 @@ fun <T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(clazz: KClass<T
  * @since 2.0.0
  */
 inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated() = getAllViewersPaginated(T::class)
+
+
+/**
+ * Gets all online players currently viewing an inventory or child inventory of the specified parent type.
+ * This function searches through the inventory hierarchy to find parent inventories of the specified type.
+ *
+ * @param T The type of parent inventory
+ * @return Map of players to their open parent inventories of type T
+ * @since 2.0.0
+ */
+inline fun <reified T : ParentInventory> getAllViewersDeeply() =
+    getAllViewers<KtInventory>()
+        .mapNotNull { (player, inventory) ->
+            when (inventory) {
+                is T -> inventory
+                is HasParentInventory<*> -> inventory.parentInventory as? T
+                else -> null
+            }?.let {
+                player to it
+            }
+        }.toMap()
