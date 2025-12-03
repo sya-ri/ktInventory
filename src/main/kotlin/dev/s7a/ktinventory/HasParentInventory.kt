@@ -1,6 +1,5 @@
 package dev.s7a.ktinventory
 
-
 /**
  * Interface for objects that have a parent inventory.
  *

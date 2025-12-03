@@ -50,6 +50,7 @@ abstract class KtInventoryPaginated(
         page: Int,
         lastPage: Int,
     ) : AbstractKtInventoryPaginated.Entry<T>(paginated, page, lastPage) {
+        @Suppress("DEPRECATION")
         private val _inventory by lazy {
             paginated.plugin.server.createInventory(
                 this,

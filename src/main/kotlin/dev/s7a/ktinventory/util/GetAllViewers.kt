@@ -59,7 +59,6 @@ fun <T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(clazz: KClass<T
  */
 inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated() = getAllViewersPaginated(T::class)
 
-
 /**
  * Gets all online players currently viewing an inventory or child inventory of the specified parent type.
  * This function searches through the inventory hierarchy to find parent inventories of the specified type.
