@@ -5,21 +5,46 @@ import org.bukkit.entity.HumanEntity
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass
 
+/**
+ * Abstract class for paginated inventories with customizable titles.
+ *
+ * @param plugin The plugin instance
+ * @param line Number of inventory lines (1-6)
+ * @param altColorChar The alternate color code character for title color formatting, defaults to '&'
+ * @since 2.0.0
+ */
 abstract class KtInventoryPaginated(
     private val plugin: Plugin,
     line: Int,
     private val altColorChar: Char? = '&',
 ) : AbstractKtInventoryPaginated<KtInventoryPaginated>(plugin, line) {
+    /**
+     * Generates the title for a specific page of the inventory.
+     *
+     * @param page Current page number
+     * @param lastPage Last page number
+     * @return The formatted title string
+     * @since 2.0.0
+     */
     abstract fun title(
         page: Int,
         lastPage: Int,
     ): String
 
-    override fun createEntry(
+    final override fun createEntry(
         page: Int,
         lastPage: Int,
     ): Entry<KtInventoryPaginated> = Entry(this, page, lastPage)
 
+    /**
+     * Represents a single page entry in the paginated inventory.
+     *
+     * @param T Type of the paginated inventory
+     * @param paginated The paginated inventory instance
+     * @param page Current page number
+     * @param lastPage Last page number
+     * @since 2.0.0
+     */
     class Entry<T : KtInventoryPaginated>(
         paginated: T,
         page: Int,
@@ -40,6 +65,13 @@ abstract class KtInventoryPaginated(
         override fun getInventory() = _inventory
     }
 
+    /**
+     * Abstract class for refreshable paginated inventories.
+     *
+     * @param T Type of the paginated inventory
+     * @param clazz The KClass of the paginated inventory type
+     * @since 2.0.0
+     */
     abstract class Refreshable<T : KtInventoryPaginated>(
         clazz: KClass<T>,
     ) : AbstractKtInventoryPaginated.Refreshable<T>(clazz) {

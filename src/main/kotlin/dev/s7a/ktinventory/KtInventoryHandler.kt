@@ -11,6 +11,12 @@ import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.server.PluginDisableEvent
 import org.bukkit.plugin.Plugin
 
+/**
+ * Internal handler for KtInventory events.
+ *
+ * @property plugin The plugin instance
+ * @since 2.0.0
+ */
 internal class KtInventoryHandler(
     private val plugin: Plugin,
 ) : Listener {

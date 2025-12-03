@@ -6,6 +6,14 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import kotlin.reflect.KClass
 
+/**
+ * Gets all online players currently viewing an inventory of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventory]
+ * @param clazz The KClass of the inventory type
+ * @return Map of players to their open inventories of type T
+ * @since 2.0.0
+ */
 fun <T : AbstractKtInventory> getAllViewers(clazz: KClass<T>): Map<Player, T> =
     Bukkit
         .getOnlinePlayers()
@@ -14,8 +22,23 @@ fun <T : AbstractKtInventory> getAllViewers(clazz: KClass<T>): Map<Player, T> =
             player to inventory
         }.toMap()
 
+/**
+ * Gets all online players currently viewing an inventory of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventory]
+ * @return Map of players to their open inventories of type T
+ * @since 2.0.0
+ */
 inline fun <reified T : AbstractKtInventory> getAllViewers() = getAllViewers(T::class)
 
+/**
+ * Gets all online players currently viewing a paginated inventory of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventoryPaginated]
+ * @param clazz The KClass of the inventory type
+ * @return Map of players to their open paginated inventory entries of type T
+ * @since 2.0.0
+ */
 fun <T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(clazz: KClass<T>): Map<Player, AbstractKtInventoryPaginated.Entry<T>> =
     Bukkit
         .getOnlinePlayers()
@@ -24,4 +47,11 @@ fun <T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(clazz: KClass<T
             player to (inventory)
         }.toMap()
 
+/**
+ * Gets all online players currently viewing a paginated inventory of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventoryPaginated]
+ * @return Map of players to their open paginated inventory entries of type T
+ * @since 2.0.0
+ */
 inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated() = getAllViewersPaginated(T::class)
