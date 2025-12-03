@@ -70,11 +70,11 @@ inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(
 inline fun <reified T : ParentInventory> getAllViewersDeeply() =
     getAllViewers<KtInventory>()
         .mapNotNull { (player, inventory) ->
-            when (inventory) {
-                is T -> inventory
-                is HasParentInventory<*> -> inventory.parentInventory as? T
-                else -> null
-            }?.let {
-                player to it
-            }
+            val parentInventory =
+                when (inventory) {
+                    is T -> inventory
+                    is HasParentInventory<*> -> inventory.parentInventory as? T
+                    else -> null
+                } ?: return@mapNotNull null
+            player to parentInventory
         }.toMap()
