@@ -1,7 +1,7 @@
 [versions]
 # Plugins
 kotlin = "2.1.10"
-dokka = "2.0.0"
+dokka = "2.1.0"
 kotlinter = "5.0.1"
 pluginYml = "0.6.0"
 minecraftServer = "3.2.1"
