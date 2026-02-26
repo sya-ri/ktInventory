@@ -1,14 +1,16 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinJvm
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.dokka)
+    alias(libs.plugins.dokka.javadoc)
     alias(libs.plugins.kotlinter)
     alias(libs.plugins.pluginYml.bukkit) apply false
     alias(libs.plugins.minecraftServer) apply false
     alias(libs.plugins.shadow) apply false
-    `maven-publish`
-    signing
+    alias(libs.plugins.mavenPublish)
 }
 
 group = "dev.s7a"
@@ -38,69 +40,36 @@ dependencies {
     compileOnly(libs.paper)
 }
 
-val sourceJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("sources")
-    from(sourceSets["main"].allSource)
-}
-
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
-
-publishing {
-    repositories {
-        maven {
-            url =
-                uri(
-                    if (version.toString().endsWith("SNAPSHOT")) {
-                        "https://central.sonatype.com/repository/maven-snapshots/"
-                    } else {
-                        "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
-                    },
-                )
-            credentials {
-                username = properties["sonatypeUsername"].toString()
-                password = properties["sonatypePassword"].toString()
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+    coordinates("dev.s7a", "ktInventory", version.toString())
+    configure(
+        KotlinJvm(
+            javadocJar = JavadocJar.Dokka("dokkaGeneratePublicationJavadoc"),
+            sourcesJar = true,
+        ),
+    )
+    pom {
+        name.set("ktInventory")
+        description.set("Spigot inventory library for Kotlin. Easy to create and handle")
+        inceptionYear.set("2026")
+        url.set("https://github.com/sya-ri/ktInventory")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://github.com/sya-ri/ktInventory/blob/master/LICENSE")
             }
         }
-    }
-    publications {
-        register<MavenPublication>("maven") {
-            groupId = "dev.s7a"
-            artifactId = "ktInventory"
-            from(components["kotlin"])
-            artifact(sourceJar.get())
-            artifact(javadocJar.get())
-            pom {
-                name.set("ktInventory")
-                description.set("Spigot inventory library for Kotlin. Easy to create and handle")
-                url.set("https://github.com/sya-ri/ktInventory")
-
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://github.com/sya-ri/ktInventory/blob/master/LICENSE")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("sya-ri")
-                        name.set("sya-ri")
-                        email.set("contact@s7a.dev")
-                    }
-                }
-                scm {
-                    url.set("https://github.com/sya-ri/ktInventory")
-                }
+        developers {
+            developer {
+                id.set("sya-ri")
+                name.set("sya-ri")
+                email.set("contact@s7a.dev")
             }
         }
+        scm {
+            url.set("https://github.com/sya-ri/ktInventory")
+        }
     }
-}
-
-signing {
-    val key = properties["signingKey"]?.toString()?.replace("\\n", "\n")
-    val password = properties["signingPassword"]?.toString()
-
-    useInMemoryPgpKeys(key, password)
-    sign(publishing.publications["maven"])
 }
