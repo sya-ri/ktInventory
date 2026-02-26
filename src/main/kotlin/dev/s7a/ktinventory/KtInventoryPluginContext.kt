@@ -4,19 +4,6 @@ import org.bukkit.event.Listener
 import org.bukkit.plugin.Plugin
 
 /**
- * Creates a [KtInventoryPluginContext] instance for the specified [plugin].
- *
- * @since 2.1.0
- */
-@Suppress("FunctionName")
-fun KtInventoryPluginContext(plugin: Plugin) =
-    object : KtInventoryPluginContext {
-        override fun registerEvents(listener: Listener) {
-            plugin.server.pluginManager.registerEvents(listener, plugin)
-        }
-    }
-
-/**
  * Context interface for KtInventory plugin integration.
  *
  * This interface provides methods for registering event listeners within the plugin context.
@@ -31,4 +18,19 @@ interface KtInventoryPluginContext {
      * @since 2.1.0
      */
     fun registerEvents(listener: Listener)
+
+    companion object {
+        /**
+         * Creates a [KtInventoryPluginContext] instance for the specified [plugin].
+         *
+         * @since 2.1.0
+         */
+
+        operator fun invoke(plugin: Plugin) =
+            object : KtInventoryPluginContext {
+                override fun registerEvents(listener: Listener) {
+                    plugin.server.pluginManager.registerEvents(listener, plugin)
+                }
+            }
+    }
 }
