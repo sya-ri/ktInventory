@@ -25,22 +25,27 @@ class ExamplePlugin : JavaPlugin() {
                     SimpleMenu(this).open(sender)
                     return true
                 }
+
                 "paper-menu" -> {
                     SimpleMenuPaper(this).open(sender)
                     return true
                 }
+
                 "settings" -> {
                     SettingsInventory(this).open(sender)
                     return true
                 }
+
                 "sound" -> {
                     SoundCheckInventory(this).open(sender)
                     return true
                 }
+
                 "sound-paper" -> {
                     SoundCheckInventoryPaper(this).open(sender)
                     return true
                 }
+
                 "storage" -> {
                     StorageInventory(this).open(sender)
                     return true
