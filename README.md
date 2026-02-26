@@ -28,8 +28,10 @@ dependencies {
 
 ```kotlin
 class SimpleMenu(
-    plugin: Plugin,
-) : KtInventory(plugin, 1) {
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override fun title() = "&0&lSelect where to teleport"
 
     init {
@@ -56,8 +58,10 @@ class SimpleMenu(
 
 ```kotlin
 class SimpleMenu(
-    plugin: Plugin,
-) : KtInventoryAdventure(plugin, 1) {
+    context: KtInventoryPluginContext,
+) : KtInventoryAdventure(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override fun title() = Component.text("Select where to teleport").color(NamedTextColor.BLACK).decorate(TextDecoration.BOLD)
 
     init {

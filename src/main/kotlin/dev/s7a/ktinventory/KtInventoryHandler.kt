@@ -9,16 +9,15 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.server.PluginDisableEvent
-import org.bukkit.plugin.Plugin
 
 /**
  * Internal handler for KtInventory events.
  *
- * @property plugin The plugin instance
+ * @property context Plugin context
  * @since 2.0.0
  */
 internal class KtInventoryHandler(
-    private val plugin: Plugin,
+    private val context: KtInventoryPluginContext,
 ) : Listener {
     @EventHandler
     fun on(event: InventoryOpenEvent) {
@@ -88,24 +87,24 @@ internal class KtInventoryHandler(
 
     @EventHandler
     fun on(event: PluginDisableEvent) {
-        if (plugin === event.plugin) {
+        if (context === event.plugin) {
             Bukkit.getOnlinePlayers().forEach { player ->
                 val inventory = player.openInventory.topInventory
                 if (inventory.holder !is AbstractKtInventory) return@forEach
                 player.closeInventory()
             }
-            handlers.remove(plugin)
+            handlers.remove(context)
         }
     }
 
     companion object {
-        private val handlers = mutableMapOf<Plugin, KtInventoryHandler>()
+        private val handlers = mutableMapOf<KtInventoryPluginContext, KtInventoryHandler>()
 
         @Synchronized
-        fun register(plugin: Plugin) =
-            handlers.getOrPut(plugin) {
-                KtInventoryHandler(plugin).apply {
-                    plugin.server.pluginManager.registerEvents(this, plugin)
+        fun register(context: KtInventoryPluginContext) =
+            handlers.getOrPut(context) {
+                KtInventoryHandler(context).apply {
+                    context.registerEvents(this)
                 }
             }
     }

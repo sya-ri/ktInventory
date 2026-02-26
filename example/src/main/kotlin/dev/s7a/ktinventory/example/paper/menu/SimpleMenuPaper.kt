@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory.example.paper.menu
 
 import dev.s7a.ktinventory.KtInventoryAdventure
+import dev.s7a.ktinventory.KtInventoryPluginContext
 import dev.s7a.ktinventory.example.itemStack
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -10,8 +11,10 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 
 class SimpleMenuPaper(
-    plugin: Plugin,
-) : KtInventoryAdventure(plugin, 1) {
+    context: KtInventoryPluginContext,
+) : KtInventoryAdventure(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override fun title() = Component.text("Select where to teleport").color(NamedTextColor.BLACK).decorate(TextDecoration.BOLD)
 
     init {

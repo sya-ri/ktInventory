@@ -1,14 +1,17 @@
 package dev.s7a.ktinventory.example.menu
 
 import dev.s7a.ktinventory.KtInventory
+import dev.s7a.ktinventory.KtInventoryPluginContext
 import dev.s7a.ktinventory.example.itemStack
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 
 class SimpleMenu(
-    plugin: Plugin,
-) : KtInventory(plugin, 1) {
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override fun title() = "&0&lSelect where to teleport"
 
     init {

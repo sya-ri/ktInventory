@@ -9,7 +9,6 @@ import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass
 
 /**
@@ -19,7 +18,7 @@ import kotlin.reflect.KClass
  * @since 2.0.0
  */
 abstract class AbstractKtInventory(
-    private val plugin: Plugin,
+    private val context: KtInventoryPluginContext,
     line: Int,
 ) : KtInventoryBase(line),
     InventoryHolder {
@@ -74,7 +73,7 @@ abstract class AbstractKtInventory(
     }
 
     final override fun open(player: HumanEntity) {
-        KtInventoryHandler.register(plugin)
+        KtInventoryHandler.register(context)
         player.openInventory(inventory)
     }
 

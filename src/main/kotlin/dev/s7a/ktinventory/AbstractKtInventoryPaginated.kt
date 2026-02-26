@@ -17,14 +17,22 @@ import kotlin.reflect.KClass
  * Base class for paginated inventories
  *
  * @param T Type of the paginated inventory
- * @param plugin Plugin instance
+ * @param context Plugin context
  * @param line Number of inventory rows
- * @since 2.0.0
+ * @since 2.1.0
  */
 abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>(
-    private val plugin: Plugin,
+    private val context: KtInventoryPluginContext,
     line: Int,
 ) : KtInventoryBase(line) {
+    /**
+     * @param plugin Plugin instance
+     * @param line Number of inventory rows
+     * @since 2.0.0
+     */
+    @Deprecated("Use KtInventoryPluginContext constructor instead")
+    constructor(plugin: Plugin, line: Int) : this(KtInventoryPluginContext(plugin), line)
+
     /**
      * List of slot numbers used for pagination
      *
@@ -233,7 +241,7 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
         val paginated: T,
         val page: Int,
         val lastPage: Int,
-    ) : AbstractKtInventory(paginated.plugin, paginated.line) {
+    ) : AbstractKtInventory(paginated.context, paginated.line) {
         /**
          * Opens next page for a player
          *
