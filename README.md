@@ -14,11 +14,11 @@ Spigot library with Kotlin for easy inventory creation and event handling
 
 ```kotlin
 repositories {
-    maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
+    mavenCentral()
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.0.0-SNAPSHOT")
+    implementation("dev.s7a:ktInventory:2.0.0")
 }
 ```
 
