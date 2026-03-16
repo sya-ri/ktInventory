@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory
 
 import net.kyori.adventure.text.Component
+import org.bukkit.Bukkit
 import org.bukkit.entity.HumanEntity
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass
@@ -8,14 +9,25 @@ import kotlin.reflect.KClass
 /**
  * Abstract class for paginated inventories with Adventure Component titles.
  *
- * @param plugin The plugin instance
+ * @param context Plugin context
  * @param line Number of inventory lines (1-6)
- * @since 2.0.0
+ * @since 2.1.0
  */
 abstract class KtInventoryPaginatedAdventure(
-    private val plugin: Plugin,
+    context: KtInventoryPluginContext,
     line: Int,
-) : AbstractKtInventoryPaginated<KtInventoryPaginatedAdventure>(plugin, line) {
+) : AbstractKtInventoryPaginated<KtInventoryPaginatedAdventure>(context, line) {
+    /**
+     * @param plugin The plugin instance
+     * @param line Number of inventory lines (1-6)
+     * @since 2.0.0
+     */
+    @Deprecated("Use KtInventoryPluginContext constructor instead")
+    constructor(plugin: Plugin, line: Int) : this(
+        KtInventoryPluginContext(plugin),
+        line,
+    )
+
     /**
      * Generates the Component title for a specific page of the inventory.
      *
@@ -49,7 +61,7 @@ abstract class KtInventoryPaginatedAdventure(
         lastPage: Int,
     ) : AbstractKtInventoryPaginated.Entry<T>(paginated, page, lastPage) {
         private val _inventory by lazy {
-            paginated.plugin.server.createInventory(this, size, paginated.title(page, lastPage))
+            Bukkit.createInventory(this, size, paginated.title(page, lastPage))
         }
 
         override fun getInventory() = _inventory

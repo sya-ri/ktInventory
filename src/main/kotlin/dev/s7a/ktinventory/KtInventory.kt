@@ -1,22 +1,36 @@
 package dev.s7a.ktinventory
 
 import net.md_5.bungee.api.ChatColor
+import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
 
 /**
  * Abstract inventory class that creates an inventory with a customizable title.
  * Extends [AbstractKtInventory] to provide basic inventory functionality.
  *
- * @param plugin The plugin instance
+ * @param context Plugin context
  * @param line Number of inventory rows
  * @param altColorChar Character used for color codes in the title. Default is '&'. Set to null to disable color code translation.
- * @since 2.0.0
+ * @since 2.1.0
  */
 abstract class KtInventory(
-    plugin: Plugin,
+    context: KtInventoryPluginContext,
     line: Int,
     altColorChar: Char? = '&',
-) : AbstractKtInventory(plugin, line) {
+) : AbstractKtInventory(context, line) {
+    /**
+     * @param plugin The plugin instance
+     * @param line Number of inventory rows
+     * @param altColorChar Character used for color codes in the title. Default is '&'. Set to null to disable color code translation.
+     * @since 2.0.0
+     */
+    @Deprecated("Use KtInventoryPluginContext constructor instead")
+    constructor(plugin: Plugin, line: Int, altColorChar: Char? = '&') : this(
+        KtInventoryPluginContext(plugin),
+        line,
+        altColorChar,
+    )
+
     /**
      * Gets the title of the inventory.
      * The title can include color codes if [altColorChar] is not null.
@@ -28,7 +42,8 @@ abstract class KtInventory(
 
     @Suppress("DEPRECATION")
     private val _inventory by lazy {
-        plugin.server.createInventory(
+        @Suppress("DEPRECATION")
+        Bukkit.createInventory(
             this,
             size,
             if (altColorChar != null) ChatColor.translateAlternateColorCodes(altColorChar, title()) else title(),

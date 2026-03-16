@@ -1,6 +1,5 @@
 # ktInventory
 
-[![Kotlin](https://img.shields.io/badge/kotlin-2.1.10-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Maven Central](https://img.shields.io/maven-central/v/dev.s7a/ktInventory)](https://search.maven.org/artifact/dev.s7a/ktInventory)
 [![KDoc link](https://img.shields.io/badge/API_reference-KDoc-blue)](https://gh.s7a.dev/ktInventory)
@@ -18,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.0.0")
+    implementation("dev.s7a:ktInventory:2.1.0")
 }
 ```
 
@@ -28,8 +27,10 @@ dependencies {
 
 ```kotlin
 class SimpleMenu(
-    plugin: Plugin,
-) : KtInventory(plugin, 1) {
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override fun title() = "&0&lSelect where to teleport"
 
     init {
@@ -56,8 +57,10 @@ class SimpleMenu(
 
 ```kotlin
 class SimpleMenu(
-    plugin: Plugin,
-) : KtInventoryAdventure(plugin, 1) {
+    context: KtInventoryPluginContext,
+) : KtInventoryAdventure(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override fun title() = Component.text("Select where to teleport").color(NamedTextColor.BLACK).decorate(TextDecoration.BOLD)
 
     init {

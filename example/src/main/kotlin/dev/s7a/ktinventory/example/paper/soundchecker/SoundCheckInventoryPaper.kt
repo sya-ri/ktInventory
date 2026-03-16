@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory.example.paper.soundchecker
 
 import dev.s7a.ktinventory.KtInventoryPaginatedAdventure
+import dev.s7a.ktinventory.KtInventoryPluginContext
 import dev.s7a.ktinventory.example.itemStack
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -11,8 +12,10 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 
 class SoundCheckInventoryPaper(
-    plugin: Plugin,
-) : KtInventoryPaginatedAdventure(plugin, 6) {
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginatedAdventure(context, 6) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override val entries =
         Registry.SOUNDS.map { sound ->
             createButton(

@@ -1,14 +1,17 @@
 package dev.s7a.ktinventory.example.settings
 
 import dev.s7a.ktinventory.KtInventory
+import dev.s7a.ktinventory.KtInventoryPluginContext
 import dev.s7a.ktinventory.example.itemStack
 import org.bukkit.Material
 import org.bukkit.entity.HumanEntity
 import org.bukkit.plugin.Plugin
 
 class SettingsInventory(
-    val plugin: Plugin,
-) : KtInventory(plugin, 1) {
+    val context: KtInventoryPluginContext,
+) : KtInventory(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override fun title() = "&0&lSettings"
 
     init {
@@ -28,6 +31,6 @@ class SettingsInventory(
         override fun createNew(
             player: HumanEntity,
             inventory: SettingsInventory,
-        ) = SettingsInventory(inventory.plugin)
+        ) = SettingsInventory(inventory.context)
     }
 }

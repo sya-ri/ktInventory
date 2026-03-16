@@ -1,13 +1,14 @@
 package dev.s7a.ktinventory.example.storage
 
 import dev.s7a.ktinventory.KtInventory
+import dev.s7a.ktinventory.KtInventoryPluginContext
 import org.bukkit.Bukkit
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 
 class StorageInventory(
     plugin: Plugin,
-) : KtInventory(plugin, 6) {
+) : KtInventory(KtInventoryPluginContext(plugin), 6) {
     override fun title() = "&0&lStorage"
 
     init {
