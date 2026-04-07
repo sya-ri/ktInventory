@@ -1,0 +1,919 @@
+# ktInventory — LLM Reference
+
+ktInventory is a Kotlin library for Spigot/Paper servers that simplifies inventory GUI creation.
+It provides a type-safe API for building interactive inventories with buttons, pagination,
+item storage, and real-time refresh support.
+
+- GitHub: https://github.com/sya-ri/ktInventory
+- Maven Central: dev.s7a:ktInventory
+- Current version: 2.1.0
+- License: MIT
+- Java target: 1.8 / Kotlin JVM target: 1.8
+- Platforms: Spigot, Paper (Adventure API requires Paper)
+
+
+## Table of Contents
+
+1. Installation
+2. ItemStack Helpers (recommended)
+3. Basic Inventory — KtInventory
+4. Adventure API Support — KtInventoryAdventure
+5. Pagination — KtInventoryPaginated / KtInventoryPaginatedAdventure
+6. Item Storage — storable
+7. Refresh — Refreshable
+8. Slot Utility — slot()
+9. Viewer Lookup Utilities
+10. KtInventoryStorableOption
+11. ParentInventory / HasParentInventory
+12. Class & Interface Reference
+
+
+---
+
+## 1. Installation
+
+### Gradle (Kotlin DSL)
+
+```kotlin
+// build.gradle.kts
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("dev.s7a:ktInventory:2.1.0")
+}
+```
+
+### Gradle (Groovy DSL)
+
+```groovy
+// build.gradle
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'dev.s7a:ktInventory:2.1.0'
+}
+```
+
+### Maven
+
+```xml
+<dependency>
+    <groupId>dev.s7a</groupId>
+    <artifactId>ktInventory</artifactId>
+    <version>2.1.0</version>
+</dependency>
+```
+
+### Plugin Setup
+
+Each inventory class is expected to expose a `Plugin` constructor as its standard entry point.
+The `Plugin` constructor wraps the argument in a `KtInventoryPluginContext` internally,
+so callers only need to pass `this`.
+
+```kotlin
+class MyPlugin : JavaPlugin() {
+    override fun onEnable() {
+        getCommand("menu")?.setExecutor { sender, _, _, _ ->
+            val player = sender as? Player ?: return@setExecutor true
+            SimpleMenu(this).open(player)  // pass the plugin directly
+            true
+        }
+    }
+}
+```
+
+Every inventory class should follow this two-constructor pattern:
+
+```kotlin
+class SimpleMenu(
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 1) {
+    // Secondary constructor for normal use — callers pass the plugin
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override fun title() = "&0&lMain Menu"
+
+    init {
+        // ...
+    }
+}
+```
+
+The primary constructor that accepts `KtInventoryPluginContext` is for dependency injection.
+Use it when you want to inject a custom or mock context (e.g. in tests or a DI framework).
+
+
+---
+
+## 2. ItemStack Helpers (recommended)
+
+ktInventory does not handle ItemStack creation — that is intentionally out of scope.
+When building inventories you will create many ItemStacks, so it is strongly recommended
+to define helper functions in your own project. Here is a practical example:
+
+```kotlin
+// ItemStack.kt — add this to your own project
+
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextDecoration
+import org.bukkit.Material
+import org.bukkit.inventory.ItemStack
+
+/**
+ * Creates an ItemStack with a display name.
+ * Uses Adventure Component, so this requires a Paper server.
+ */
+fun itemStack(material: Material, name: String): ItemStack {
+    return ItemStack(material).also { item ->
+        val meta = item.itemMeta ?: return@also
+        meta.displayName(
+            Component.text(name).decoration(TextDecoration.ITALIC, false)
+        )
+        item.itemMeta = meta
+    }
+}
+
+/**
+ * Creates an ItemStack with a display name and lore lines.
+ */
+fun itemStack(material: Material, name: String, vararg lore: String): ItemStack {
+    return ItemStack(material).also { item ->
+        val meta = item.itemMeta ?: return@also
+        meta.displayName(
+            Component.text(name).decoration(TextDecoration.ITALIC, false)
+        )
+        meta.lore(lore.map { line ->
+            Component.text(line).decoration(TextDecoration.ITALIC, false)
+        })
+        item.itemMeta = meta
+    }
+}
+```
+
+The `TextDecoration.ITALIC, false` call removes the default italic styling that Minecraft
+applies to custom item names.
+
+Usage (the examples below use these helpers):
+
+```kotlin
+button(4, itemStack(Material.DIAMOND, "Reward")) { event ->
+    // ...
+}
+
+button(8, itemStack(Material.BARRIER, "Close", "Click to close")) { event ->
+    event.player.closeInventory()
+}
+```
+
+
+---
+
+## 3. Basic Inventory — KtInventory
+
+`KtInventory` is the standard inventory class with a String title that supports
+`&` color codes.
+
+### Class signature
+
+```kotlin
+abstract class KtInventory(
+    context: KtInventoryPluginContext,
+    line: Int,                  // Number of rows, 1–6
+    altColorChar: Char? = '&'  // Color code prefix character (null to disable)
+) : AbstractKtInventory(context, line)
+```
+
+### Minimal example
+
+```kotlin
+class SimpleMenu(
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 3) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override fun title() = "&0&lMain Menu"
+
+    init {
+        button(11, itemStack(Material.GRASS_BLOCK, "Go to World")) { event ->
+            val player = event.player as? Player ?: return@button
+            player.sendMessage("Welcome!")
+            player.closeInventory()
+        }
+
+        button(13, itemStack(Material.CHEST, "Storage")) { event ->
+            val player = event.player as? Player ?: return@button
+            StorageInventory(event.inventory.context).open(player)
+        }
+
+        button(15, itemStack(Material.BARRIER, "Close", "Click to close")) { event ->
+            event.player.closeInventory()
+        }
+    }
+}
+```
+
+### Opening an inventory
+
+```kotlin
+SimpleMenu(this).open(player)  // `this` is your JavaPlugin instance
+```
+
+### button() signatures
+
+```kotlin
+// Single slot
+fun button(slot: Int, itemStack: ItemStack, onClick: (ClickEvent) -> Unit = {})
+
+// Multiple slots (vararg)
+fun button(vararg slots: Int, itemStack: ItemStack, onClick: (ClickEvent) -> Unit = {})
+
+// Multiple slots (Iterable)
+fun button(slots: Iterable<Int>, itemStack: ItemStack, onClick: (ClickEvent) -> Unit = {})
+
+// Pass a pre-built KtInventoryButton directly
+fun button(slot: Int, item: KtInventoryButton<AbstractKtInventory>)
+fun button(vararg slots: Int, item: KtInventoryButton<AbstractKtInventory>)
+fun button(slots: Iterable<Int>, item: KtInventoryButton<AbstractKtInventory>)
+```
+
+### ClickEvent properties
+
+```kotlin
+event.player        // HumanEntity — the player who clicked
+event.slot          // Int — the clicked slot number
+event.currentItem   // ItemStack? — the item that was in the slot
+event.cursor        // ItemStack? — the item on the player's cursor
+event.click         // ClickType
+event.action        // InventoryAction
+event.hotbarButton  // Int — hotbar key pressed (-1 if not applicable)
+```
+
+### Overridable event hooks
+
+```kotlin
+class MyInventory(
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override fun title() = "My Inventory"
+
+    override fun onOpen(event: InventoryOpenEvent) {
+        // Called when the inventory is opened
+    }
+
+    override fun onClick(event: InventoryClickEvent) {
+        // Called after button handlers when the top inventory is clicked
+    }
+
+    override fun onClickBottom(event: InventoryClickEvent) {
+        // Called when the player's own inventory is clicked
+    }
+
+    override fun onDrag(event: InventoryDragEvent) {
+        // Called on drag events
+    }
+
+    override fun onClose(event: InventoryCloseEvent) {
+        // Called when the inventory is closed
+    }
+}
+```
+
+
+---
+
+## 4. Adventure API Support — KtInventoryAdventure
+
+`KtInventoryAdventure` is identical to `KtInventory` except that `title()` returns
+an Adventure `Component` instead of a String. Requires a Paper server.
+
+```kotlin
+class SimpleMenuPaper(
+    context: KtInventoryPluginContext,
+) : KtInventoryAdventure(context, 3) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override fun title() = Component.text("Main Menu")
+        .color(NamedTextColor.BLACK)
+        .decorate(TextDecoration.BOLD)
+
+    init {
+        button(13, itemStack(Material.NETHER_STAR, "Special")) { event ->
+            val player = event.player as? Player ?: return@button
+            player.sendMessage(Component.text("Sparkle!").color(NamedTextColor.GOLD))
+            player.closeInventory()
+        }
+    }
+}
+```
+
+
+---
+
+## 5. Pagination
+
+### KtInventoryPaginated (String title)
+
+Define all entries in `entries`, specify which slots display page items with
+`paginateSlot()`, and add navigation buttons.
+
+```kotlin
+class SoundCheckInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginated(context, 6) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    // All entries across all pages — the library handles splitting automatically
+    override val entries = Registry.SOUNDS.map { sound ->
+        createButton(itemStack(Material.MUSIC_DISC_CAT, sound.key().value())) { event ->
+            val player = event.player as? Player ?: return@createButton
+            player.playSound(player.location, sound, 1F, 1F)
+        }
+    }
+
+    override fun title(page: Int, lastPage: Int) =
+        "&0&lSound List (${page + 1}/${lastPage + 1})"
+
+    init {
+        // Slots 0–44 are used for page entries
+        paginateSlot(0 until 45)
+
+        // Navigation buttons
+        previousPageButton(45, itemStack(Material.ARROW, "Previous Page"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next Page"))
+
+        // Fixed button present on every page
+        button(49, itemStack(Material.BARRIER, "Close")) { event ->
+            event.player.closeInventory()
+        }
+    }
+}
+```
+
+### KtInventoryPaginatedAdventure (Component title)
+
+```kotlin
+class SoundCheckInventoryPaper(
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginatedAdventure(context, 6) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override val entries = Registry.SOUNDS.map { sound ->
+        createButton(itemStack(Material.MUSIC_DISC_CAT, sound.key().value())) { event ->
+            val player = event.player as? Player ?: return@createButton
+            player.playSound(player.location, sound, 1F, 1F)
+        }
+    }
+
+    override fun title(page: Int, lastPage: Int) = Component.text()
+        .append(Component.text("Sound List ").color(NamedTextColor.BLACK))
+        .append(Component.text("(${page + 1}/${lastPage + 1})").color(NamedTextColor.GRAY))
+        .build()
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "Previous Page"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next Page"))
+    }
+}
+```
+
+### Opening a specific page
+
+```kotlin
+// First page (default)
+inventory.open(player)
+
+// Open at a specific page (0-based index)
+inventory.open(player, page = 2)
+```
+
+### Paginated Refreshable
+
+`AbstractKtInventoryPaginated.Refreshable` supports a `RefreshBehavior` parameter
+to control whether the current page is preserved.
+
+```kotlin
+companion object : KtInventoryPaginated.Refreshable<SoundCheckInventory>(
+    SoundCheckInventory::class
+) {
+    override fun createNew(
+        player: HumanEntity,
+        inventory: KtInventoryPaginated.Entry<SoundCheckInventory>
+    ) = SoundCheckInventory(inventory.paginated.context)
+}
+
+// Refresh all viewers, keeping their current page
+SoundCheckInventory.refreshAll(behavior = RefreshBehavior.Keep)
+
+// Refresh all viewers, sending them back to the first page
+SoundCheckInventory.refreshAll(behavior = RefreshBehavior.OpenFirst)
+```
+
+
+---
+
+## 6. Item Storage — storable
+
+`storable()` defines a region of slots where players can freely place and take items.
+When the inventory is closed, the `save` callback is invoked for persistence.
+
+```kotlin
+class StorageInventory(
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 4) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override fun title() = "&0&lStorage"
+
+    init {
+        storable(
+            slots = 0 until 27,
+            initialize = {
+                // Called when the inventory is opened — return the initial items
+                loadItemsFromDatabase()
+            },
+            save = { items ->
+                // Called when the inventory is closed
+                saveItemsToDatabase(items)
+            }
+        )
+
+        button(31, itemStack(Material.BARRIER, "Close")) { event ->
+            event.player.closeInventory()
+        }
+    }
+
+    private fun loadItemsFromDatabase(): List<ItemStack?> = emptyList() // implement as needed
+    private fun saveItemsToDatabase(items: List<ItemStack?>) {}         // implement as needed
+}
+```
+
+### storable() signatures
+
+```kotlin
+// Iterable slot range
+fun storable(
+    slots: Iterable<Int>,
+    initialize: () -> List<ItemStack?> = { emptyList() },
+    onPreClick: (KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = { Allow },
+    onClick: (KtInventoryStorable.ClickEvent) -> Unit = {},
+    onPreDrag: (KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = { Allow },
+    onDrag: (KtInventoryStorable.DragEvent) -> Unit = {},
+    save: (List<ItemStack?>) -> Unit = {}
+): KtInventoryStorable
+
+// vararg slots
+fun storable(vararg slots: Int, /* same parameters */): KtInventoryStorable
+
+// No slots specified upfront
+fun storable(/* same parameters */): KtInventoryStorable
+```
+
+### Controlling clicks with onPreClick / onPreDrag
+
+```kotlin
+storable(
+    slots = 0 until 27,
+    onPreClick = { event ->
+        // Only allow right-click
+        if (event.click == ClickType.RIGHT) Allow else Deny
+    },
+    onClick = { event ->
+        println("${event.player.name} clicked slot ${event.slot}")
+    },
+    save = { items -> saveItems(items) }
+)
+```
+
+### KtInventoryStorable operations
+
+```kotlin
+val storable: KtInventoryStorable = storable(slots = 0..8, save = { ... })
+
+storable.get()              // List<ItemStack?> — current items (AIR is returned as null)
+storable.update(itemList)   // Set items; returns overflow items that did not fit
+storable.clear()            // Clear all managed slots
+storable.save()             // Trigger the save callback manually
+storable.contains(slot)     // Whether the given slot is managed by this storable
+```
+
+### ClickEvent and DragEvent properties
+
+```kotlin
+// KtInventoryStorable.ClickEvent
+event.player        // HumanEntity
+event.slot          // Int
+event.currentItem   // ItemStack?
+event.cursor        // ItemStack?
+event.click         // ClickType
+event.action        // InventoryAction
+event.hotbarButton  // Int
+
+// KtInventoryStorable.DragEvent
+event.player        // HumanEntity
+event.newItems      // Map<Int, ItemStack> — items being placed per slot
+event.slots         // Set<Int> — inventory slots involved
+event.cursor        // ItemStack?
+event.oldCursor     // ItemStack?
+event.type          // DragType
+```
+
+
+---
+
+## 7. Refresh — Refreshable
+
+The `Refreshable` mechanism re-opens the inventory for all current viewers when
+shared state changes. The standard pattern is to define a `companion object` that
+extends `Refreshable`.
+
+```kotlin
+class SettingsInventory(
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override fun title() = "&0&lSettings (count: $count)"
+
+    init {
+        button(4, itemStack(Material.SUGAR, "Increment", "Click to +1")) {
+            count++
+            // Rebuild and reopen this inventory for every viewer
+            SettingsInventory.refreshAll()
+        }
+
+        button(8, itemStack(Material.BARRIER, "Close")) { event ->
+            event.player.closeInventory()
+        }
+    }
+
+    companion object : Refreshable<SettingsInventory>(SettingsInventory::class) {
+        var count = 0
+
+        override fun createNew(
+            player: HumanEntity,
+            inventory: SettingsInventory
+        ): SettingsInventory {
+            // Return a fresh instance that will replace the current one
+            return SettingsInventory(inventory.context)
+        }
+    }
+}
+```
+
+### Refreshable methods
+
+```kotlin
+// Refresh a specific player only (with optional predicate)
+SettingsInventory.refresh(player)
+SettingsInventory.refresh(player) { inventory -> inventory.someCondition }
+
+// Refresh a specific player using a known inventory instance
+SettingsInventory.refresh(player, inventoryInstance)
+
+// Refresh all viewers (with optional predicate)
+SettingsInventory.refreshAll()
+SettingsInventory.refreshAll { player, inventory -> player.hasPermission("myplugin.settings") }
+```
+
+
+---
+
+## 8. Slot Utility — slot()
+
+### Inventory slot layout
+
+A Minecraft chest inventory is a grid of rows and columns.
+Slot 0 is at the top-left corner. Columns run left to right (x: 0–8),
+rows run top to bottom (y: 0 and up, max y depends on line count).
+
+The raw slot number formula is: `slot = y * 9 + x`
+
+6-row inventory (54 slots total):
+
+```
+       x=0  x=1  x=2  x=3  x=4  x=5  x=6  x=7  x=8
+y=0  [  0 ][  1 ][  2 ][  3 ][  4 ][  5 ][  6 ][  7 ][  8 ]
+y=1  [  9 ][ 10 ][ 11 ][ 12 ][ 13 ][ 14 ][ 15 ][ 16 ][ 17 ]
+y=2  [ 18 ][ 19 ][ 20 ][ 21 ][ 22 ][ 23 ][ 24 ][ 25 ][ 26 ]
+y=3  [ 27 ][ 28 ][ 29 ][ 30 ][ 31 ][ 32 ][ 33 ][ 34 ][ 35 ]
+y=4  [ 36 ][ 37 ][ 38 ][ 39 ][ 40 ][ 41 ][ 42 ][ 43 ][ 44 ]
+y=5  [ 45 ][ 46 ][ 47 ][ 48 ][ 49 ][ 50 ][ 51 ][ 52 ][ 53 ]
+```
+
+For smaller inventories the grid is the same — just fewer rows:
+
+- 1-row (9 slots):  slots 0–8
+- 2-row (18 slots): slots 0–17
+- 3-row (27 slots): slots 0–26
+- 4-row (36 slots): slots 0–35
+- 5-row (45 slots): slots 0–44
+- 6-row (54 slots): slots 0–53
+
+### slot() helper
+
+`slot()` converts row/column coordinates into slot numbers, making layout code
+much more readable than raw integers.
+
+```kotlin
+// Single slot: slot(y, x) → y * 9 + x
+slot(0, 0)   // → 0  (top-left)
+slot(0, 8)   // → 8  (top-right)
+slot(5, 0)   // → 45 (bottom-left, 6-row inventory)
+slot(5, 8)   // → 53 (bottom-right, 6-row inventory)
+slot(0, 3)   // → 3
+
+// Row: slot(y, x: IntRange) → list of slots in that row
+slot(0, 0..8)   // → [0, 1, 2, 3, 4, 5, 6, 7, 8]  (entire first row)
+slot(5, 0..8)   // → [45, 46, 47, 48, 49, 50, 51, 52, 53]
+
+// Column: slot(y: IntRange, x) → list of slots in that column
+slot(0..5, 0)   // → [0, 9, 18, 27, 36, 45]  (left edge)
+slot(0..5, 4)   // → [4, 13, 22, 31, 40, 49] (center column)
+
+// Rectangle: slot(y: IntRange, x: IntRange) → flat list of all slots in the area
+slot(1..4, 1..7)  // inner rectangle, avoids the border
+```
+
+### Practical layout example
+
+```kotlin
+// 6-row inventory with a glass border and a storage area inside
+init {
+    val border = slot(0, 0..8) +   // top row
+                 slot(5, 0..8) +   // bottom row
+                 slot(1..4, 0) +   // left column
+                 slot(1..4, 8)     // right column
+    button(border, itemStack(Material.GRAY_STAINED_GLASS_PANE, " "))
+
+    // Inner 4×7 area (rows 1–4, columns 1–7) → 28 storable slots
+    storable(slots = slot(1..4, 1..7), save = { saveItems(it) })
+}
+```
+
+
+---
+
+## 9. Viewer Lookup Utilities
+
+### getOpenInventory — get the inventory a specific player has open
+
+```kotlin
+import dev.s7a.ktinventory.util.getOpenInventory
+import dev.s7a.ktinventory.util.getOpenInventoryPaginated
+
+// Returns null if the player does not have this inventory open
+val inventory: SimpleMenu? = getOpenInventory<SimpleMenu>(player)
+
+// For paginated inventories — returns the Entry (page) the player is on
+val entry: KtInventoryPaginated.Entry<SoundCheckInventory>? =
+    getOpenInventoryPaginated<SoundCheckInventory>(player)
+```
+
+### getAllViewers — get all players currently viewing a given inventory type
+
+```kotlin
+import dev.s7a.ktinventory.util.getAllViewers
+import dev.s7a.ktinventory.util.getAllViewersPaginated
+import dev.s7a.ktinventory.util.getAllViewersDeeply
+
+// Map of every player who has SimpleMenu open → Map<Player, SimpleMenu>
+val viewers: Map<Player, SimpleMenu> = getAllViewers<SimpleMenu>()
+
+// Paginated version — returns Map<Player, Entry<SoundCheckInventory>>
+val paginatedViewers = getAllViewersPaginated<SoundCheckInventory>()
+
+// Deep search — includes players in child inventories that declare parentInventory
+val deepViewers = getAllViewersDeeply<MyParentInventory>()
+```
+
+
+---
+
+## 10. KtInventoryStorableOption
+
+Controls when the `save` callback fires and provides an after-save hook.
+The default behavior saves only when the last viewer closes the inventory.
+
+```kotlin
+class MyInventory(
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 3) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override fun title() = "My Inventory"
+
+    // Override the default option
+    override val storableOption = buildStorableOption {
+        // Save regardless of how many viewers remain
+        allowSave { event -> true }
+
+        // Callback executed after saving
+        onSave {
+            println("Storage saved!")
+        }
+    }
+
+    init {
+        storable(slots = 0 until 27, save = { saveItems(it) })
+    }
+}
+```
+
+Default behavior of `buildStorableOption`:
+
+- `allowSave`: saves only when `event.viewers.size == 1` (the last viewer closing)
+- `onSave`: no-op
+
+
+---
+
+## 11. ParentInventory / HasParentInventory
+
+Marker interfaces for building parent–child inventory hierarchies.
+
+```kotlin
+// Parent inventory
+class MainMenu(context: KtInventoryPluginContext) : KtInventory(context, 3), ParentInventory {
+    override fun title() = "&0&lMain Menu"
+
+    init {
+        button(13, itemStack(Material.CHEST, "Open Sub Menu")) { event ->
+            val player = event.player as? Player ?: return@button
+            SubMenu(context, parent = this).open(player)
+        }
+    }
+}
+
+// Child inventory — holds a reference back to its parent
+class SubMenu(
+    context: KtInventoryPluginContext,
+    override val parentInventory: MainMenu?
+) : KtInventory(context, 2), HasParentInventory<MainMenu> {
+
+    override fun title() = "&0&lSub Menu"
+
+    init {
+        button(8, itemStack(Material.ARROW, "Back")) { event ->
+            val player = event.player as? Player ?: return@button
+            parentInventory?.open(player) ?: player.closeInventory()
+        }
+    }
+}
+```
+
+`getAllViewersDeeply<MainMenu>()` traverses `HasParentInventory.parentInventory`
+recursively and returns all players associated with `MainMenu`, including those
+currently viewing a child inventory.
+
+
+---
+
+## 12. Class & Interface Reference
+
+| Name | Kind | Purpose |
+|------|------|---------|
+| `KtInventoryPluginContext` | interface | Abstracts the plugin dependency; create via `KtInventoryPluginContext(plugin)` |
+| `KtInventoryBase` | abstract class | Root base — button management, event hooks |
+| `AbstractKtInventory` | abstract class | Implements `InventoryHolder`; adds storable and refresh support |
+| `KtInventory` | abstract class | Concrete inventory with a String title |
+| `KtInventoryAdventure` | abstract class | Concrete inventory with a Component title (Paper only) |
+| `AbstractKtInventoryPaginated<T>` | abstract class | Base for paginated inventories |
+| `KtInventoryPaginated` | abstract class | Paginated inventory with a String title |
+| `KtInventoryPaginatedAdventure` | abstract class | Paginated inventory with a Component title (Paper only) |
+| `KtInventoryButton<T>` | class | A clickable button component |
+| `KtInventoryStorable` | class | A storable-item-slot component |
+| `KtInventoryStorableOption` | interface | Save-timing and callback configuration for storables |
+| `KtInventoryHandler` | class | Internal event handler — do not use directly |
+| `RefreshableInventory<T>` | interface | Interface implemented by `Refreshable` inner classes |
+| `ParentInventory` | interface | Marker for inventories that can act as a parent |
+| `HasParentInventory<T>` | interface | Marks an inventory that holds a reference to a parent |
+
+### Utility functions
+
+| Function | Source file | Purpose |
+|----------|-------------|---------|
+| `slot(y, x)` | `Utils.kt` | Convert row/column to slot number(s) |
+| `getOpenInventory<T>(player)` | `util/GetOpenInventory.kt` | Get the typed inventory a player has open |
+| `getOpenInventoryPaginated<T>(player)` | `util/GetOpenInventory.kt` | Paginated variant |
+| `getAllViewers<T>()` | `util/GetAllViewers.kt` | All players viewing a given inventory type |
+| `getAllViewersPaginated<T>()` | `util/GetAllViewers.kt` | Paginated variant |
+| `getAllViewersDeeply<T>()` | `util/GetAllViewers.kt` | Deep search through parent–child hierarchy |
+| `buildStorableOption { }` | `options/` | DSL builder for `KtInventoryStorableOption` |
+
+
+---
+
+## Appendix: Full Example (Storage + Refresh + Pagination)
+
+```kotlin
+// Plugin main class
+class MyPlugin : JavaPlugin() {
+    override fun onEnable() {
+        getCommand("storage")?.setExecutor { sender, _, _, _ ->
+            val player = sender as? Player ?: return@setExecutor true
+            PlayerStorageInventory(this, player.uniqueId).open(player)
+            true
+        }
+        getCommand("sounds")?.setExecutor { sender, _, _, _ ->
+            val player = sender as? Player ?: return@setExecutor true
+            SoundBrowserInventory(this).open(player)
+            true
+        }
+        getCommand("settings")?.setExecutor { sender, _, _, _ ->
+            val player = sender as? Player ?: return@setExecutor true
+            SettingsInventory(this).open(player)
+            true
+        }
+    }
+}
+
+// ---- Storage Inventory ----
+
+class PlayerStorageInventory(
+    context: KtInventoryPluginContext,
+    private val uuid: UUID,
+) : KtInventory(context, 5) {
+    constructor(plugin: Plugin, uuid: UUID) : this(KtInventoryPluginContext(plugin), uuid)
+
+    override fun title() = "&8&lStorage"
+
+    init {
+        // Glass border
+        val frame = slot(0, 0..8) + slot(4, 0..8) +
+                    slot(1..3, 0) + slot(1..3, 8)
+        button(frame, itemStack(Material.GRAY_STAINED_GLASS_PANE, " "))
+
+        // Storage area
+        storable(
+            slots = slot(1..3, 1..7),
+            initialize = { StorageRepository.load(uuid) },
+            save = { items -> StorageRepository.save(uuid, items) }
+        )
+
+        button(40, itemStack(Material.BARRIER, "Close")) { event ->
+            event.player.closeInventory()
+        }
+    }
+}
+
+// ---- Paginated Sound Browser ----
+
+class SoundBrowserInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginated(context, 6) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override val entries = Registry.SOUNDS.sortedBy { it.key().value() }.map { sound ->
+        createButton(itemStack(Material.MUSIC_DISC_CAT, sound.key().value())) { event ->
+            val player = event.player as? Player ?: return@createButton
+            player.playSound(player.location, sound, 1F, 1F)
+            player.sendMessage("Now playing: ${sound.key().value()}")
+        }
+    }
+
+    override fun title(page: Int, lastPage: Int) =
+        "&0&lSounds &8(${page + 1}/${lastPage + 1})"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "Previous"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next"))
+        button(49, itemStack(Material.BARRIER, "Close")) { event ->
+            event.player.closeInventory()
+        }
+    }
+}
+
+// ---- Settings with Refresh ----
+
+class SettingsInventory(
+    context: KtInventoryPluginContext,
+) : KtInventory(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override fun title() = "&0&lSettings (count: $count)"
+
+    init {
+        button(4, itemStack(Material.SUGAR, "Increment")) {
+            count++
+            SettingsInventory.refreshAll()
+        }
+    }
+
+    companion object : Refreshable<SettingsInventory>(SettingsInventory::class) {
+        var count = 0
+
+        override fun createNew(
+            player: HumanEntity,
+            inventory: SettingsInventory
+        ) = SettingsInventory(inventory.context)
+    }
+}
+```
