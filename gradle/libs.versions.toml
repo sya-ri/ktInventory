@@ -5,7 +5,7 @@ dokka = "2.1.0"
 kotlinter = "5.4.2"
 pluginYml = "0.6.0"
 minecraftServer = "4.0.2"
-shadow = "8.1.1"
+shadow = "9.3.2"
 mavenPublish = "0.35.0"
 
 # Libraries
@@ -20,7 +20,7 @@ dokka-javadoc = { id = "org.jetbrains.dokka-javadoc", version.ref = "dokka" }
 kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
 pluginYml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginYml" }
 minecraftServer = { id = "dev.s7a.gradle.minecraft.server", version.ref = "minecraftServer" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 
 [libraries]
