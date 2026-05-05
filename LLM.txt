@@ -6,7 +6,7 @@ item storage, and real-time refresh support.
 
 - GitHub: https://github.com/sya-ri/ktInventory
 - Maven Central: dev.s7a:ktInventory
-- Current version: 2.1.0
+- Current version: 2.1.1
 - License: MIT
 - Java target: 1.8 / Kotlin JVM target: 1.8
 - Platforms: Spigot, Paper (Adventure API requires Paper)
@@ -41,7 +41,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.1.0")
+    implementation("dev.s7a:ktInventory:2.1.1")
 }
 ```
 
@@ -54,7 +54,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.s7a:ktInventory:2.1.0'
+    implementation 'dev.s7a:ktInventory:2.1.1'
 }
 ```
 
@@ -64,7 +64,7 @@ dependencies {
 <dependency>
     <groupId>dev.s7a</groupId>
     <artifactId>ktInventory</artifactId>
-    <version>2.1.0</version>
+    <version>2.1.1</version>
 </dependency>
 ```
 

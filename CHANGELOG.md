@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.1.1
+
+### Added
+
+- Add installable `ktinventory` skill for agent tooling.
+  - Includes repository guidance for building Bukkit, Spigot, and Paper inventory UIs with `ktInventory`.
+  - Documents recommended class selection, constructor usage, pagination, refresh, and storage patterns.
+
 ## v2.1.0
 
 ### Added
