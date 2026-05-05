@@ -83,22 +83,16 @@ class SimpleMenu(
 }
 ```
 
-## Codex Skill
+## Skill
 
-This repository includes an installable Codex skill at `skills/ktinventory`.
+This repository includes an installable skill at `skills/ktinventory`.
 
 ### Install with `gh skill`
 
-Install from the repository and target Codex explicitly:
+Install from the repository:
 
 ```bash
-gh skill install sya-ri/ktInventory ktinventory --agent codex
-```
-
-Install from the local checkout instead:
-
-```bash
-gh skill install ./skills/ktinventory --agent codex
+gh skill install sya-ri/ktInventory ktinventory
 ```
 
 ### Install with `npx skills`
@@ -106,19 +100,7 @@ gh skill install ./skills/ktinventory --agent codex
 Install from GitHub:
 
 ```bash
-npx skills add sya-ri/ktInventory --skill ktinventory -a codex
+npx skills add sya-ri/ktInventory --skill ktinventory
 ```
 
-Install from the direct skill path:
-
-```bash
-npx skills add https://github.com/sya-ri/ktInventory/tree/master/skills/ktinventory -a codex
-```
-
-List installable skills in this repository:
-
-```bash
-npx skills add sya-ri/ktInventory --list
-```
-
-After installing the skill, restart Codex so it picks up the new metadata.
+After installing the skill, restart your agent tooling so it picks up the new metadata.
