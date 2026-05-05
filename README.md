@@ -82,3 +82,43 @@ class SimpleMenu(
     }
 }
 ```
+
+## Codex Skill
+
+This repository includes an installable Codex skill at `skills/ktinventory`.
+
+### Install with `gh skill`
+
+Install from the repository and target Codex explicitly:
+
+```bash
+gh skill install sya-ri/ktInventory ktinventory --agent codex
+```
+
+Install from the local checkout instead:
+
+```bash
+gh skill install ./skills/ktinventory --agent codex
+```
+
+### Install with `npx skills`
+
+Install from GitHub:
+
+```bash
+npx skills add sya-ri/ktInventory --skill ktinventory -a codex
+```
+
+Install from the direct skill path:
+
+```bash
+npx skills add https://github.com/sya-ri/ktInventory/tree/master/skills/ktinventory -a codex
+```
+
+List installable skills in this repository:
+
+```bash
+npx skills add sya-ri/ktInventory --list
+```
+
+After installing the skill, restart Codex so it picks up the new metadata.

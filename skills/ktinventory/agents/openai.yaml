@@ -1,0 +1,4 @@
+interface:
+  display_name: "ktInventory"
+  short_description: "Build inventory GUIs with ktInventory"
+  default_prompt: "Use $ktinventory to implement or update a Bukkit, Spigot, or Paper inventory UI with the patterns used by this repository."
