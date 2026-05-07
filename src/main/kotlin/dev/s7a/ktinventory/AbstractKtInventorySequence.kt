@@ -33,6 +33,12 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
      */
     abstract val entries: Sequence<KtInventoryButton<Entry<T>>>
 
+    private val iterator by lazy {
+        entries.iterator()
+    }
+
+    private var nextPage = 0
+
     private val paginates = mutableListOf<Int>()
 
     private val pages = ConcurrentHashMap<Int, Entry<T>>()
@@ -170,23 +176,36 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
         }
         val pageSize = paginates.size
         require(pageSize > 0) { "Call paginateSlot before opening a sequence-backed inventory." }
-        pages
-            .computeIfAbsent(page) {
-                val slots = this.paginates
-                val buttons = this.buttons
-                createEntry(page)
+        createPagesUpTo(page).open(player)
+    }
+
+    /**
+     * Creates missing pages up to the specified page.
+     *
+     * This consumes [entries] while assigning buttons to pagination slots.
+     *
+     * @param page Page number to create up to
+     * @return Created or cached page for the specified page number
+     */
+    @Synchronized
+    private fun createPagesUpTo(page: Int): Entry<T> {
+        while (nextPage <= page) {
+            val currentPage = nextPage
+            pages[currentPage] =
+                createEntry(currentPage)
                     .apply {
-                        val pageEntries = entries.drop(page * pageSize).take(pageSize).toList()
-                        slots.forEachIndexed { index, slot ->
-                            pageEntries.getOrNull(index)?.let {
-                                button(slot, it)
+                        this@AbstractKtInventorySequence.paginates.forEach { slot ->
+                            if (iterator.hasNext()) {
+                                button(slot, iterator.next())
                             }
                         }
-                        buttons.forEach { (slot, item) ->
+                        this@AbstractKtInventorySequence.buttons.forEach { (slot, item) ->
                             button(slot, item)
                         }
                     }
-            }.open(player)
+            nextPage += 1
+        }
+        return pages.getValue(page)
     }
 
     /**
