@@ -9,8 +9,6 @@ shadow = "9.3.2"
 mavenPublish = "0.35.0"
 
 # Libraries
-spigot8 = "1.8.8-R0.1-SNAPSHOT"
-spigotLatest = "1.21.4-R0.1-SNAPSHOT"
 paper = "1.16.5-R0.1-SNAPSHOT"
 
 [plugins]
@@ -24,6 +22,4 @@ shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 
 [libraries]
-spigot8 = { group = "org.spigotmc", name = "spigot-api", version.ref = "spigot8" }
-spigotLatest = { group = "org.spigotmc", name = "spigot-api", version.ref = "spigotLatest" }
 paper = { group = "com.destroystokyo.paper", name = "paper-api", version.ref = "paper" }
