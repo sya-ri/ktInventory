@@ -34,6 +34,17 @@
   - `KtInventorySequence` for legacy string titles.
   - `KtInventorySequenceAdventure` for Adventure `Component` titles.
   - These classes use `entries: Sequence<KtInventoryButton<Entry<T>>>` and intentionally do not expose `lastPage`.
+- Add condition-based fetched inventory base classes.
+  - `KtInventoryFetched` for legacy string titles.
+  - `KtInventoryFetchedAdventure` for Adventure `Component` titles.
+  - These classes fetch entries with `fetch(condition, limit)`, allowing offset, cursor, or filter-based pagination without storing all entries up front.
+- Add lazy fetched inventory base classes.
+  - `KtInventoryLazyFetched` for legacy string titles.
+  - `KtInventoryLazyFetchedAdventure` for Adventure `Component` titles.
+  - These classes open the inventory immediately, run `fetch(condition, limit)` asynchronously through `KtInventoryPluginContext.LazyFetchable`, and place buttons on the server main thread after data is loaded.
+- Add `KtInventoryPluginContext.LazyFetchable` for lazy fetched inventories.
+  - Use `KtInventoryPluginContext.LazyFetchable(plugin)` when constructing lazy fetched inventories.
+  - `KtInventoryPluginContext(plugin)` remains the scheduler-free context for existing inventory classes and custom context source compatibility.
 - Add `KtInventoryPluginContext.handlerId` and `KtInventoryHandlerId` for internal event handler sharing.
   - Contexts created with `KtInventoryPluginContext(plugin)` share the same handler id per plugin instance.
   - Custom context implementations should use `KtInventoryHandlerId.of(plugin)` with the plugin that registers events.

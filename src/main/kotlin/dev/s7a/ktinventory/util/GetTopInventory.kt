@@ -1,5 +1,7 @@
 package dev.s7a.ktinventory.util
 
+import dev.s7a.ktinventory.AbstractKtInventoryFetched
+import dev.s7a.ktinventory.AbstractKtInventoryLazyFetched
 import dev.s7a.ktinventory.AbstractKtInventoryPaginated
 import dev.s7a.ktinventory.AbstractKtInventorySequence
 import org.bukkit.entity.HumanEntity
@@ -69,6 +71,8 @@ fun <T : Any> getTopInventoryPaginated(
         when (holder) {
             is AbstractKtInventoryPaginated.Entry<*> -> holder.paginated
             is AbstractKtInventorySequence.Entry<*> -> holder.paginated
+            is AbstractKtInventoryFetched.Entry<*, *> -> holder.paginated
+            is AbstractKtInventoryLazyFetched.Entry<*, *, *> -> holder.paginated
             else -> return null
         }
     return clazz.safeCast(paginated)

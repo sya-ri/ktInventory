@@ -2,6 +2,7 @@ package dev.s7a.ktinventory
 
 import org.bukkit.event.Listener
 import org.bukkit.plugin.Plugin
+import org.bukkit.scheduler.BukkitTask
 
 /**
  * Context interface for KtInventory plugin integration.
@@ -28,6 +29,51 @@ interface KtInventoryPluginContext {
      * @since 2.1.0
      */
     fun registerEvents(listener: Listener)
+
+    /**
+     * Context capability for inventories that fetch data asynchronously.
+     *
+     * Custom contexts only need to implement this interface when they are used with lazy fetched inventories.
+     */
+    interface LazyFetchable : KtInventoryPluginContext {
+        /**
+         * Runs a task on the server main thread.
+         *
+         * @param block Task to run
+         * @return Scheduled task
+         * @since 2.2.0
+         */
+        fun runTask(block: () -> Unit): BukkitTask
+
+        /**
+         * Runs a task asynchronously.
+         *
+         * @param block Task to run
+         * @return Scheduled task
+         * @since 2.2.0
+         */
+        fun runTaskAsync(block: () -> Unit): BukkitTask
+
+        companion object {
+            /**
+             * Creates a [LazyFetchable] context for the specified [plugin].
+             *
+             * @since 2.2.0
+             */
+            operator fun invoke(plugin: Plugin) =
+                object : LazyFetchable {
+                    override val handlerId = KtInventoryHandlerId.of(plugin)
+
+                    override fun registerEvents(listener: Listener) {
+                        plugin.server.pluginManager.registerEvents(listener, plugin)
+                    }
+
+                    override fun runTask(block: () -> Unit) = plugin.server.scheduler.runTask(plugin, Runnable(block))
+
+                    override fun runTaskAsync(block: () -> Unit) = plugin.server.scheduler.runTaskAsynchronously(plugin, Runnable(block))
+                }
+        }
+    }
 
     companion object {
         /**

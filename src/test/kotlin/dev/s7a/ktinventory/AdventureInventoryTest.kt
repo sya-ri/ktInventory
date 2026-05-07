@@ -5,7 +5,9 @@ import dev.s7a.ktinventory.util.getTopInventoryPaginated
 import dev.s7a.ktinventory.util.getTopInventorySequenceEntry
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
+import org.bukkit.event.Listener
 import org.bukkit.inventory.ItemStack
+import org.bukkit.plugin.Plugin
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
 import org.mockbukkit.mockbukkit.plugin.PluginMock
@@ -14,6 +16,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -123,6 +126,57 @@ class AdventureInventoryTest {
         assertTrue(entry.paginated is TestSequenceAdventureInventory)
     }
 
+    @Test
+    fun `fetched adventure inventory opens requested condition`() {
+        val player = server.addPlayer()
+        val inventory = TestFetchedAdventureInventory(KtInventoryPluginContext(plugin))
+
+        inventory.open(player, 2)
+
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryFetched.Entry<*, *>
+        assertSame(inventory, entry.paginated)
+        assertEquals(2, entry.condition)
+        assertEquals(Component.text("Adventure 2"), player.openInventory.title())
+        assertSame(inventory, getTopInventoryPaginated<TestFetchedAdventureInventory>(player))
+        assertEquals(
+            Material.DIAMOND,
+            player.openInventory.topInventory
+                .getItem(0)
+                ?.type,
+        )
+    }
+
+    @Test
+    fun `lazy fetched adventure inventory opens immediately and places fetched data later`() {
+        val context = DeferredTaskContext(plugin)
+        val player = server.addPlayer()
+        val inventory = TestLazyFetchedAdventureInventory(context)
+
+        inventory.open(player, 2)
+
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryLazyFetched.Entry<*, *, *>
+        assertSame(inventory, entry.paginated)
+        assertEquals(2, entry.condition)
+        assertEquals(Component.text("Adventure 2"), player.openInventory.title())
+        assertSame(inventory, getTopInventoryPaginated<TestLazyFetchedAdventureInventory>(player))
+        assertEquals(emptyList(), inventory.fetchedConditions)
+        assertNull(player.openInventory.topInventory.getItem(0))
+
+        context.runNextAsyncTask()
+
+        assertEquals(listOf(2), inventory.fetchedConditions)
+        assertNull(player.openInventory.topInventory.getItem(0))
+
+        context.runNextSyncTask()
+
+        assertEquals(
+            Material.DIAMOND,
+            player.openInventory.topInventory
+                .getItem(0)
+                ?.type,
+        )
+    }
+
     private class TestAdventureInventory(
         context: KtInventoryPluginContext,
     ) : KtInventoryAdventure(context, 1) {
@@ -202,6 +256,107 @@ class AdventureInventoryTest {
 
         init {
             paginateSlot(0, 1)
+        }
+    }
+
+    private class TestFetchedAdventureInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventoryFetchedAdventure<Int>(context, 1) {
+        private val materials =
+            listOf(
+                Material.STONE,
+                Material.DIRT,
+                Material.DIAMOND,
+            )
+
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): Page<Int, KtInventoryButton<AbstractKtInventoryFetched.Entry<KtInventoryFetchedAdventure<Int>, Int>>> =
+            Page(
+                entries =
+                    materials
+                        .drop(condition)
+                        .take(limit)
+                        .map { createButton(ItemStack(it)) {} },
+                previousCondition = (condition - limit).takeIf { it >= 0 },
+                nextCondition = (condition + limit).takeIf { it < materials.size },
+            )
+
+        override fun title(condition: Int) = Component.text("Adventure $condition")
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class TestLazyFetchedAdventureInventory(
+        context: KtInventoryPluginContext.LazyFetchable,
+    ) : KtInventoryLazyFetchedAdventure<Int, Material>(context, 1) {
+        private val materials =
+            listOf(
+                Material.STONE,
+                Material.DIRT,
+                Material.DIAMOND,
+            )
+        val fetchedConditions = mutableListOf<Int>()
+
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): AbstractKtInventoryFetched.Page<Int, Material> {
+            fetchedConditions += condition
+            return AbstractKtInventoryFetched.Page(
+                entries = materials.drop(condition).take(limit),
+                previousCondition = (condition - limit).takeIf { it >= 0 },
+                nextCondition = (condition + limit).takeIf { it < materials.size },
+            )
+        }
+
+        override fun createButton(
+            data: Material,
+        ): KtInventoryButton<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetchedAdventure<Int, Material>, Int, Material>> =
+            createButton(ItemStack(data)) {}
+
+        override fun title(condition: Int) = Component.text("Adventure $condition")
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class DeferredTaskContext(
+        private val plugin: Plugin,
+    ) : KtInventoryPluginContext.LazyFetchable {
+        private val syncTasks = mutableListOf<() -> Unit>()
+        private val asyncTasks = mutableListOf<() -> Unit>()
+
+        override val handlerId = KtInventoryHandlerId.of(plugin)
+
+        override fun registerEvents(listener: Listener) {
+            plugin.server.pluginManager.registerEvents(listener, plugin)
+        }
+
+        override fun runTask(block: () -> Unit) =
+            plugin.server.scheduler.runTask(plugin, Runnable {}).also {
+                syncTasks += block
+            }
+
+        override fun runTaskAsync(block: () -> Unit) =
+            plugin.server.scheduler.runTaskAsynchronously(plugin, Runnable {}).also {
+                asyncTasks += block
+            }
+
+        fun runNextAsyncTask() {
+            asyncTasks.removeFirst().invoke()
+        }
+
+        fun runNextSyncTask() {
+            syncTasks.removeFirst().invoke()
         }
     }
 }

@@ -7,8 +7,10 @@ import org.mockbukkit.mockbukkit.plugin.PluginMock
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class KtInventoryPluginContextTest {
     private lateinit var server: ServerMock
@@ -56,6 +58,17 @@ class KtInventoryPluginContextTest {
     @Test
     fun `custom contexts can share handler id through the plugin that registers events`() {
         assertSame(TestContext(plugin).handlerId, TestContext(plugin).handlerId)
+    }
+
+    @Test
+    fun `lazy fetchable context schedules sync and async tasks with the expected scheduler mode`() {
+        val context = KtInventoryPluginContext.LazyFetchable(plugin)
+
+        val syncTask = context.runTask {}
+        val asyncTask = context.runTaskAsync {}
+
+        assertTrue(syncTask.isSync)
+        assertFalse(asyncTask.isSync)
     }
 
     private class TestContext(

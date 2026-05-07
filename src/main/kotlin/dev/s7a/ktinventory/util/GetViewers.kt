@@ -1,5 +1,7 @@
 package dev.s7a.ktinventory.util
 
+import dev.s7a.ktinventory.AbstractKtInventoryFetched
+import dev.s7a.ktinventory.AbstractKtInventoryLazyFetched
 import dev.s7a.ktinventory.AbstractKtInventoryPaginated
 import dev.s7a.ktinventory.AbstractKtInventorySequence
 import dev.s7a.ktinventory.HasParentInventory
@@ -147,6 +149,38 @@ inline fun <reified T : ParentInventory> getViewersDeeply() =
                     }
 
                     is AbstractKtInventorySequence.Entry<*> -> {
+                        when (val paginated = inventory.paginated) {
+                            is T -> {
+                                paginated
+                            }
+
+                            is HasParentInventory<*> -> {
+                                paginated.parentInventory as? T
+                            }
+
+                            else -> {
+                                null
+                            }
+                        }
+                    }
+
+                    is AbstractKtInventoryFetched.Entry<*, *> -> {
+                        when (val paginated = inventory.paginated) {
+                            is T -> {
+                                paginated
+                            }
+
+                            is HasParentInventory<*> -> {
+                                paginated.parentInventory as? T
+                            }
+
+                            else -> {
+                                null
+                            }
+                        }
+                    }
+
+                    is AbstractKtInventoryLazyFetched.Entry<*, *, *> -> {
                         when (val paginated = inventory.paginated) {
                             is T -> {
                                 paginated
