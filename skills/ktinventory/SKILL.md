@@ -14,16 +14,19 @@ Use this skill when the task is about inventory UIs built with `ktInventory`.
    - `KtInventoryAdventure`: Adventure `Component` title
    - `KtInventoryPaginated`: paginated string-title inventory
    - `KtInventoryPaginatedAdventure`: paginated Adventure-title inventory
+   - `KtInventorySequence`: sequence-backed paginated string-title inventory without `lastPage`
+   - `KtInventorySequenceAdventure`: sequence-backed paginated Adventure-title inventory without `lastPage`
 2. Prefer a primary constructor that accepts `KtInventoryPluginContext`. Callers should pass an injected context directly, or pass a `Plugin` instance when that is what they have; convert `Plugin` to `KtInventoryPluginContext` inside the inventory definition.
 3. Define buttons in `init` with `button(...)` or `createButton(...)`. In click handlers, prefer `event.player` or a safe cast from `event.whoClicked`.
-4. For paginated UIs, define `entries`, call `paginateSlot(...)`, and wire navigation with `previousPageButton(...)` and `nextPageButton(...)`.
+4. For paginated UIs, define `entries`, call `paginateSlot(...)`, and wire navigation with `previousPageButton(...)` and `nextPageButton(...)`. Use `KtInventorySequence` or `KtInventorySequenceAdventure` when `entries` should be a `Sequence`.
 5. For stateful refreshes, follow the repository pattern: `companion object : Refreshable<...>(...)` and rebuild a fresh inventory in `createNew(...)`.
 6. For editable storage areas, use `storable(...)` and keep save behavior inside the provided callback instead of scattering inventory persistence logic.
 7. For top inventory or viewer lookup, use the current APIs:
    - `getTopInventory<T>(player)` for the top holder a player has open.
    - `getTopInventoryPaginated<T>(player)` for the paginated inventory itself.
    - `getTopInventoryPaginatedEntry<T>(player)` when page state is needed.
-   - `getViewers<T>()`, `getViewersPaginated<T>()`, `getViewersPaginatedEntry<T>()`, or `getViewersDeeply<T>()` for viewer maps.
+   - `getTopInventorySequenceEntry<T>(player)` for sequence-backed page state.
+   - `getViewers<T>()`, `getViewersPaginated<T>()`, `getViewersPaginatedEntry<T>()`, `getViewersSequenceEntry<T>()`, or `getViewersDeeply<T>()` for viewer maps.
 8. Avoid deprecated lookup APIs in new code: `getOpenInventory`, `getOpenInventoryPaginated`, `getAllViewers`, `getAllViewersPaginated`, and `getAllViewersDeeply`.
 9. Start from the smallest working pattern, then add pagination, refresh, or storage only when the user actually needs them.
 

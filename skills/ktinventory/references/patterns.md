@@ -98,6 +98,33 @@ Rules of thumb:
 - keep navigation buttons outside that area
 - build each row entry with `createButton(...)`
 
+Use `KtInventorySequence` when the entry source is lazy or sequence-backed. Sequence-backed titles receive only the current page:
+
+```kotlin
+class SoundCheckInventory(
+    context: KtInventoryPluginContext,
+) : KtInventorySequence(context, 6) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override val entries =
+        Registry.SOUNDS.asSequence().map { sound ->
+            createButton(itemStack(Material.GRAY_DYE, "&6${sound.key.key}")) { event ->
+                val player = event.player as? Player ?: return@createButton
+                player.playSound(player.location, sound, 1F, 1F)
+            }
+        }
+
+    override fun title(page: Int) =
+        "&0&lSound checker (${page + 1})"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "&d<<"))
+        nextPageButton(53, itemStack(Material.ARROW, "&d>>"))
+    }
+}
+```
+
 ## Storable Slots Pattern
 
 Use `storable(...)` when players should place or move items inside managed slots:

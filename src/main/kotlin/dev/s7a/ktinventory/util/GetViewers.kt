@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory.util
 
 import dev.s7a.ktinventory.AbstractKtInventoryPaginated
+import dev.s7a.ktinventory.AbstractKtInventorySequence
 import dev.s7a.ktinventory.HasParentInventory
 import dev.s7a.ktinventory.KtInventoryBase
 import dev.s7a.ktinventory.ParentInventory
@@ -84,6 +85,31 @@ fun <T : AbstractKtInventoryPaginated<*>> getViewersPaginatedEntry(clazz: KClass
 inline fun <reified T : AbstractKtInventoryPaginated<*>> getViewersPaginatedEntry() = getViewersPaginatedEntry(T::class)
 
 /**
+ * Gets all online players currently viewing a sequence-backed paginated inventory entry of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventorySequence]
+ * @param clazz The KClass of the inventory type
+ * @return Map of players to their open sequence-backed inventory entries of type T
+ * @since 2.2.0
+ */
+fun <T : AbstractKtInventorySequence<*>> getViewersSequenceEntry(clazz: KClass<T>): Map<Player, AbstractKtInventorySequence.Entry<T>> =
+    Bukkit
+        .getOnlinePlayers()
+        .mapNotNull { player ->
+            val inventory = getTopInventorySequenceEntry(clazz, player) ?: return@mapNotNull null
+            player to inventory
+        }.toMap()
+
+/**
+ * Gets all online players currently viewing a sequence-backed paginated inventory entry of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventorySequence]
+ * @return Map of players to their open sequence-backed inventory entries of type T
+ * @since 2.2.0
+ */
+inline fun <reified T : AbstractKtInventorySequence<*>> getViewersSequenceEntry() = getViewersSequenceEntry(T::class)
+
+/**
  * Gets all online players currently viewing an inventory or child inventory of the specified parent type.
  * This function searches through the inventory hierarchy to find parent inventories of the specified type.
  *
@@ -96,16 +122,49 @@ inline fun <reified T : ParentInventory> getViewersDeeply() =
         .mapNotNull { (player, inventory) ->
             val parentInventory =
                 when (inventory) {
-                    is T -> inventory
-                    is HasParentInventory<*> -> inventory.parentInventory as? T
+                    is T -> {
+                        inventory
+                    }
+
+                    is HasParentInventory<*> -> {
+                        inventory.parentInventory as? T
+                    }
+
                     is AbstractKtInventoryPaginated.Entry<*> -> {
                         when (val paginated = inventory.paginated) {
-                            is T -> paginated
-                            is HasParentInventory<*> -> paginated.parentInventory as? T
-                            else -> null
+                            is T -> {
+                                paginated
+                            }
+
+                            is HasParentInventory<*> -> {
+                                paginated.parentInventory as? T
+                            }
+
+                            else -> {
+                                null
+                            }
                         }
                     }
-                    else -> null
+
+                    is AbstractKtInventorySequence.Entry<*> -> {
+                        when (val paginated = inventory.paginated) {
+                            is T -> {
+                                paginated
+                            }
+
+                            is HasParentInventory<*> -> {
+                                paginated.parentInventory as? T
+                            }
+
+                            else -> {
+                                null
+                            }
+                        }
+                    }
+
+                    else -> {
+                        null
+                    }
                 } ?: return@mapNotNull null
             player to parentInventory
         }.toMap()

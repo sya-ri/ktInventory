@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory.util
 
 import dev.s7a.ktinventory.AbstractKtInventoryPaginated
+import dev.s7a.ktinventory.AbstractKtInventorySequence
 import org.bukkit.entity.HumanEntity
 import org.bukkit.inventory.Inventory
 import kotlin.reflect.KClass
@@ -63,8 +64,14 @@ fun <T : Any> getTopInventoryPaginated(
     clazz: KClass<T>,
     player: HumanEntity,
 ): T? {
-    val entry = getTopInventory<AbstractKtInventoryPaginated.Entry<*>>(player) ?: return null
-    return clazz.safeCast(entry.paginated)
+    val holder = getTopInventory<Any>(player) ?: return null
+    val paginated =
+        when (holder) {
+            is AbstractKtInventoryPaginated.Entry<*> -> holder.paginated
+            is AbstractKtInventorySequence.Entry<*> -> holder.paginated
+            else -> return null
+        }
+    return clazz.safeCast(paginated)
 }
 
 /**
@@ -106,3 +113,33 @@ fun <T : AbstractKtInventoryPaginated<*>> getTopInventoryPaginatedEntry(
  */
 inline fun <reified T : AbstractKtInventoryPaginated<*>> getTopInventoryPaginatedEntry(player: HumanEntity) =
     getTopInventoryPaginatedEntry(T::class, player)
+
+/**
+ * Gets the sequence-backed paginated inventory entry of the top inventory in the currently open inventory view.
+ *
+ * @param T The sequence-backed inventory type
+ * @param clazz The KClass of the sequence-backed inventory type
+ * @param player The player whose top inventory entry to check
+ * @return The top sequence-backed inventory entry of type T, or null if not found
+ * @since 2.2.0
+ */
+@Suppress("UNCHECKED_CAST")
+fun <T : AbstractKtInventorySequence<*>> getTopInventorySequenceEntry(
+    clazz: KClass<T>,
+    player: HumanEntity,
+): AbstractKtInventorySequence.Entry<T>? {
+    val entry = getTopInventory<AbstractKtInventorySequence.Entry<*>>(player) ?: return null
+    if (!clazz.isInstance(entry.paginated)) return null
+    return entry as AbstractKtInventorySequence.Entry<T>
+}
+
+/**
+ * Gets the sequence-backed paginated inventory entry of the top inventory in the currently open inventory view.
+ *
+ * @param T The sequence-backed inventory type
+ * @param player The player whose top inventory entry to check
+ * @return The top sequence-backed inventory entry of type T, or null if not found
+ * @since 2.2.0
+ */
+inline fun <reified T : AbstractKtInventorySequence<*>> getTopInventorySequenceEntry(player: HumanEntity) =
+    getTopInventorySequenceEntry(T::class, player)

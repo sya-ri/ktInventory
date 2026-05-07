@@ -16,6 +16,8 @@
   - `getTopInventoryPaginated(clazz, player)`
   - `getTopInventoryPaginatedEntry<T>()`
   - `getTopInventoryPaginatedEntry(clazz, player)`
+  - `getTopInventorySequenceEntry<T>()`
+  - `getTopInventorySequenceEntry(clazz, player)`
 - Add generic viewer lookup APIs.
   - These APIs generalize viewer lookup beyond `AbstractKtInventory`, matching the new top inventory lookup behavior.
   - The paginated variants provide both paginated inventory lookup and paginated entry lookup.
@@ -25,12 +27,20 @@
   - `getViewersPaginated(clazz)`
   - `getViewersPaginatedEntry<T>()`
   - `getViewersPaginatedEntry(clazz)`
+  - `getViewersSequenceEntry<T>()`
+  - `getViewersSequenceEntry(clazz)`
   - `getViewersDeeply<T>()`
+- Add sequence-backed paginated inventory base classes.
+  - `KtInventorySequence` for legacy string titles.
+  - `KtInventorySequenceAdventure` for Adventure `Component` titles.
+  - These classes use `entries: Sequence<KtInventoryButton<Entry<T>>>` and intentionally do not expose `lastPage`.
+
 ### Fixed
 
 - `getViewersDeeply<T>()` now searches from `KtInventoryBase` holders and resolves paginated entries through their `paginated` inventory.
   - The old deep viewer search was based on `KtInventory`, so it only supported some inventory implementations.
   - It also did not handle paginated inventories correctly because the opened holder is the paginated entry, while the target parent type is attached to the paginated inventory itself.
+  - Sequence-backed paginated entries are resolved the same way.
 
 ### Changed
 

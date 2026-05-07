@@ -357,6 +357,33 @@ class SoundCheckInventory(
 }
 ```
 
+Use `KtInventorySequence` when entries should be produced from a `Sequence`.
+Sequence-backed inventories do not expose `lastPage`, so titles receive only `page`.
+
+```kotlin
+class SoundCheckSequenceInventory(
+    context: KtInventoryPluginContext,
+) : KtInventorySequence(context, 6) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override val entries = Registry.SOUNDS.asSequence().map { sound ->
+        createButton(itemStack(Material.MUSIC_DISC_CAT, sound.key().value())) { event ->
+            val player = event.player as? Player ?: return@createButton
+            player.playSound(player.location, sound, 1F, 1F)
+        }
+    }
+
+    override fun title(page: Int) =
+        "&0&lSound List (${page + 1})"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "Previous Page"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next Page"))
+    }
+}
+```
+
 ### KtInventoryPaginatedAdventure (Component title)
 
 ```kotlin
@@ -670,6 +697,7 @@ init {
 import dev.s7a.ktinventory.util.getTopInventory
 import dev.s7a.ktinventory.util.getTopInventoryPaginated
 import dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry
+import dev.s7a.ktinventory.util.getTopInventorySequenceEntry
 
 // Returns null if the player does not have this top inventory holder open
 val inventory: SimpleMenu? = getTopInventory<SimpleMenu>(player)
@@ -681,6 +709,10 @@ val paginated: SoundCheckInventory? =
 // For paginated inventories — returns the Entry (page) the player is on
 val entry: KtInventoryPaginated.Entry<SoundCheckInventory>? =
     getTopInventoryPaginatedEntry<SoundCheckInventory>(player)
+
+// For sequence-backed inventories — returns the Entry (page) the player is on
+val sequenceEntry: AbstractKtInventorySequence.Entry<SoundCheckSequenceInventory>? =
+    getTopInventorySequenceEntry<SoundCheckSequenceInventory>(player)
 ```
 
 Deprecated aliases:
@@ -694,6 +726,7 @@ Deprecated aliases:
 import dev.s7a.ktinventory.util.getViewers
 import dev.s7a.ktinventory.util.getViewersPaginated
 import dev.s7a.ktinventory.util.getViewersPaginatedEntry
+import dev.s7a.ktinventory.util.getViewersSequenceEntry
 import dev.s7a.ktinventory.util.getViewersDeeply
 
 // Map of every player who has SimpleMenu open → Map<Player, SimpleMenu>
@@ -704,6 +737,9 @@ val paginatedViewers = getViewersPaginated<SoundCheckInventory>()
 
 // Paginated entry version — returns Map<Player, Entry<SoundCheckInventory>>
 val paginatedEntryViewers = getViewersPaginatedEntry<SoundCheckInventory>()
+
+// Sequence-backed entry version — returns Map<Player, Entry<SoundCheckSequenceInventory>>
+val sequenceEntryViewers = getViewersSequenceEntry<SoundCheckSequenceInventory>()
 
 // Deep search — includes players in child inventories that declare parentInventory
 val deepViewers = getViewersDeeply<MyParentInventory>()
@@ -792,8 +828,9 @@ class SubMenu(
 
 `getViewersDeeply<MainMenu>()` traverses `HasParentInventory.parentInventory`
 and returns all players associated with `MainMenu`, including those currently
-viewing a child inventory. It also resolves paginated entries through their
-`paginated` inventory before checking `ParentInventory` / `HasParentInventory`.
+viewing a child inventory. It also resolves List-backed and sequence-backed
+paginated entries through their `paginated` inventory before checking
+`ParentInventory` / `HasParentInventory`.
 
 
 ---
@@ -810,6 +847,9 @@ viewing a child inventory. It also resolves paginated entries through their
 | `AbstractKtInventoryPaginated<T>` | abstract class | Base for paginated inventories |
 | `KtInventoryPaginated` | abstract class | Paginated inventory with a String title |
 | `KtInventoryPaginatedAdventure` | abstract class | Paginated inventory with a Component title (Paper only) |
+| `AbstractKtInventorySequence<T>` | abstract class | Base for sequence-backed paginated inventories |
+| `KtInventorySequence` | abstract class | Sequence-backed paginated inventory with a String title |
+| `KtInventorySequenceAdventure` | abstract class | Sequence-backed paginated inventory with a Component title (Paper only) |
 | `KtInventoryButton<T>` | class | A clickable button component |
 | `KtInventoryStorable` | class | A storable-item-slot component |
 | `KtInventoryStorableOption` | interface | Save-timing and callback configuration for storables |
@@ -826,9 +866,11 @@ viewing a child inventory. It also resolves paginated entries through their
 | `getTopInventory<T>(player)` | `util/GetTopInventory.kt` | Get the typed top inventory holder a player has open |
 | `getTopInventoryPaginated<T>(player)` | `util/GetTopInventory.kt` | Get the paginated inventory behind the open paginated entry |
 | `getTopInventoryPaginatedEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open paginated entry, including page state |
+| `getTopInventorySequenceEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open sequence-backed paginated entry, including page state |
 | `getViewers<T>()` | `util/GetViewers.kt` | All players viewing a given top inventory holder type |
 | `getViewersPaginated<T>()` | `util/GetViewers.kt` | All players viewing a given paginated inventory type |
 | `getViewersPaginatedEntry<T>()` | `util/GetViewers.kt` | All players viewing a given paginated entry type |
+| `getViewersSequenceEntry<T>()` | `util/GetViewers.kt` | All players viewing a given sequence-backed paginated entry type |
 | `getViewersDeeply<T>()` | `util/GetViewers.kt` | Deep search through parent–child hierarchy |
 | `buildStorableOption { }` | `options/` | DSL builder for `KtInventoryStorableOption` |
 
