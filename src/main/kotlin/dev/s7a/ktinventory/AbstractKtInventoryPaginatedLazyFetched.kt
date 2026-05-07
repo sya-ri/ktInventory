@@ -3,49 +3,34 @@ package dev.s7a.ktinventory
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryPagedStorable
 import dev.s7a.ktinventory.components.KtInventoryStorable
-import dev.s7a.ktinventory.util.getTopInventorySequenceEntry
-import dev.s7a.ktinventory.util.getViewersSequenceEntry
+import dev.s7a.ktinventory.util.getTopInventory
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedLazyFetchedEntry
+import dev.s7a.ktinventory.util.getViewersPaginatedLazyFetchedEntry
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.inventory.ItemStack
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 /**
- * Base class for sequence-backed paginated inventories.
+ * Base class for inventories that open immediately and populate entries after data is fetched asynchronously.
  *
- * Unlike [AbstractKtInventoryPaginated], this class does not expose the last page number.
- *
- * @param T Type of the sequence-backed inventory
+ * @param T Type of the lazy fetched inventory
+ * @param C Type of the display condition
+ * @param D Type of the fetched data
  * @param context Plugin context
  * @param line Number of inventory rows
  * @since 2.2.0
  */
-abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
-    private val context: KtInventoryPluginContext,
+abstract class AbstractKtInventoryPaginatedLazyFetched<T : AbstractKtInventoryPaginatedLazyFetched<T, C, D>, C : Any, D>(
+    private val context: KtInventoryPluginContext.LazyFetchable,
     line: Int,
 ) : KtInventoryBase(line) {
-    /**
-     * Sequence of entries to be paginated.
-     *
-     * @since 2.2.0
-     */
-    abstract val entries: Sequence<KtInventoryButton<Entry<T>>>
-
-    private val iterator by lazy {
-        entries.iterator()
-    }
-
-    private var nextPage = 0
-
     private val paginates = mutableListOf<Int>()
 
-    private val pages = ConcurrentHashMap<Int, Entry<T>>()
-
-    private val _pagedStorables = mutableSetOf<KtInventoryPagedStorable<Entry<T>>>()
+    private val _pagedStorables = mutableSetOf<KtInventoryPagedStorable<Entry<T, C, D>>>()
 
     /**
      * Set of all paged storables in this inventory.
@@ -56,13 +41,46 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
         get() = _pagedStorables.toSet()
 
     /**
+     * Initial display condition used by [open].
+     *
+     * @since 2.2.0
+     */
+    abstract val initialCondition: C
+
+    /**
+     * Fetches data for the specified display condition.
+     *
+     * This function is executed asynchronously. Do not call Bukkit APIs from this function.
+     *
+     * @param condition Display condition
+     * @param limit Maximum number of entries to fetch
+     * @return Fetched page data
+     * @since 2.2.0
+     */
+    protected abstract fun fetch(
+        condition: C,
+        limit: Int,
+    ): AbstractKtInventoryPaginatedFetched.Page<C, D>
+
+    /**
+     * Creates a button for fetched data.
+     *
+     * This function is executed on the server main thread.
+     *
+     * @param data Fetched data
+     * @return Created button
+     * @since 2.2.0
+     */
+    protected abstract fun createButton(data: D): KtInventoryButton<Entry<T, C, D>>
+
+    /**
      * Creates a new inventory page.
      *
-     * @param page Page number
+     * @param condition Display condition
      * @return Created inventory page
      * @since 2.2.0
      */
-    protected abstract fun createEntry(page: Int): Entry<T>
+    protected abstract fun createEntry(condition: C): Entry<T, C, D>
 
     final override fun button(
         slot: Int,
@@ -101,67 +119,65 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
     }
 
     /**
-     * Adds a storable that is applied to each created page entry.
+     * Adds a storable that is applied to each created condition entry.
      *
      * @param slots Slot numbers to manage
-     * @param initialize Provides initial items for each page entry
+     * @param initialize Provides initial items for each condition entry
      * @param onPreClick Handler called before click events
      * @param onClick Handler for click events
      * @param onPreDrag Handler called before drag events
      * @param onDrag Handler for drag events
-     * @param save Handler to save page entry state
+     * @param save Handler to save condition entry state
      * @since 2.2.0
      */
     fun storable(
         slots: Iterable<Int>,
-        initialize: Entry<T>.() -> List<ItemStack?> = { emptyList() },
-        onPreClick: Entry<T>.(KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = {
+        initialize: Entry<T, C, D>.() -> List<ItemStack?> = { emptyList() },
+        onPreClick: Entry<T, C, D>.(KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = {
             KtInventoryStorable.EventResult.Allow
         },
-        onClick: Entry<T>.(KtInventoryStorable.ClickEvent) -> Unit = {},
-        onPreDrag: Entry<T>.(KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = {
+        onClick: Entry<T, C, D>.(KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: Entry<T, C, D>.(KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = {
             KtInventoryStorable.EventResult.Allow
         },
-        onDrag: Entry<T>.(KtInventoryStorable.DragEvent) -> Unit = {},
-        save: Entry<T>.(List<ItemStack?>) -> Unit = {},
-    ): KtInventoryPagedStorable<Entry<T>> {
+        onDrag: Entry<T, C, D>.(KtInventoryStorable.DragEvent) -> Unit = {},
+        save: Entry<T, C, D>.(List<ItemStack?>) -> Unit = {},
+    ): KtInventoryPagedStorable<Entry<T, C, D>> {
         val slots = slots.toList()
         require(slots.none { it in paginates }) { "storable slots must not contain pagination slots" }
         val buttons = this.buttons
         require(slots.none { it in buttons }) { "storable slots must not contain fixed button slots" }
-        val pagedStorable =
-            KtInventoryPagedStorable(
-                slots = slots,
-                initialize = initialize,
-                onPreClick = onPreClick,
-                onClick = onClick,
-                onPreDrag = onPreDrag,
-                onDrag = onDrag,
-                save = save,
-            )
-        _pagedStorables += pagedStorable
-        pages.values.forEach(pagedStorable::applyTo)
-        return pagedStorable
+        return KtInventoryPagedStorable(
+            slots = slots,
+            initialize = initialize,
+            onPreClick = onPreClick,
+            onClick = onClick,
+            onPreDrag = onPreDrag,
+            onDrag = onDrag,
+            save = save,
+        ).also {
+            _pagedStorables += it
+        }
     }
 
     /**
-     * Adds a storable that is applied to each created page entry.
+     * Adds a storable that is applied to each created condition entry.
      *
      * @param slots Slot numbers to manage
      * @since 2.2.0
      */
     fun storable(
         vararg slots: Int,
-        initialize: Entry<T>.() -> List<ItemStack?> = { emptyList() },
-        onPreClick: Entry<T>.(KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = {
+        initialize: Entry<T, C, D>.() -> List<ItemStack?> = { emptyList() },
+        onPreClick: Entry<T, C, D>.(KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = {
             KtInventoryStorable.EventResult.Allow
         },
-        onClick: Entry<T>.(KtInventoryStorable.ClickEvent) -> Unit = {},
-        onPreDrag: Entry<T>.(KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = {
+        onClick: Entry<T, C, D>.(KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: Entry<T, C, D>.(KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = {
             KtInventoryStorable.EventResult.Allow
         },
-        onDrag: Entry<T>.(KtInventoryStorable.DragEvent) -> Unit = {},
-        save: Entry<T>.(List<ItemStack?>) -> Unit = {},
+        onDrag: Entry<T, C, D>.(KtInventoryStorable.DragEvent) -> Unit = {},
+        save: Entry<T, C, D>.(List<ItemStack?>) -> Unit = {},
     ) {
         storable(slots.toList(), initialize, onPreClick, onClick, onPreDrag, onDrag, save)
     }
@@ -176,11 +192,11 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
      */
     fun createButton(
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<Entry<T>>) -> Unit,
+        onClick: (KtInventoryButton.ClickEvent<Entry<T, C, D>>) -> Unit,
     ) = KtInventoryButton(itemStack, onClick)
 
     /**
-     * Adds a button to navigate to the next page.
+     * Adds a button to navigate to the next condition.
      *
      * @param slot Button slot number
      * @param itemStack Item to display
@@ -190,13 +206,13 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
     fun nextPageButton(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<Entry<T>>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<Entry<T, C, D>>) -> Unit = {},
     ) {
         nextPageButton(slot, createButton(itemStack, onClick))
     }
 
     /**
-     * Adds a button to navigate to the next page.
+     * Adds a button to navigate to the next condition.
      *
      * @param slot Button slot number
      * @param item Button to use
@@ -204,7 +220,7 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
      */
     fun nextPageButton(
         slot: Int,
-        item: KtInventoryButton<Entry<T>>,
+        item: KtInventoryButton<Entry<T, C, D>>,
     ) {
         button(
             slot,
@@ -215,7 +231,7 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
     }
 
     /**
-     * Adds a button to navigate to the previous page.
+     * Adds a button to navigate to the previous condition.
      *
      * @param slot Button slot number
      * @param itemStack Item to display
@@ -225,13 +241,13 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
     fun previousPageButton(
         slot: Int,
         itemStack: ItemStack,
-        onClick: (KtInventoryButton.ClickEvent<Entry<T>>) -> Unit = {},
+        onClick: (KtInventoryButton.ClickEvent<Entry<T, C, D>>) -> Unit = {},
     ) {
         previousPageButton(slot, createButton(itemStack, onClick))
     }
 
     /**
-     * Adds a button to navigate to the previous page.
+     * Adds a button to navigate to the previous condition.
      *
      * @param slot Button slot number
      * @param item Button to use
@@ -239,7 +255,7 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
      */
     fun previousPageButton(
         slot: Int,
-        item: KtInventoryButton<Entry<T>>,
+        item: KtInventoryButton<Entry<T, C, D>>,
     ) {
         button(
             slot,
@@ -250,89 +266,76 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
     }
 
     final override fun open(player: HumanEntity) {
-        open(player, 0)
+        open(player, initialCondition)
     }
 
     /**
-     * Opens specific page of the inventory for a player.
+     * Opens the inventory immediately and populates entries after fetching data asynchronously.
      *
      * @param player Player to open inventory for
-     * @param page Page number to open
+     * @param condition Display condition
      * @since 2.2.0
      */
     fun open(
         player: HumanEntity,
-        page: Int,
+        condition: C,
     ) {
-        if (page < 0) {
-            open(player, 0)
-            return
+        val limit = paginates.size
+        require(limit > 0) { "Call paginateSlot before opening a lazy fetched inventory." }
+        val entry = createEntry(condition)
+        this@AbstractKtInventoryPaginatedLazyFetched.buttons.forEach { (slot, item) ->
+            entry.button(slot, item)
         }
-        val pageSize = paginates.size
-        require(pageSize > 0) { "Call paginateSlot before opening a sequence-backed inventory." }
-        createPagesUpTo(page).open(player)
-    }
-
-    /**
-     * Creates missing pages up to the specified page.
-     *
-     * This consumes [entries] while assigning buttons to pagination slots.
-     *
-     * @param page Page number to create up to
-     * @return Created or cached page for the specified page number
-     */
-    @Synchronized
-    private fun createPagesUpTo(page: Int): Entry<T> {
-        while (nextPage <= page) {
-            val currentPage = nextPage
-            pages[currentPage] =
-                createEntry(currentPage)
-                    .apply {
-                        this@AbstractKtInventorySequence.paginates.forEach { slot ->
-                            if (iterator.hasNext()) {
-                                button(slot, iterator.next())
-                            }
-                        }
-                        this@AbstractKtInventorySequence.buttons.forEach { (slot, item) ->
-                            button(slot, item)
-                        }
-                        _pagedStorables.forEach { it.applyTo(this) }
+        _pagedStorables.forEach { it.applyTo(entry) }
+        entry.open(player)
+        context.runTaskAsync {
+            val page = fetch(condition, limit)
+            context.runTask {
+                if (getTopInventory<KtInventoryBase>(player) !== entry) return@runTask
+                entry.page = page
+                paginates.forEachIndexed { index, slot ->
+                    page.entries.getOrNull(index)?.let {
+                        entry.button(slot, createButton(it))
                     }
-            nextPage += 1
+                }
+            }
         }
-        return pages.getValue(page)
     }
 
     /**
-     * Represents a single page of sequence-backed inventory.
+     * Represents a single lazy fetched inventory page.
      *
-     * @param T Type of the sequence-backed inventory
+     * @param T Type of the lazy fetched inventory
+     * @param C Type of the display condition
+     * @param D Type of the fetched data
      * @param paginated Parent inventory
-     * @param page Current page number
+     * @param condition Current display condition
      * @since 2.2.0
      */
-    abstract class Entry<T : AbstractKtInventorySequence<*>>(
+    abstract class Entry<T : AbstractKtInventoryPaginatedLazyFetched<T, C, D>, C : Any, D>(
         val paginated: T,
-        val page: Int,
+        val condition: C,
     ) : AbstractKtInventory(paginated.context, paginated.line) {
+        internal var page: AbstractKtInventoryPaginatedFetched.Page<C, D>? = null
+
         /**
-         * Opens next page for a player.
+         * Opens the next page for a player if the fetched page has a next condition.
          *
          * @param player Player to open inventory for
          * @since 2.2.0
          */
         fun openNextPage(player: HumanEntity) {
-            paginated.open(player, page + 1)
+            page?.nextCondition?.let { paginated.open(player, it) }
         }
 
         /**
-         * Opens previous page for a player.
+         * Opens the previous page for a player if the fetched page has a previous condition.
          *
          * @param player Player to open inventory for
          * @since 2.2.0
          */
         fun openPreviousPage(player: HumanEntity) {
-            paginated.open(player, page - 1)
+            page?.previousCondition?.let { paginated.open(player, it) }
         }
 
         override fun onOpen(event: InventoryOpenEvent) = paginated.onOpen(event)
@@ -343,15 +346,16 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
     }
 
     /**
-     * Base class for refreshable sequence-backed inventories.
+     * Base class for refreshable lazy-fetched paginated inventories.
      *
-     * @param T Type of the sequence-backed inventory
-     * @param clazz Class of the sequence-backed inventory
+     * @param T Type of the lazy-fetched inventory
+     * @param C Type of the display condition
+     * @param clazz Class of the lazy-fetched inventory
      * @since 2.2.0
      */
-    abstract class Refreshable<T : AbstractKtInventorySequence<*>>(
+    abstract class Refreshable<T : AbstractKtInventoryPaginatedLazyFetched<*, C, *>, C : Any>(
         val clazz: KClass<T>,
-    ) : RefreshableInventory<Entry<T>> {
+    ) : RefreshableInventory<Entry<*, C, *>> {
         /**
          * Creates new inventory instance.
          *
@@ -362,17 +366,17 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
          */
         abstract fun createNew(
             player: HumanEntity,
-            inventory: Entry<T>,
+            inventory: Entry<*, C, *>,
         ): T?
 
         final override fun refresh(
             player: HumanEntity,
-            predicate: (Entry<T>) -> Boolean,
+            predicate: (Entry<*, C, *>) -> Boolean,
         ) = refresh(player, RefreshBehavior.OpenFirst, predicate)
 
         final override fun refresh(
             player: HumanEntity,
-            inventory: Entry<T>,
+            inventory: Entry<*, C, *>,
         ) = refresh(player, inventory, RefreshBehavior.OpenFirst)
 
         /**
@@ -384,12 +388,13 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
          * @return True if inventory was refreshed
          * @since 2.2.0
          */
+        @Suppress("UNCHECKED_CAST")
         fun refresh(
             player: HumanEntity,
             behavior: RefreshBehavior,
-            predicate: (Entry<T>) -> Boolean = { true },
+            predicate: (Entry<*, C, *>) -> Boolean = { true },
         ): Boolean {
-            val inventory = getTopInventorySequenceEntry(clazz, player) ?: return false
+            val inventory = getTopInventoryPaginatedLazyFetchedEntry(clazz, player) as? Entry<*, C, *> ?: return false
             if (predicate(inventory).not()) return false
             refresh(player, inventory, behavior)
             return true
@@ -405,23 +410,21 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
          */
         fun refresh(
             player: HumanEntity,
-            inventory: Entry<T>,
+            inventory: Entry<*, C, *>,
             behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
         ) {
             val newInventory = createNew(player, inventory)
             if (newInventory != null) {
-                val page =
-                    when (behavior) {
-                        RefreshBehavior.Keep -> inventory.page
-                        RefreshBehavior.OpenFirst -> 0
-                    }
-                newInventory.open(player, page)
+                when (behavior) {
+                    RefreshBehavior.Keep -> newInventory.open(player, inventory.condition)
+                    RefreshBehavior.OpenFirst -> newInventory.open(player)
+                }
             } else {
                 player.closeInventory()
             }
         }
 
-        final override fun refreshAll(predicate: (Player, Entry<T>) -> Boolean) = refreshAll(RefreshBehavior.OpenFirst, predicate)
+        final override fun refreshAll(predicate: (Player, Entry<*, C, *>) -> Boolean) = refreshAll(RefreshBehavior.OpenFirst, predicate)
 
         /**
          * Refreshes inventory for all matching viewers.
@@ -430,11 +433,13 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
          * @param predicate Condition for refresh
          * @since 2.2.0
          */
+        @Suppress("UNCHECKED_CAST")
         fun refreshAll(
             behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
-            predicate: (Player, Entry<T>) -> Boolean = { _, _ -> true },
+            predicate: (Player, Entry<*, C, *>) -> Boolean = { _, _ -> true },
         ) {
-            getViewersSequenceEntry(clazz)
+            getViewersPaginatedLazyFetchedEntry(clazz)
+                .mapValues { (_, inventory) -> inventory as Entry<*, C, *> }
                 .filter { (player, inventory) ->
                     predicate(player, inventory)
                 }.forEach { (player, inventory) ->
@@ -449,14 +454,14 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
          */
         enum class RefreshBehavior {
             /**
-             * Keep current page when refreshing.
+             * Keep current condition when refreshing.
              *
              * @since 2.2.0
              */
             Keep,
 
             /**
-             * Open first page when refreshing.
+             * Open the initial condition when refreshing.
              *
              * @since 2.2.0
              */

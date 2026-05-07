@@ -13,11 +13,11 @@ import kotlin.reflect.KClass
  * @param altColorChar The alternate color code character for title color formatting, defaults to '&'
  * @since 2.2.0
  */
-abstract class KtInventorySequence(
+abstract class KtInventoryPaginatedSequence(
     private val context: KtInventoryPluginContext,
     line: Int,
     private val altColorChar: Char? = '&',
-) : AbstractKtInventorySequence<KtInventorySequence>(context, line) {
+) : AbstractKtInventoryPaginatedSequence<KtInventoryPaginatedSequence>(context, line) {
     /**
      * Generates the title for a specific page of the inventory.
      *
@@ -27,7 +27,7 @@ abstract class KtInventorySequence(
      */
     abstract fun title(page: Int): String
 
-    final override fun createEntry(page: Int): Entry<KtInventorySequence> = Entry(this, page)
+    final override fun createEntry(page: Int): Entry<KtInventoryPaginatedSequence> = Entry(this, page)
 
     /**
      * Represents a single page entry in the sequence-backed inventory.
@@ -37,10 +37,10 @@ abstract class KtInventorySequence(
      * @param page Current page number
      * @since 2.2.0
      */
-    class Entry<T : KtInventorySequence>(
+    class Entry<T : KtInventoryPaginatedSequence>(
         paginated: T,
         page: Int,
-    ) : AbstractKtInventorySequence.Entry<T>(paginated, page) {
+    ) : AbstractKtInventoryPaginatedSequence.Entry<T>(paginated, page) {
         @Suppress("DEPRECATION")
         private val _inventory by lazy {
             @Suppress("DEPRECATION")
@@ -65,12 +65,12 @@ abstract class KtInventorySequence(
      * @param clazz The KClass of the sequence-backed inventory type
      * @since 2.2.0
      */
-    abstract class Refreshable<T : KtInventorySequence>(
+    abstract class Refreshable<T : KtInventoryPaginatedSequence>(
         clazz: KClass<T>,
-    ) : AbstractKtInventorySequence.Refreshable<T>(clazz) {
+    ) : AbstractKtInventoryPaginatedSequence.Refreshable<T>(clazz) {
         abstract override fun createNew(
             player: HumanEntity,
-            inventory: AbstractKtInventorySequence.Entry<T>,
+            inventory: AbstractKtInventoryPaginatedSequence.Entry<T>,
         ): T?
     }
 }

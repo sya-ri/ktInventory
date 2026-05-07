@@ -1,9 +1,9 @@
 package dev.s7a.ktinventory.util
 
-import dev.s7a.ktinventory.AbstractKtInventoryFetched
-import dev.s7a.ktinventory.AbstractKtInventoryLazyFetched
 import dev.s7a.ktinventory.AbstractKtInventoryPaginated
-import dev.s7a.ktinventory.AbstractKtInventorySequence
+import dev.s7a.ktinventory.AbstractKtInventoryPaginatedFetched
+import dev.s7a.ktinventory.AbstractKtInventoryPaginatedLazyFetched
+import dev.s7a.ktinventory.AbstractKtInventoryPaginatedSequence
 import org.bukkit.entity.HumanEntity
 import org.bukkit.inventory.Inventory
 import kotlin.reflect.KClass
@@ -70,9 +70,9 @@ fun <T : Any> getTopInventoryPaginated(
     val paginated =
         when (holder) {
             is AbstractKtInventoryPaginated.Entry<*> -> holder.paginated
-            is AbstractKtInventorySequence.Entry<*> -> holder.paginated
-            is AbstractKtInventoryFetched.Entry<*, *> -> holder.paginated
-            is AbstractKtInventoryLazyFetched.Entry<*, *, *> -> holder.paginated
+            is AbstractKtInventoryPaginatedSequence.Entry<*> -> holder.paginated
+            is AbstractKtInventoryPaginatedFetched.Entry<*, *> -> holder.paginated
+            is AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *> -> holder.paginated
             else -> return null
         }
     return clazz.safeCast(paginated)
@@ -128,13 +128,13 @@ inline fun <reified T : AbstractKtInventoryPaginated<*>> getTopInventoryPaginate
  * @since 2.2.0
  */
 @Suppress("UNCHECKED_CAST")
-fun <T : AbstractKtInventorySequence<*>> getTopInventorySequenceEntry(
+fun <T : AbstractKtInventoryPaginatedSequence<*>> getTopInventoryPaginatedSequenceEntry(
     clazz: KClass<T>,
     player: HumanEntity,
-): AbstractKtInventorySequence.Entry<T>? {
-    val entry = getTopInventory<AbstractKtInventorySequence.Entry<*>>(player) ?: return null
+): AbstractKtInventoryPaginatedSequence.Entry<T>? {
+    val entry = getTopInventory<AbstractKtInventoryPaginatedSequence.Entry<*>>(player) ?: return null
     if (!clazz.isInstance(entry.paginated)) return null
-    return entry as AbstractKtInventorySequence.Entry<T>
+    return entry as AbstractKtInventoryPaginatedSequence.Entry<T>
 }
 
 /**
@@ -145,5 +145,63 @@ fun <T : AbstractKtInventorySequence<*>> getTopInventorySequenceEntry(
  * @return The top sequence-backed inventory entry of type T, or null if not found
  * @since 2.2.0
  */
-inline fun <reified T : AbstractKtInventorySequence<*>> getTopInventorySequenceEntry(player: HumanEntity) =
-    getTopInventorySequenceEntry(T::class, player)
+inline fun <reified T : AbstractKtInventoryPaginatedSequence<*>> getTopInventoryPaginatedSequenceEntry(player: HumanEntity) =
+    getTopInventoryPaginatedSequenceEntry(T::class, player)
+
+/**
+ * Gets the condition-fetched paginated inventory entry of the top inventory in the currently open inventory view.
+ *
+ * @param T The condition-fetched inventory type
+ * @param clazz The KClass of the condition-fetched inventory type
+ * @param player The player whose top inventory entry to check
+ * @return The top condition-fetched inventory entry for type T, or null if not found
+ * @since 2.2.0
+ */
+fun <T : AbstractKtInventoryPaginatedFetched<*, *>> getTopInventoryPaginatedFetchedEntry(
+    clazz: KClass<T>,
+    player: HumanEntity,
+): AbstractKtInventoryPaginatedFetched.Entry<*, *>? {
+    val entry = getTopInventory<AbstractKtInventoryPaginatedFetched.Entry<*, *>>(player) ?: return null
+    if (!clazz.isInstance(entry.paginated)) return null
+    return entry
+}
+
+/**
+ * Gets the condition-fetched paginated inventory entry of the top inventory in the currently open inventory view.
+ *
+ * @param T The condition-fetched inventory type
+ * @param player The player whose top inventory entry to check
+ * @return The top condition-fetched inventory entry for type T, or null if not found
+ * @since 2.2.0
+ */
+inline fun <reified T : AbstractKtInventoryPaginatedFetched<*, *>> getTopInventoryPaginatedFetchedEntry(player: HumanEntity) =
+    getTopInventoryPaginatedFetchedEntry(T::class, player)
+
+/**
+ * Gets the lazy-fetched paginated inventory entry of the top inventory in the currently open inventory view.
+ *
+ * @param T The lazy-fetched inventory type
+ * @param clazz The KClass of the lazy-fetched inventory type
+ * @param player The player whose top inventory entry to check
+ * @return The top lazy-fetched inventory entry for type T, or null if not found
+ * @since 2.2.0
+ */
+fun <T : AbstractKtInventoryPaginatedLazyFetched<*, *, *>> getTopInventoryPaginatedLazyFetchedEntry(
+    clazz: KClass<T>,
+    player: HumanEntity,
+): AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>? {
+    val entry = getTopInventory<AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>>(player) ?: return null
+    if (!clazz.isInstance(entry.paginated)) return null
+    return entry
+}
+
+/**
+ * Gets the lazy-fetched paginated inventory entry of the top inventory in the currently open inventory view.
+ *
+ * @param T The lazy-fetched inventory type
+ * @param player The player whose top inventory entry to check
+ * @return The top lazy-fetched inventory entry for type T, or null if not found
+ * @since 2.2.0
+ */
+inline fun <reified T : AbstractKtInventoryPaginatedLazyFetched<*, *, *>> getTopInventoryPaginatedLazyFetchedEntry(player: HumanEntity) =
+    getTopInventoryPaginatedLazyFetchedEntry(T::class, player)

@@ -1,11 +1,16 @@
 package dev.s7a.ktinventory.util
 
+import dev.s7a.ktinventory.AbstractKtInventoryPaginatedFetched
+import dev.s7a.ktinventory.AbstractKtInventoryPaginatedLazyFetched
 import dev.s7a.ktinventory.HasParentInventory
 import dev.s7a.ktinventory.KtInventory
 import dev.s7a.ktinventory.KtInventoryPaginated
+import dev.s7a.ktinventory.KtInventoryPaginatedFetched
+import dev.s7a.ktinventory.KtInventoryPaginatedLazyFetched
+import dev.s7a.ktinventory.KtInventoryPaginatedSequence
 import dev.s7a.ktinventory.KtInventoryPluginContext
-import dev.s7a.ktinventory.KtInventorySequence
 import dev.s7a.ktinventory.ParentInventory
+import dev.s7a.ktinventory.components.KtInventoryButton
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -18,6 +23,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+
+private typealias LazyFetchedTestEntry =
+    AbstractKtInventoryPaginatedLazyFetched.Entry<KtInventoryPaginatedLazyFetched<Int, Material>, Int, Material>
+
+private typealias FetchedTestEntry =
+    AbstractKtInventoryPaginatedFetched.Entry<KtInventoryPaginatedFetched<Int>, Int>
 
 class GetViewersTest {
     private lateinit var server: ServerMock
@@ -60,15 +71,39 @@ class GetViewersTest {
     }
 
     @Test
-    fun `getViewersSequenceEntry returns sequence entries`() {
+    fun `getViewersPaginatedSequenceEntry returns sequence entries`() {
         val player = server.addPlayer()
         val inventory = SequenceParentInventory(KtInventoryPluginContext(plugin))
 
         inventory.open(player, 1)
 
-        val entry = getTopInventorySequenceEntry<SequenceParentInventory>(player)
+        val entry = getTopInventoryPaginatedSequenceEntry<SequenceParentInventory>(player)
         assertSame(inventory, getViewersPaginated<SequenceParentInventory>().getValue(player))
-        assertSame(entry, getViewersSequenceEntry<SequenceParentInventory>().getValue(player))
+        assertSame(entry, getViewersPaginatedSequenceEntry<SequenceParentInventory>().getValue(player))
+    }
+
+    @Test
+    fun `getViewersPaginatedFetchedEntry returns fetched entries`() {
+        val player = server.addPlayer()
+        val inventory = FetchedParentInventory(KtInventoryPluginContext(plugin))
+
+        inventory.open(player)
+
+        val entry = getTopInventoryPaginatedFetchedEntry<FetchedParentInventory>(player)
+        assertSame(inventory, getViewersPaginated<FetchedParentInventory>().getValue(player))
+        assertSame(entry, getViewersPaginatedFetchedEntry<FetchedParentInventory>().getValue(player))
+    }
+
+    @Test
+    fun `getViewersPaginatedLazyFetchedEntry returns lazy fetched entries`() {
+        val player = server.addPlayer()
+        val inventory = LazyFetchedParentInventory(KtInventoryPluginContext.LazyFetchable(plugin))
+
+        inventory.open(player)
+
+        val entry = getTopInventoryPaginatedLazyFetchedEntry<LazyFetchedParentInventory>(player)
+        assertSame(inventory, getViewersPaginated<LazyFetchedParentInventory>().getValue(player))
+        assertSame(entry, getViewersPaginatedLazyFetchedEntry<LazyFetchedParentInventory>().getValue(player))
     }
 
     @Test
@@ -82,14 +117,20 @@ class GetViewersTest {
         assertNull(getTopInventory<OtherInventory>(player))
         assertNull(getTopInventoryPaginated<PaginatedParentInventory>(player))
         assertNull(getTopInventoryPaginatedEntry<PaginatedParentInventory>(player))
-        assertNull(getTopInventorySequenceEntry<SequenceParentInventory>(player))
+        assertNull(getTopInventoryPaginatedSequenceEntry<SequenceParentInventory>(player))
+        assertNull(getTopInventoryPaginatedFetchedEntry<FetchedParentInventory>(player))
+        assertNull(getTopInventoryPaginatedLazyFetchedEntry<LazyFetchedParentInventory>(player))
 
         paginated.open(player)
         assertNull(getTopInventory<PaginatedParentInventory>(player))
-        assertNull(getTopInventorySequenceEntry<SequenceParentInventory>(player))
+        assertNull(getTopInventoryPaginatedSequenceEntry<SequenceParentInventory>(player))
+        assertNull(getTopInventoryPaginatedFetchedEntry<FetchedParentInventory>(player))
+        assertNull(getTopInventoryPaginatedLazyFetchedEntry<LazyFetchedParentInventory>(player))
 
         sequence.open(player)
         assertNull(getTopInventoryPaginatedEntry<PaginatedParentInventory>(player))
+        assertNull(getTopInventoryPaginatedFetchedEntry<FetchedParentInventory>(player))
+        assertNull(getTopInventoryPaginatedLazyFetchedEntry<LazyFetchedParentInventory>(player))
     }
 
     @Test
@@ -288,7 +329,7 @@ class GetViewersTest {
 
     private class SequenceParentInventory(
         context: KtInventoryPluginContext,
-    ) : KtInventorySequence(context, 1),
+    ) : KtInventoryPaginatedSequence(context, 1),
         ParentInventory {
         override val entries
             get() =
@@ -306,7 +347,7 @@ class GetViewersTest {
     private class SequenceChildInventory(
         context: KtInventoryPluginContext,
         override val parentInventory: ParentNormalInventory,
-    ) : KtInventorySequence(context, 1),
+    ) : KtInventoryPaginatedSequence(context, 1),
         HasParentInventory<ParentNormalInventory> {
         override val entries
             get() =
@@ -324,7 +365,7 @@ class GetViewersTest {
     private class SequenceChildWithOtherParentInventory(
         context: KtInventoryPluginContext,
         override val parentInventory: OtherParentInventory,
-    ) : KtInventorySequence(context, 1),
+    ) : KtInventoryPaginatedSequence(context, 1),
         HasParentInventory<OtherParentInventory> {
         override val entries
             get() =
@@ -333,6 +374,52 @@ class GetViewersTest {
                 }
 
         override fun title(page: Int) = "Sequence Child With Other Parent"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class FetchedParentInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventoryPaginatedFetched<Int>(context, 1),
+        ParentInventory {
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): Page<Int, KtInventoryButton<FetchedTestEntry>> =
+            Page(
+                entries = listOf(createButton(ItemStack(Material.STONE)) {}),
+                nextCondition = condition + 1,
+            )
+
+        override fun title(condition: Int) = "Fetched $condition"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class LazyFetchedParentInventory(
+        context: KtInventoryPluginContext.LazyFetchable,
+    ) : KtInventoryPaginatedLazyFetched<Int, Material>(context, 1),
+        ParentInventory {
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): AbstractKtInventoryPaginatedFetched.Page<Int, Material> =
+            AbstractKtInventoryPaginatedFetched.Page(
+                entries = listOf(Material.STONE),
+                nextCondition = condition + 1,
+            )
+
+        override fun createButton(data: Material): KtInventoryButton<LazyFetchedTestEntry> = createButton(ItemStack(data)) {}
+
+        override fun title(condition: Int) = "LazyFetched $condition"
 
         init {
             paginateSlot(0, 1)

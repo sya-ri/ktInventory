@@ -21,7 +21,13 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-class AbstractKtInventoryLazyFetchedTest {
+private typealias LazyFetchedStringMaterialEntry =
+    AbstractKtInventoryPaginatedLazyFetched.Entry<KtInventoryPaginatedLazyFetched<String, Material>, String, Material>
+
+private typealias LazyFetchedIntMaterialEntry =
+    AbstractKtInventoryPaginatedLazyFetched.Entry<KtInventoryPaginatedLazyFetched<Int, Material>, Int, Material>
+
+class AbstractKtInventoryPaginatedLazyFetchedTest {
     private lateinit var server: ServerMock
     private lateinit var plugin: PluginMock
 
@@ -50,7 +56,7 @@ class AbstractKtInventoryLazyFetchedTest {
 
         inventory.open(player, 2)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryLazyFetched.Entry<*, *, *>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>
         assertSame(inventory, entry.paginated)
         assertSame(inventory, getTopInventoryPaginated<OffsetLazyFetchedInventory>(player))
         assertEquals(2, entry.condition)
@@ -93,10 +99,10 @@ class AbstractKtInventoryLazyFetchedTest {
         context.runDeferredTasks()
         player.clickInventorySlot(8)
         context.runDeferredTasks()
-        val next = player.openInventory.topInventory.holder as AbstractKtInventoryLazyFetched.Entry<*, *, *>
+        val next = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>
         player.clickInventorySlot(7)
         context.runDeferredTasks()
-        val previous = player.openInventory.topInventory.holder as AbstractKtInventoryLazyFetched.Entry<*, *, *>
+        val previous = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>
 
         assertEquals(2, next.condition)
         assertEquals(0, previous.condition)
@@ -133,7 +139,7 @@ class AbstractKtInventoryLazyFetchedTest {
         assertSame(secondEntry, player.openInventory.topInventory.holder)
         assertEquals(listOf(0, 2), inventory.fetchedConditions)
         assertEquals(listOf(Material.DIAMOND, Material.GOLD_INGOT), inventory.buttonMaterials)
-        assertNull((firstEntry as AbstractKtInventoryLazyFetched.Entry<*, *, *>).page)
+        assertNull((firstEntry as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>).page)
         assertEquals(
             Material.DIAMOND,
             player.openInventory.topInventory
@@ -179,7 +185,7 @@ class AbstractKtInventoryLazyFetchedTest {
         player.clickInventorySlot(8)
         context.runDeferredTasks()
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryLazyFetched.Entry<*, *, *>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>
         assertEquals("cursor-2", entry.condition)
         assertEquals(listOf("start", "cursor-2"), inventory.fetchedConditions)
         assertEquals(
@@ -198,7 +204,7 @@ class AbstractKtInventoryLazyFetchedTest {
         player.clickInventorySlot(7)
         context.runDeferredTasks()
 
-        val previous = player.openInventory.topInventory.holder as AbstractKtInventoryLazyFetched.Entry<*, *, *>
+        val previous = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>
         assertEquals("start", previous.condition)
         assertEquals(listOf("start", "cursor-2", "start"), inventory.fetchedConditions)
     }
@@ -256,7 +262,7 @@ class AbstractKtInventoryLazyFetchedTest {
         context: KtInventoryPluginContext.LazyFetchable,
         private val fetchStarted: CountDownLatch? = null,
         private val finishFetch: CountDownLatch? = null,
-    ) : KtInventoryLazyFetched<Int, Material>(context, 1) {
+    ) : KtInventoryPaginatedLazyFetched<Int, Material>(context, 1) {
         private val materials =
             listOf(
                 Material.STONE,
@@ -274,14 +280,14 @@ class AbstractKtInventoryLazyFetchedTest {
         override fun fetch(
             condition: Int,
             limit: Int,
-        ): AbstractKtInventoryFetched.Page<Int, Material> {
+        ): AbstractKtInventoryPaginatedFetched.Page<Int, Material> {
             fetchThread = Thread.currentThread()
             fetchStarted?.countDown()
             check(finishFetch?.await(5, TimeUnit.SECONDS) ?: true)
             fetchedConditions += condition
             val nextCondition = condition + limit
             val previousCondition = condition - limit
-            return AbstractKtInventoryFetched.Page(
+            return AbstractKtInventoryPaginatedFetched.Page(
                 entries = materials.drop(condition).take(limit),
                 previousCondition = previousCondition.takeIf { it >= 0 },
                 nextCondition = nextCondition.takeIf { it < materials.size },
@@ -290,7 +296,7 @@ class AbstractKtInventoryLazyFetchedTest {
 
         override fun createButton(
             data: Material,
-        ): KtInventoryButton<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetched<Int, Material>, Int, Material>> {
+        ): KtInventoryButton<AbstractKtInventoryPaginatedLazyFetched.Entry<KtInventoryPaginatedLazyFetched<Int, Material>, Int, Material>> {
             buttonMaterials += data
             return createButton(ItemStack(data)) {}
         }
@@ -306,17 +312,17 @@ class AbstractKtInventoryLazyFetchedTest {
 
     private class OffsetLazyFetchedWithoutSlotsInventory(
         context: KtInventoryPluginContext.LazyFetchable,
-    ) : KtInventoryLazyFetched<Int, Material>(context, 1) {
+    ) : KtInventoryPaginatedLazyFetched<Int, Material>(context, 1) {
         override val initialCondition = 0
 
         override fun fetch(
             condition: Int,
             limit: Int,
-        ): AbstractKtInventoryFetched.Page<Int, Material> = AbstractKtInventoryFetched.Page(emptyList())
+        ): AbstractKtInventoryPaginatedFetched.Page<Int, Material> = AbstractKtInventoryPaginatedFetched.Page(emptyList())
 
         override fun createButton(
             data: Material,
-        ): KtInventoryButton<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetched<Int, Material>, Int, Material>> =
+        ): KtInventoryButton<AbstractKtInventoryPaginatedLazyFetched.Entry<KtInventoryPaginatedLazyFetched<Int, Material>, Int, Material>> =
             createButton(ItemStack(data)) {}
 
         override fun title(condition: Int) = "Lazy $condition"
@@ -324,7 +330,7 @@ class AbstractKtInventoryLazyFetchedTest {
 
     private class CursorLazyFetchedInventory(
         context: KtInventoryPluginContext.LazyFetchable,
-    ) : KtInventoryLazyFetched<String, Material>(context, 1) {
+    ) : KtInventoryPaginatedLazyFetched<String, Material>(context, 1) {
         val fetchedConditions = mutableListOf<String>()
 
         override val initialCondition = "start"
@@ -332,18 +338,18 @@ class AbstractKtInventoryLazyFetchedTest {
         override fun fetch(
             condition: String,
             limit: Int,
-        ): AbstractKtInventoryFetched.Page<String, Material> {
+        ): AbstractKtInventoryPaginatedFetched.Page<String, Material> {
             fetchedConditions += condition
             return when (condition) {
                 "start" -> {
-                    AbstractKtInventoryFetched.Page(
+                    AbstractKtInventoryPaginatedFetched.Page(
                         entries = listOf(Material.STONE, Material.DIRT).take(limit),
                         nextCondition = "cursor-2",
                     )
                 }
 
                 else -> {
-                    AbstractKtInventoryFetched.Page(
+                    AbstractKtInventoryPaginatedFetched.Page(
                         entries = listOf(Material.DIAMOND, Material.GOLD_INGOT).take(limit),
                         previousCondition = "start",
                     )
@@ -351,10 +357,7 @@ class AbstractKtInventoryLazyFetchedTest {
             }
         }
 
-        override fun createButton(
-            data: Material,
-        ): KtInventoryButton<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetched<String, Material>, String, Material>> =
-            createButton(ItemStack(data)) {}
+        override fun createButton(data: Material): KtInventoryButton<LazyFetchedStringMaterialEntry> = createButton(ItemStack(data)) {}
 
         override fun title(condition: String) = condition
 
@@ -368,28 +371,24 @@ class AbstractKtInventoryLazyFetchedTest {
     private class StorableLazyFetchedInventory(
         context: KtInventoryPluginContext.LazyFetchable,
         private val saved: MutableMap<Int, List<Material?>>,
-    ) : KtInventoryLazyFetched<Int, Material>(context, 1) {
+    ) : KtInventoryPaginatedLazyFetched<Int, Material>(context, 1) {
         override val initialCondition = 0
 
         override fun fetch(
             condition: Int,
             limit: Int,
-        ): AbstractKtInventoryFetched.Page<Int, Material> =
-            AbstractKtInventoryFetched.Page(
+        ): AbstractKtInventoryPaginatedFetched.Page<Int, Material> =
+            AbstractKtInventoryPaginatedFetched.Page(
                 entries = listOf(Material.STONE),
                 previousCondition = (condition - 1).takeIf { it >= 0 },
                 nextCondition = (condition + 1).takeIf { it < 2 },
             )
 
-        override fun createButton(
-            data: Material,
-        ): KtInventoryButton<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetched<Int, Material>, Int, Material>> =
-            createButton(ItemStack(data)) {}
+        override fun createButton(data: Material): KtInventoryButton<LazyFetchedIntMaterialEntry> = createButton(ItemStack(data)) {}
 
         override fun title(condition: Int) = "Storable $condition"
 
-        val pagedStorable:
-            KtInventoryPagedStorable<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetched<Int, Material>, Int, Material>>
+        val pagedStorable: KtInventoryPagedStorable<LazyFetchedIntMaterialEntry>
 
         init {
             paginateSlot(8)

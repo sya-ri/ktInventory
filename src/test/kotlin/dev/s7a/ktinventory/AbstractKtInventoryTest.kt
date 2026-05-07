@@ -720,7 +720,7 @@ class AbstractKtInventoryTest {
 
     private class CloseTrackingSequenceInventory(
         context: KtInventoryPluginContext,
-    ) : KtInventorySequence(context, 1) {
+    ) : KtInventoryPaginatedSequence(context, 1) {
         var closeCount = 0
             private set
 

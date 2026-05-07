@@ -15,19 +15,29 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
+private typealias RefreshableFetchedEntry =
+    AbstractKtInventoryPaginatedFetched.Entry<KtInventoryPaginatedFetched<Int>, Int>
+
+private typealias RefreshableLazyFetchedEntry =
+    AbstractKtInventoryPaginatedLazyFetched.Entry<KtInventoryPaginatedLazyFetched<Int, Material>, Int, Material>
+
 class RefreshableInventoryTest {
     private lateinit var server: ServerMock
     private lateinit var plugin: PluginMock
     private lateinit var context: KtInventoryPluginContext
+    private lateinit var lazyContext: KtInventoryPluginContext.LazyFetchable
 
     @BeforeTest
     fun setUp() {
         server = MockBukkit.mock()
         plugin = MockBukkit.createMockPlugin()
         context = KtInventoryPluginContext(plugin)
+        lazyContext = KtInventoryPluginContext.LazyFetchable(plugin)
         RefreshableNormalInventory.resetRefresh()
         RefreshablePaginatedInventory.resetRefresh()
         RefreshableSequenceInventory.resetRefresh()
+        RefreshableFetchedInventory.resetRefresh()
+        RefreshableLazyFetchedInventory.resetRefresh()
     }
 
     @AfterTest
@@ -134,7 +144,7 @@ class RefreshableInventoryTest {
         original.open(player, 2)
         RefreshableSequenceInventory.refresh(player)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         val current = entry.paginated as RefreshableSequenceInventory
         assertEquals(0, entry.page)
         assertEquals("new", current.marker)
@@ -148,7 +158,7 @@ class RefreshableInventoryTest {
         original.open(player, 1)
 
         assertFalse(RefreshableSequenceInventory.refresh(player) { false })
-        assertSame(original, (player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>).paginated)
+        assertSame(original, (player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>).paginated)
     }
 
     @Test
@@ -170,11 +180,56 @@ class RefreshableInventoryTest {
         val original = RefreshableSequenceInventory(context, "old")
 
         original.open(player, 2)
-        RefreshableSequenceInventory.refreshAll(AbstractKtInventorySequence.Refreshable.RefreshBehavior.Keep)
+        RefreshableSequenceInventory.refreshAll(AbstractKtInventoryPaginatedSequence.Refreshable.RefreshBehavior.Keep)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         val current = entry.paginated as RefreshableSequenceInventory
         assertEquals(2, entry.page)
+        assertEquals("new", current.marker)
+    }
+
+    @Test
+    fun `fetched refresh opens initial condition by default`() {
+        val player = server.addPlayer()
+        val original = RefreshableFetchedInventory(context, "old")
+
+        original.open(player, 5)
+        RefreshableFetchedInventory.refresh(player)
+
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedFetched.Entry<*, *>
+        val current = entry.paginated as RefreshableFetchedInventory
+        assertEquals(0, entry.condition)
+        assertEquals("new", current.marker)
+    }
+
+    @Test
+    fun `fetched refresh can keep current condition and refresh all viewers`() {
+        val player = server.addPlayer()
+        val original = RefreshableFetchedInventory(context, "old")
+
+        original.open(player, 5)
+        RefreshableFetchedInventory.refreshAll(AbstractKtInventoryPaginatedFetched.Refreshable.RefreshBehavior.Keep)
+
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedFetched.Entry<*, *>
+        val current = entry.paginated as RefreshableFetchedInventory
+        assertEquals(5, entry.condition)
+        assertEquals("new", current.marker)
+    }
+
+    @Test
+    fun `lazy fetched refresh can keep current condition`() {
+        val player = server.addPlayer()
+        val original = RefreshableLazyFetchedInventory(lazyContext, "old")
+
+        original.open(player, 5)
+        RefreshableLazyFetchedInventory.refresh(
+            player,
+            AbstractKtInventoryPaginatedLazyFetched.Refreshable.RefreshBehavior.Keep,
+        )
+
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>
+        val current = entry.paginated as RefreshableLazyFetchedInventory
+        assertEquals(5, entry.condition)
         assertEquals("new", current.marker)
     }
 
@@ -271,8 +326,8 @@ class RefreshableInventoryTest {
     private class RefreshableSequenceInventory(
         private val context: KtInventoryPluginContext,
         val marker: String,
-    ) : KtInventorySequence(context, 1) {
-        companion object : KtInventorySequence.Refreshable<RefreshableSequenceInventory>(RefreshableSequenceInventory::class) {
+    ) : KtInventoryPaginatedSequence(context, 1) {
+        companion object : KtInventoryPaginatedSequence.Refreshable<RefreshableSequenceInventory>(RefreshableSequenceInventory::class) {
             var nextMarker = "new"
             var shouldCreate = true
 
@@ -283,14 +338,14 @@ class RefreshableInventoryTest {
 
             override fun createNew(
                 player: org.bukkit.entity.HumanEntity,
-                inventory: AbstractKtInventorySequence.Entry<RefreshableSequenceInventory>,
+                inventory: AbstractKtInventoryPaginatedSequence.Entry<RefreshableSequenceInventory>,
             ) = if (shouldCreate) RefreshableSequenceInventory(inventory.paginated.context, nextMarker) else null
         }
 
         var closeCount = 0
             private set
 
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>>
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>>
             get() =
                 generateSequence {
                     createButton(ItemStack(Material.STONE)) {}
@@ -301,6 +356,77 @@ class RefreshableInventoryTest {
         override fun onClose(event: org.bukkit.event.inventory.InventoryCloseEvent) {
             closeCount += 1
         }
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class RefreshableFetchedInventory(
+        private val context: KtInventoryPluginContext,
+        val marker: String,
+    ) : KtInventoryPaginatedFetched<Int>(context, 1) {
+        companion object : KtInventoryPaginatedFetched.Refreshable<RefreshableFetchedInventory, Int>(
+            RefreshableFetchedInventory::class,
+        ) {
+            var nextMarker = "new"
+
+            fun resetRefresh() {
+                nextMarker = "new"
+            }
+
+            override fun createNew(
+                player: org.bukkit.entity.HumanEntity,
+                inventory: AbstractKtInventoryPaginatedFetched.Entry<*, Int>,
+            ) = RefreshableFetchedInventory((inventory.paginated as RefreshableFetchedInventory).context, nextMarker)
+        }
+
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): Page<Int, KtInventoryButton<RefreshableFetchedEntry>> = Page(listOf(createButton(ItemStack(Material.STONE)) {}))
+
+        override fun title(condition: Int) = marker
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class RefreshableLazyFetchedInventory(
+        private val context: KtInventoryPluginContext.LazyFetchable,
+        val marker: String,
+    ) : KtInventoryPaginatedLazyFetched<Int, Material>(context, 1) {
+        companion object : KtInventoryPaginatedLazyFetched.Refreshable<RefreshableLazyFetchedInventory, Int>(
+            RefreshableLazyFetchedInventory::class,
+        ) {
+            var nextMarker = "new"
+
+            fun resetRefresh() {
+                nextMarker = "new"
+            }
+
+            override fun createNew(
+                player: org.bukkit.entity.HumanEntity,
+                inventory: AbstractKtInventoryPaginatedLazyFetched.Entry<*, Int, *>,
+            ) = RefreshableLazyFetchedInventory((inventory.paginated as RefreshableLazyFetchedInventory).context, nextMarker)
+        }
+
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): AbstractKtInventoryPaginatedFetched.Page<Int, Material> =
+            AbstractKtInventoryPaginatedFetched.Page(
+                entries = listOf(Material.STONE),
+            )
+
+        override fun createButton(data: Material): KtInventoryButton<RefreshableLazyFetchedEntry> = createButton(ItemStack(data)) {}
+
+        override fun title(condition: Int) = marker
 
         init {
             paginateSlot(0, 1)

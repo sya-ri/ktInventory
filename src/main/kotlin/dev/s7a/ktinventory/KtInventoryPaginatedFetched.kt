@@ -3,6 +3,8 @@ package dev.s7a.ktinventory
 import dev.s7a.ktinventory.components.KtInventoryButton
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
+import org.bukkit.entity.HumanEntity
+import kotlin.reflect.KClass
 
 /**
  * Abstract class for fetched inventories with customizable titles.
@@ -13,11 +15,11 @@ import org.bukkit.Bukkit
  * @param altColorChar The alternate color code character for title color formatting, defaults to '&'
  * @since 2.2.0
  */
-abstract class KtInventoryFetched<C : Any>(
+abstract class KtInventoryPaginatedFetched<C : Any>(
     private val context: KtInventoryPluginContext,
     line: Int,
     private val altColorChar: Char? = '&',
-) : AbstractKtInventoryFetched<KtInventoryFetched<C>, C>(context, line) {
+) : AbstractKtInventoryPaginatedFetched<KtInventoryPaginatedFetched<C>, C>(context, line) {
     /**
      * Generates the title for a specific display condition.
      *
@@ -29,7 +31,7 @@ abstract class KtInventoryFetched<C : Any>(
 
     final override fun createEntry(
         condition: C,
-        page: Page<C, KtInventoryButton<AbstractKtInventoryFetched.Entry<KtInventoryFetched<C>, C>>>,
+        page: Page<C, KtInventoryButton<AbstractKtInventoryPaginatedFetched.Entry<KtInventoryPaginatedFetched<C>, C>>>,
     ): Entry<C> = Entry(this, condition, page)
 
     /**
@@ -42,10 +44,10 @@ abstract class KtInventoryFetched<C : Any>(
      * @since 2.2.0
      */
     class Entry<C : Any>(
-        paginated: KtInventoryFetched<C>,
+        paginated: KtInventoryPaginatedFetched<C>,
         condition: C,
-        page: Page<C, KtInventoryButton<AbstractKtInventoryFetched.Entry<KtInventoryFetched<C>, C>>>,
-    ) : AbstractKtInventoryFetched.Entry<KtInventoryFetched<C>, C>(paginated, condition, page) {
+        page: Page<C, KtInventoryButton<AbstractKtInventoryPaginatedFetched.Entry<KtInventoryPaginatedFetched<C>, C>>>,
+    ) : AbstractKtInventoryPaginatedFetched.Entry<KtInventoryPaginatedFetched<C>, C>(paginated, condition, page) {
         @Suppress("DEPRECATION")
         private val _inventory by lazy {
             @Suppress("DEPRECATION")
@@ -61,5 +63,22 @@ abstract class KtInventoryFetched<C : Any>(
         }
 
         override fun getInventory() = _inventory
+    }
+
+    /**
+     * Abstract class for refreshable condition-fetched inventories.
+     *
+     * @param T Type of the condition-fetched inventory
+     * @param C Type of the display condition
+     * @param clazz The KClass of the condition-fetched inventory type
+     * @since 2.2.0
+     */
+    abstract class Refreshable<T : KtInventoryPaginatedFetched<C>, C : Any>(
+        clazz: KClass<T>,
+    ) : AbstractKtInventoryPaginatedFetched.Refreshable<T, C>(clazz) {
+        abstract override fun createNew(
+            player: HumanEntity,
+            inventory: AbstractKtInventoryPaginatedFetched.Entry<*, C>,
+        ): T?
     }
 }

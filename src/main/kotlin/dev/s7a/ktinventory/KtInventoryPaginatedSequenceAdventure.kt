@@ -12,10 +12,10 @@ import kotlin.reflect.KClass
  * @param line Number of inventory lines (1-6)
  * @since 2.2.0
  */
-abstract class KtInventorySequenceAdventure(
+abstract class KtInventoryPaginatedSequenceAdventure(
     context: KtInventoryPluginContext,
     line: Int,
-) : AbstractKtInventorySequence<KtInventorySequenceAdventure>(context, line) {
+) : AbstractKtInventoryPaginatedSequence<KtInventoryPaginatedSequenceAdventure>(context, line) {
     /**
      * Generates the Component title for a specific page of the inventory.
      *
@@ -25,7 +25,7 @@ abstract class KtInventorySequenceAdventure(
      */
     abstract fun title(page: Int): Component
 
-    final override fun createEntry(page: Int): Entry<KtInventorySequenceAdventure> = Entry(this, page)
+    final override fun createEntry(page: Int): Entry<KtInventoryPaginatedSequenceAdventure> = Entry(this, page)
 
     /**
      * Represents a single page entry in the sequence-backed inventory.
@@ -35,10 +35,10 @@ abstract class KtInventorySequenceAdventure(
      * @param page Current page number
      * @since 2.2.0
      */
-    class Entry<T : KtInventorySequenceAdventure>(
+    class Entry<T : KtInventoryPaginatedSequenceAdventure>(
         paginated: T,
         page: Int,
-    ) : AbstractKtInventorySequence.Entry<T>(paginated, page) {
+    ) : AbstractKtInventoryPaginatedSequence.Entry<T>(paginated, page) {
         private val _inventory by lazy {
             Bukkit.createInventory(this, size, paginated.title(page))
         }
@@ -53,12 +53,12 @@ abstract class KtInventorySequenceAdventure(
      * @param clazz The KClass of the sequence-backed inventory type
      * @since 2.2.0
      */
-    abstract class Refreshable<T : KtInventorySequenceAdventure>(
+    abstract class Refreshable<T : KtInventoryPaginatedSequenceAdventure>(
         clazz: KClass<T>,
-    ) : AbstractKtInventorySequence.Refreshable<T>(clazz) {
+    ) : AbstractKtInventoryPaginatedSequence.Refreshable<T>(clazz) {
         abstract override fun createNew(
             player: HumanEntity,
-            inventory: AbstractKtInventorySequence.Entry<T>,
+            inventory: AbstractKtInventoryPaginatedSequence.Entry<T>,
         ): T?
     }
 }

@@ -3,11 +3,15 @@ package dev.s7a.ktinventory
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryPagedStorable
 import dev.s7a.ktinventory.components.KtInventoryStorable
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedFetchedEntry
+import dev.s7a.ktinventory.util.getViewersPaginatedFetchedEntry
 import org.bukkit.entity.HumanEntity
+import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.inventory.ItemStack
+import kotlin.reflect.KClass
 
 /**
  * Base class for inventories that fetch entries by display condition.
@@ -18,7 +22,7 @@ import org.bukkit.inventory.ItemStack
  * @param line Number of inventory rows
  * @since 2.2.0
  */
-abstract class AbstractKtInventoryFetched<T : AbstractKtInventoryFetched<T, C>, C : Any>(
+abstract class AbstractKtInventoryPaginatedFetched<T : AbstractKtInventoryPaginatedFetched<T, C>, C : Any>(
     private val context: KtInventoryPluginContext,
     line: Int,
 ) : KtInventoryBase(line) {
@@ -270,12 +274,12 @@ abstract class AbstractKtInventoryFetched<T : AbstractKtInventoryFetched<T, C>, 
         val page = fetch(condition, limit)
         createEntry(condition, page)
             .apply {
-                this@AbstractKtInventoryFetched.paginates.forEachIndexed { index, slot ->
+                this@AbstractKtInventoryPaginatedFetched.paginates.forEachIndexed { index, slot ->
                     page.entries.getOrNull(index)?.let {
                         button(slot, it)
                     }
                 }
-                this@AbstractKtInventoryFetched.buttons.forEach { (slot, item) ->
+                this@AbstractKtInventoryPaginatedFetched.buttons.forEach { (slot, item) ->
                     button(slot, item)
                 }
                 _pagedStorables.forEach { it.applyTo(this) }
@@ -308,7 +312,7 @@ abstract class AbstractKtInventoryFetched<T : AbstractKtInventoryFetched<T, C>, 
      * @param page Fetched page data
      * @since 2.2.0
      */
-    abstract class Entry<T : AbstractKtInventoryFetched<T, C>, C : Any>(
+    abstract class Entry<T : AbstractKtInventoryPaginatedFetched<T, C>, C : Any>(
         val paginated: T,
         val condition: C,
         val page: Page<C, KtInventoryButton<Entry<T, C>>>,
@@ -338,5 +342,129 @@ abstract class AbstractKtInventoryFetched<T : AbstractKtInventoryFetched<T, C>, 
         override fun onClick(event: InventoryClickEvent) = paginated.onClick(event)
 
         override fun onClose(event: InventoryCloseEvent) = paginated.onClose(event)
+    }
+
+    /**
+     * Base class for refreshable condition-fetched paginated inventories.
+     *
+     * @param T Type of the condition-fetched inventory
+     * @param C Type of the display condition
+     * @param clazz Class of the condition-fetched inventory
+     * @since 2.2.0
+     */
+    abstract class Refreshable<T : AbstractKtInventoryPaginatedFetched<*, C>, C : Any>(
+        val clazz: KClass<T>,
+    ) : RefreshableInventory<Entry<*, C>> {
+        /**
+         * Creates new inventory instance.
+         *
+         * @param player Player to create inventory for
+         * @param inventory Current inventory page
+         * @return Created inventory or null if inventory cannot be created
+         * @since 2.2.0
+         */
+        abstract fun createNew(
+            player: HumanEntity,
+            inventory: Entry<*, C>,
+        ): T?
+
+        final override fun refresh(
+            player: HumanEntity,
+            predicate: (Entry<*, C>) -> Boolean,
+        ) = refresh(player, RefreshBehavior.OpenFirst, predicate)
+
+        final override fun refresh(
+            player: HumanEntity,
+            inventory: Entry<*, C>,
+        ) = refresh(player, inventory, RefreshBehavior.OpenFirst)
+
+        /**
+         * Refreshes inventory for a player if predicate matches.
+         *
+         * @param player Player to refresh inventory for
+         * @param behavior Refresh behavior
+         * @param predicate Condition for refresh
+         * @return True if inventory was refreshed
+         * @since 2.2.0
+         */
+        @Suppress("UNCHECKED_CAST")
+        fun refresh(
+            player: HumanEntity,
+            behavior: RefreshBehavior,
+            predicate: (Entry<*, C>) -> Boolean = { true },
+        ): Boolean {
+            val inventory = getTopInventoryPaginatedFetchedEntry(clazz, player) as? Entry<*, C> ?: return false
+            if (predicate(inventory).not()) return false
+            refresh(player, inventory, behavior)
+            return true
+        }
+
+        /**
+         * Refreshes specific inventory page for a player.
+         *
+         * @param player Player to refresh inventory for
+         * @param inventory Current inventory page
+         * @param behavior Refresh behavior
+         * @since 2.2.0
+         */
+        fun refresh(
+            player: HumanEntity,
+            inventory: Entry<*, C>,
+            behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
+        ) {
+            val newInventory = createNew(player, inventory)
+            if (newInventory != null) {
+                when (behavior) {
+                    RefreshBehavior.Keep -> newInventory.open(player, inventory.condition)
+                    RefreshBehavior.OpenFirst -> newInventory.open(player)
+                }
+            } else {
+                player.closeInventory()
+            }
+        }
+
+        final override fun refreshAll(predicate: (Player, Entry<*, C>) -> Boolean) = refreshAll(RefreshBehavior.OpenFirst, predicate)
+
+        /**
+         * Refreshes inventory for all matching viewers.
+         *
+         * @param behavior Refresh behavior
+         * @param predicate Condition for refresh
+         * @since 2.2.0
+         */
+        @Suppress("UNCHECKED_CAST")
+        fun refreshAll(
+            behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
+            predicate: (Player, Entry<*, C>) -> Boolean = { _, _ -> true },
+        ) {
+            getViewersPaginatedFetchedEntry(clazz)
+                .mapValues { (_, inventory) -> inventory as Entry<*, C> }
+                .filter { (player, inventory) ->
+                    predicate(player, inventory)
+                }.forEach { (player, inventory) ->
+                    refresh(player, inventory, behavior)
+                }
+        }
+
+        /**
+         * Defines how inventory should be refreshed.
+         *
+         * @since 2.2.0
+         */
+        enum class RefreshBehavior {
+            /**
+             * Keep current condition when refreshing.
+             *
+             * @since 2.2.0
+             */
+            Keep,
+
+            /**
+             * Open the initial condition when refreshing.
+             *
+             * @since 2.2.0
+             */
+            OpenFirst,
+        }
     }
 }

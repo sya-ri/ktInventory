@@ -1,9 +1,9 @@
 package dev.s7a.ktinventory.util
 
-import dev.s7a.ktinventory.AbstractKtInventoryFetched
-import dev.s7a.ktinventory.AbstractKtInventoryLazyFetched
 import dev.s7a.ktinventory.AbstractKtInventoryPaginated
-import dev.s7a.ktinventory.AbstractKtInventorySequence
+import dev.s7a.ktinventory.AbstractKtInventoryPaginatedFetched
+import dev.s7a.ktinventory.AbstractKtInventoryPaginatedLazyFetched
+import dev.s7a.ktinventory.AbstractKtInventoryPaginatedSequence
 import dev.s7a.ktinventory.HasParentInventory
 import dev.s7a.ktinventory.KtInventoryBase
 import dev.s7a.ktinventory.ParentInventory
@@ -89,27 +89,86 @@ inline fun <reified T : AbstractKtInventoryPaginated<*>> getViewersPaginatedEntr
 /**
  * Gets all online players currently viewing a sequence-backed paginated inventory entry of the specified type.
  *
- * @param T The type of inventory extending [AbstractKtInventorySequence]
+ * @param T The type of inventory extending [AbstractKtInventoryPaginatedSequence]
  * @param clazz The KClass of the inventory type
  * @return Map of players to their open sequence-backed inventory entries of type T
  * @since 2.2.0
  */
-fun <T : AbstractKtInventorySequence<*>> getViewersSequenceEntry(clazz: KClass<T>): Map<Player, AbstractKtInventorySequence.Entry<T>> =
+fun <T : AbstractKtInventoryPaginatedSequence<*>> getViewersPaginatedSequenceEntry(
+    clazz: KClass<T>,
+): Map<Player, AbstractKtInventoryPaginatedSequence.Entry<T>> =
     Bukkit
         .getOnlinePlayers()
         .mapNotNull { player ->
-            val inventory = getTopInventorySequenceEntry(clazz, player) ?: return@mapNotNull null
+            val inventory = getTopInventoryPaginatedSequenceEntry(clazz, player) ?: return@mapNotNull null
             player to inventory
         }.toMap()
 
 /**
  * Gets all online players currently viewing a sequence-backed paginated inventory entry of the specified type.
  *
- * @param T The type of inventory extending [AbstractKtInventorySequence]
+ * @param T The type of inventory extending [AbstractKtInventoryPaginatedSequence]
  * @return Map of players to their open sequence-backed inventory entries of type T
  * @since 2.2.0
  */
-inline fun <reified T : AbstractKtInventorySequence<*>> getViewersSequenceEntry() = getViewersSequenceEntry(T::class)
+inline fun <reified T : AbstractKtInventoryPaginatedSequence<*>> getViewersPaginatedSequenceEntry() =
+    getViewersPaginatedSequenceEntry(T::class)
+
+/**
+ * Gets all online players currently viewing a condition-fetched paginated inventory entry of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventoryPaginatedFetched]
+ * @param clazz The KClass of the inventory type
+ * @return Map of players to their open condition-fetched inventory entries for type T
+ * @since 2.2.0
+ */
+fun <T : AbstractKtInventoryPaginatedFetched<*, *>> getViewersPaginatedFetchedEntry(
+    clazz: KClass<T>,
+): Map<Player, AbstractKtInventoryPaginatedFetched.Entry<*, *>> =
+    Bukkit
+        .getOnlinePlayers()
+        .mapNotNull { player ->
+            val inventory = getTopInventoryPaginatedFetchedEntry(clazz, player) ?: return@mapNotNull null
+            player to inventory
+        }.toMap()
+
+/**
+ * Gets all online players currently viewing a condition-fetched paginated inventory entry of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventoryPaginatedFetched]
+ * @return Map of players to their open condition-fetched inventory entries for type T
+ * @since 2.2.0
+ */
+inline fun <reified T : AbstractKtInventoryPaginatedFetched<*, *>> getViewersPaginatedFetchedEntry() =
+    getViewersPaginatedFetchedEntry(T::class)
+
+/**
+ * Gets all online players currently viewing a lazy-fetched paginated inventory entry of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventoryPaginatedLazyFetched]
+ * @param clazz The KClass of the inventory type
+ * @return Map of players to their open lazy-fetched inventory entries for type T
+ * @since 2.2.0
+ */
+fun <T : AbstractKtInventoryPaginatedLazyFetched<*, *, *>> getViewersPaginatedLazyFetchedEntry(
+    clazz: KClass<T>,
+): Map<Player, AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>> =
+    Bukkit
+        .getOnlinePlayers()
+        .mapNotNull { player ->
+            val inventory = getTopInventoryPaginatedLazyFetchedEntry(clazz, player) ?: return@mapNotNull null
+            player to inventory
+        }.toMap()
+
+/**
+ * Gets all online players currently viewing a lazy-fetched paginated inventory entry of the specified type.
+ *
+ * @param T The type of inventory extending [AbstractKtInventoryPaginatedLazyFetched]
+ * @return Map of players to their open lazy-fetched inventory entries for type T
+ * @since 2.2.0
+ */
+inline fun <reified T : AbstractKtInventoryPaginatedLazyFetched<*, *, *>> getViewersPaginatedLazyFetchedEntry() =
+    getViewersPaginatedLazyFetchedEntry(T::class)
 
 /**
  * Gets all online players currently viewing an inventory or child inventory of the specified parent type.
@@ -148,7 +207,7 @@ inline fun <reified T : ParentInventory> getViewersDeeply() =
                         }
                     }
 
-                    is AbstractKtInventorySequence.Entry<*> -> {
+                    is AbstractKtInventoryPaginatedSequence.Entry<*> -> {
                         when (val paginated = inventory.paginated) {
                             is T -> {
                                 paginated
@@ -164,7 +223,7 @@ inline fun <reified T : ParentInventory> getViewersDeeply() =
                         }
                     }
 
-                    is AbstractKtInventoryFetched.Entry<*, *> -> {
+                    is AbstractKtInventoryPaginatedFetched.Entry<*, *> -> {
                         when (val paginated = inventory.paginated) {
                             is T -> {
                                 paginated
@@ -180,7 +239,7 @@ inline fun <reified T : ParentInventory> getViewersDeeply() =
                         }
                     }
 
-                    is AbstractKtInventoryLazyFetched.Entry<*, *, *> -> {
+                    is AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *> -> {
                         when (val paginated = inventory.paginated) {
                             is T -> {
                                 paginated

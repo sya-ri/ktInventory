@@ -16,8 +16,12 @@
   - `getTopInventoryPaginated(clazz, player)`
   - `getTopInventoryPaginatedEntry<T>()`
   - `getTopInventoryPaginatedEntry(clazz, player)`
-  - `getTopInventorySequenceEntry<T>()`
-  - `getTopInventorySequenceEntry(clazz, player)`
+  - `getTopInventoryPaginatedSequenceEntry<T>()`
+  - `getTopInventoryPaginatedSequenceEntry(clazz, player)`
+  - `getTopInventoryPaginatedFetchedEntry<T>()`
+  - `getTopInventoryPaginatedFetchedEntry(clazz, player)`
+  - `getTopInventoryPaginatedLazyFetchedEntry<T>()`
+  - `getTopInventoryPaginatedLazyFetchedEntry(clazz, player)`
 - Add generic viewer lookup APIs.
   - These APIs generalize viewer lookup beyond `AbstractKtInventory`, matching the new top inventory lookup behavior.
   - The paginated variants provide both paginated inventory lookup and paginated entry lookup.
@@ -27,21 +31,28 @@
   - `getViewersPaginated(clazz)`
   - `getViewersPaginatedEntry<T>()`
   - `getViewersPaginatedEntry(clazz)`
-  - `getViewersSequenceEntry<T>()`
-  - `getViewersSequenceEntry(clazz)`
+  - `getViewersPaginatedSequenceEntry<T>()`
+  - `getViewersPaginatedSequenceEntry(clazz)`
+  - `getViewersPaginatedFetchedEntry<T>()`
+  - `getViewersPaginatedFetchedEntry(clazz)`
+  - `getViewersPaginatedLazyFetchedEntry<T>()`
+  - `getViewersPaginatedLazyFetchedEntry(clazz)`
   - `getViewersDeeply<T>()`
 - Add sequence-backed paginated inventory base classes.
-  - `KtInventorySequence` for legacy string titles.
-  - `KtInventorySequenceAdventure` for Adventure `Component` titles.
+  - `KtInventoryPaginatedSequence` for legacy string titles.
+  - `KtInventoryPaginatedSequenceAdventure` for Adventure `Component` titles.
   - These classes use `entries: Sequence<KtInventoryButton<Entry<T>>>` and intentionally do not expose `lastPage`.
 - Add condition-based fetched inventory base classes.
-  - `KtInventoryFetched` for legacy string titles.
-  - `KtInventoryFetchedAdventure` for Adventure `Component` titles.
+  - `KtInventoryPaginatedFetched` for legacy string titles.
+  - `KtInventoryPaginatedFetchedAdventure` for Adventure `Component` titles.
   - These classes fetch entries with `fetch(condition, limit)`, allowing offset, cursor, or filter-based pagination without storing all entries up front.
 - Add lazy fetched inventory base classes.
-  - `KtInventoryLazyFetched` for legacy string titles.
-  - `KtInventoryLazyFetchedAdventure` for Adventure `Component` titles.
+  - `KtInventoryPaginatedLazyFetched` for legacy string titles.
+  - `KtInventoryPaginatedLazyFetchedAdventure` for Adventure `Component` titles.
   - These classes open the inventory immediately, run `fetch(condition, limit)` asynchronously through `KtInventoryPluginContext.LazyFetchable`, and place buttons on the server main thread after data is loaded.
+- Add refreshable support to condition-fetched and lazy-fetched paginated inventories.
+  - `RefreshBehavior.Keep` reopens the current display condition.
+  - `RefreshBehavior.OpenFirst` reopens the inventory from `initialCondition`.
 - Add entry-aware storables to multi-page inventory base classes.
   - Paginated and sequence-backed inventories can initialize and save storable contents per page entry.
   - Fetched and lazy fetched inventories can initialize and save storable contents per condition entry.

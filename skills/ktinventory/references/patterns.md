@@ -2,29 +2,25 @@
 
 ## Pick The Right Base Class
 
-- `KtInventory`
+- `KtInventory`, `KtInventoryAdventure`
   Use for Spigot-style inventories with `String` titles and legacy `&` color codes.
-- `KtInventoryAdventure`
-  Use on Paper when the title should be an Adventure `Component`.
-- `KtInventoryPaginated`
+- `KtInventoryPaginated`, `KtInventoryPaginatedAdventure`
   Use when the menu is a list split across multiple pages. This is the recommended default for ordinary multi-page menus.
-- `KtInventoryPaginatedAdventure`
-  Use when you need both pagination and an Adventure title.
-- `KtInventorySequence`
+- `KtInventoryPaginatedSequence`, `KtInventoryPaginatedSequenceAdventure`
   Use when entries should be produced lazily from a `Sequence` and the title does not need `lastPage`.
-- `KtInventoryFetched`
+- `KtInventoryPaginatedFetched`, `KtInventoryPaginatedFetchedAdventure`
   Use when a repository or API loads each page from a condition such as an offset, cursor, filter, or search key.
-- `KtInventoryLazyFetched`
+- `KtInventoryPaginatedLazyFetched`, `KtInventoryPaginatedLazyFetchedAdventure`
   Use when the inventory should open immediately and slow page loading should run asynchronously.
 
 Multi-page recommendation:
 
-| Data source | Recommended class | Notes |
-|-------------|-------------------|-------|
-| Prebuilt collection | `KtInventoryPaginated` | Best default. Simple, exposes `page` and `lastPage`, and is easiest to refresh. |
-| Lazy generated source | `KtInventorySequence` | Avoids building everything immediately, but titles receive only `page`. |
-| Cursor, offset, filter, or search condition | `KtInventoryFetched` | Let the data source return previous and next conditions. |
-| Slow database/API call | `KtInventoryLazyFetched` | Requires `KtInventoryPluginContext.LazyFetchable`; keep Bukkit API usage out of async `fetch`. |
+| Data source | String-title class | Adventure-title class | Notes |
+|-------------|--------------------|-----------------------|-------|
+| Prebuilt collection | `KtInventoryPaginated` | `KtInventoryPaginatedAdventure` | Best default. Simple, exposes `page` and `lastPage`, and is easiest to refresh. |
+| Lazy generated source | `KtInventoryPaginatedSequence` | `KtInventoryPaginatedSequenceAdventure` | Avoids building everything immediately, but titles receive only `page`. |
+| Cursor, offset, filter, or search condition | `KtInventoryPaginatedFetched` | `KtInventoryPaginatedFetchedAdventure` | Let the data source return previous and next conditions. |
+| Slow database/API call | `KtInventoryPaginatedLazyFetched` | `KtInventoryPaginatedLazyFetchedAdventure` | Requires `KtInventoryPluginContext.LazyFetchable`; keep Bukkit API usage out of async `fetch`. |
 
 ## Minimal Menu
 
@@ -80,6 +76,10 @@ Typical flow:
 - call `refresh(player, inventory)` or `refreshAll()`
 - rebuild the menu in `createNew(...)`
 
+Paginated fetched and lazy fetched inventories also support `Refreshable`.
+Use `RefreshBehavior.Keep` to preserve the current condition, or
+`RefreshBehavior.OpenFirst` to reopen from `initialCondition`.
+
 ## Paginated Inventory Pattern
 
 Use a paginated base class for large lists:
@@ -114,12 +114,12 @@ Rules of thumb:
 - keep fixed buttons, pagination slots, and paged storable slots separate
 - build each row entry with `createButton(...)`
 
-Use `KtInventorySequence` when the entry source is lazy or sequence-backed. Sequence-backed titles receive only the current page:
+Use `KtInventoryPaginatedSequence` when the entry source is lazy or sequence-backed. Sequence-backed titles receive only the current page:
 
 ```kotlin
 class SoundCheckInventory(
     context: KtInventoryPluginContext,
-) : KtInventorySequence(context, 6) {
+) : KtInventoryPaginatedSequence(context, 6) {
     constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
 
     override val entries =
@@ -141,12 +141,12 @@ class SoundCheckInventory(
 }
 ```
 
-Use `KtInventoryFetched` when the data source should decide page boundaries with an offset, cursor, filter, or other condition:
+Use `KtInventoryPaginatedFetched` when the data source should decide page boundaries with an offset, cursor, filter, or other condition:
 
 ```kotlin
 class ItemBrowserInventory(
     context: KtInventoryPluginContext,
-) : KtInventoryFetched<String>(context, 6) {
+) : KtInventoryPaginatedFetched<String>(context, 6) {
     override val initialCondition = "start"
 
     override fun fetch(
@@ -173,7 +173,7 @@ class ItemBrowserInventory(
 }
 ```
 
-Use `KtInventoryLazyFetched` with `KtInventoryPluginContext.LazyFetchable` when the inventory should open immediately and fetch data asynchronously. Keep Bukkit API usage out of `fetch`; create item buttons in `createButton`, which runs on the server main thread.
+Use `KtInventoryPaginatedLazyFetched` with `KtInventoryPluginContext.LazyFetchable` when the inventory should open immediately and fetch data asynchronously. Keep Bukkit API usage out of `fetch`; create item buttons in `createButton`, which runs on the server main thread.
 
 ## Storable Slots Pattern
 
@@ -245,6 +245,11 @@ val inventory = getTopInventoryPaginated<SoundCheckInventory>(player)
 
 // Current page entry, including page state
 val entry = getTopInventoryPaginatedEntry<SoundCheckInventory>(player)
+
+// Specialized page entries for non-list pagination models
+val sequenceEntry = getTopInventoryPaginatedSequenceEntry<SoundCheckSequenceInventory>(player)
+val fetchedEntry = getTopInventoryPaginatedFetchedEntry<ItemBrowserInventory>(player)
+val lazyFetchedEntry = getTopInventoryPaginatedLazyFetchedEntry<AsyncItemBrowserInventory>(player)
 ```
 
 Use `getViewers` for viewer maps:
@@ -253,6 +258,9 @@ Use `getViewers` for viewer maps:
 val viewers = getViewers<SettingsInventory>()
 val paginated = getViewersPaginated<SoundCheckInventory>()
 val paginatedEntries = getViewersPaginatedEntry<SoundCheckInventory>()
+val sequenceEntries = getViewersPaginatedSequenceEntry<SoundCheckSequenceInventory>()
+val fetchedEntries = getViewersPaginatedFetchedEntry<ItemBrowserInventory>()
+val lazyFetchedEntries = getViewersPaginatedLazyFetchedEntry<AsyncItemBrowserInventory>()
 ```
 
 Use `getViewersDeeply<ParentInventoryType>()` when child inventories or paginated entries should be associated with a parent inventory.

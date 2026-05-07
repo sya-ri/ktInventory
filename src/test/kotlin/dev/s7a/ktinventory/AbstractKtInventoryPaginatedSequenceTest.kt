@@ -3,7 +3,7 @@ package dev.s7a.ktinventory
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryPagedStorable
 import dev.s7a.ktinventory.util.getTopInventoryPaginated
-import dev.s7a.ktinventory.util.getTopInventorySequenceEntry
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedSequenceEntry
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import org.mockbukkit.mockbukkit.MockBukkit
@@ -18,7 +18,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 
-class AbstractKtInventorySequenceTest {
+class AbstractKtInventoryPaginatedSequenceTest {
     private lateinit var server: ServerMock
     private lateinit var plugin: PluginMock
 
@@ -40,12 +40,12 @@ class AbstractKtInventorySequenceTest {
 
         inventory.open(player, 2)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         assertSame(inventory, entry.paginated)
         assertEquals(2, entry.page)
         assertEquals(6, inventory.materializedEntries)
         assertSame(inventory, getTopInventoryPaginated<TestSequenceInventory>(player))
-        assertSame(entry as Any?, getTopInventorySequenceEntry<TestSequenceInventory>(player))
+        assertSame(entry as Any?, getTopInventoryPaginatedSequenceEntry<TestSequenceInventory>(player))
         assertNotNull(player.openInventory.topInventory.getItem(0))
     }
 
@@ -57,7 +57,7 @@ class AbstractKtInventorySequenceTest {
         inventory.open(player, 1)
 
         assertEquals(4, inventory.materializedEntries)
-        assertSame(inventory, (player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>).paginated)
+        assertSame(inventory, (player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>).paginated)
         assertNull(player.openInventory.topInventory.getItem(0))
         assertEquals(
             Material.DIAMOND,
@@ -143,7 +143,7 @@ class AbstractKtInventorySequenceTest {
         inventory.open(player, 2)
         inventory.open(player, 0)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         assertEquals(0, entry.page)
         assertEquals(1, inventory.entriesAccessCount)
         assertEquals(listOf(6), inventory.materializedEntryCounts)
@@ -163,7 +163,7 @@ class AbstractKtInventorySequenceTest {
         inventory.open(player, 2)
         inventory.open(player, 0)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         assertEquals(0, entry.page)
         assertEquals(
             Material.DIAMOND,
@@ -180,7 +180,7 @@ class AbstractKtInventorySequenceTest {
 
         inventory.open(player, -1)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         assertEquals(0, entry.page)
     }
 
@@ -200,10 +200,10 @@ class AbstractKtInventorySequenceTest {
         val inventory = TestSequenceInventory(KtInventoryPluginContext(plugin))
 
         inventory.open(player, 1)
-        (player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>).openNextPage(player)
-        val next = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        (player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>).openNextPage(player)
+        val next = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         next.openPreviousPage(player)
-        val previous = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val previous = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
 
         assertEquals(2, next.page)
         assertEquals(1, previous.page)
@@ -216,9 +216,9 @@ class AbstractKtInventorySequenceTest {
 
         inventory.open(player, 0)
         player.clickInventorySlot(8)
-        val next = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val next = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         player.clickInventorySlot(7)
-        val previous = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val previous = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
 
         assertEquals(1, next.page)
         assertEquals(0, previous.page)
@@ -226,12 +226,12 @@ class AbstractKtInventorySequenceTest {
 
     private class TestSequenceInventory(
         context: KtInventoryPluginContext,
-    ) : KtInventorySequence(context, 1) {
+    ) : KtInventoryPaginatedSequence(context, 1) {
         var materializedEntries = 0
             private set
         val createdPageTitles = mutableListOf<Int>()
 
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>>
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>>
             get() =
                 sequence {
                     repeat(10) {
@@ -252,8 +252,8 @@ class AbstractKtInventorySequenceTest {
 
     private class SequenceWithoutSlots(
         context: KtInventoryPluginContext,
-    ) : KtInventorySequence(context, 1) {
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>>
+    ) : KtInventoryPaginatedSequence(context, 1) {
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>>
             get() = emptySequence()
 
         override fun title(page: Int) = "Test ${page + 1}"
@@ -261,11 +261,11 @@ class AbstractKtInventorySequenceTest {
 
     private class SlottedSequenceInventory(
         context: KtInventoryPluginContext,
-    ) : KtInventorySequence(context, 1) {
+    ) : KtInventoryPaginatedSequence(context, 1) {
         var materializedEntries = 0
             private set
 
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>>
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>>
             get() =
                 sequence {
                     listOf(
@@ -288,12 +288,12 @@ class AbstractKtInventorySequenceTest {
 
     private class ReiterableSequenceInventory(
         context: KtInventoryPluginContext,
-    ) : KtInventorySequence(context, 1) {
+    ) : KtInventoryPaginatedSequence(context, 1) {
         var entriesAccessCount = 0
             private set
         val materializedEntryCounts = mutableListOf<Int>()
 
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>>
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>>
             get() {
                 entriesAccessCount += 1
                 var materializedEntries = 0
@@ -324,8 +324,8 @@ class AbstractKtInventorySequenceTest {
 
     private class OneShotSequenceInventory(
         context: KtInventoryPluginContext,
-    ) : KtInventorySequence(context, 1) {
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>> =
+    ) : KtInventoryPaginatedSequence(context, 1) {
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>> =
             (0 until 10)
                 .map { index ->
                     val material =
@@ -347,8 +347,8 @@ class AbstractKtInventorySequenceTest {
 
     private class NavigationSequenceInventory(
         context: KtInventoryPluginContext,
-    ) : KtInventorySequence(context, 1) {
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>>
+    ) : KtInventoryPaginatedSequence(context, 1) {
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>>
             get() =
                 generateSequence {
                     createButton(ItemStack(Material.STONE)) {}
@@ -366,8 +366,8 @@ class AbstractKtInventorySequenceTest {
     private class StorableSequenceInventory(
         context: KtInventoryPluginContext,
         private val saved: MutableMap<Int, List<Material?>>,
-    ) : KtInventorySequence(context, 1) {
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>>
+    ) : KtInventoryPaginatedSequence(context, 1) {
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>>
             get() =
                 sequence {
                     repeat(2) {
@@ -377,7 +377,7 @@ class AbstractKtInventorySequenceTest {
 
         override fun title(page: Int) = "Storable $page"
 
-        val pagedStorable: KtInventoryPagedStorable<AbstractKtInventorySequence.Entry<KtInventorySequence>>
+        val pagedStorable: KtInventoryPagedStorable<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequence>>
 
         init {
             paginateSlot(8)

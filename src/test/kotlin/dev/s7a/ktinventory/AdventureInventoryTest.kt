@@ -2,7 +2,7 @@ package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.util.getTopInventoryPaginated
-import dev.s7a.ktinventory.util.getTopInventorySequenceEntry
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedSequenceEntry
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.event.Listener
@@ -19,6 +19,9 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+
+private typealias AdventureLazyFetchedEntry =
+    AbstractKtInventoryPaginatedLazyFetched.Entry<KtInventoryPaginatedLazyFetchedAdventure<Int, Material>, Int, Material>
 
 class AdventureInventoryTest {
     private lateinit var server: ServerMock
@@ -105,11 +108,11 @@ class AdventureInventoryTest {
 
         inventory.open(player, 1)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         assertSame(inventory, entry.paginated)
         assertEquals(1, entry.page)
         assertEquals(Component.text("Adventure 2"), player.openInventory.title())
-        assertSame(entry as Any?, getTopInventorySequenceEntry<TestSequenceAdventureInventory>(player))
+        assertSame(entry as Any?, getTopInventoryPaginatedSequenceEntry<TestSequenceAdventureInventory>(player))
         assertNotNull(player.openInventory.topInventory.getItem(0))
     }
 
@@ -121,7 +124,7 @@ class AdventureInventoryTest {
         inventory.open(player, 1)
         TestSequenceAdventureInventory.refresh(player)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventorySequence.Entry<*>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedSequence.Entry<*>
         assertEquals(0, entry.page)
         assertTrue(entry.paginated is TestSequenceAdventureInventory)
     }
@@ -133,7 +136,7 @@ class AdventureInventoryTest {
 
         inventory.open(player, 2)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryFetched.Entry<*, *>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedFetched.Entry<*, *>
         assertSame(inventory, entry.paginated)
         assertEquals(2, entry.condition)
         assertEquals(Component.text("Adventure 2"), player.openInventory.title())
@@ -154,7 +157,7 @@ class AdventureInventoryTest {
 
         inventory.open(player, 2)
 
-        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryLazyFetched.Entry<*, *, *>
+        val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>
         assertSame(inventory, entry.paginated)
         assertEquals(2, entry.condition)
         assertEquals(Component.text("Adventure 2"), player.openInventory.title())
@@ -237,16 +240,16 @@ class AdventureInventoryTest {
 
     private class TestSequenceAdventureInventory(
         private val context: KtInventoryPluginContext,
-    ) : KtInventorySequenceAdventure(context, 1) {
+    ) : KtInventoryPaginatedSequenceAdventure(context, 1) {
         companion object :
-            KtInventorySequenceAdventure.Refreshable<TestSequenceAdventureInventory>(TestSequenceAdventureInventory::class) {
+            KtInventoryPaginatedSequenceAdventure.Refreshable<TestSequenceAdventureInventory>(TestSequenceAdventureInventory::class) {
             override fun createNew(
                 player: org.bukkit.entity.HumanEntity,
-                inventory: AbstractKtInventorySequence.Entry<TestSequenceAdventureInventory>,
+                inventory: AbstractKtInventoryPaginatedSequence.Entry<TestSequenceAdventureInventory>,
             ) = TestSequenceAdventureInventory(inventory.paginated.context)
         }
 
-        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequenceAdventure>>>
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventoryPaginatedSequence.Entry<KtInventoryPaginatedSequenceAdventure>>>
             get() =
                 generateSequence {
                     createButton(ItemStack(Material.STONE)) {}
@@ -261,7 +264,7 @@ class AdventureInventoryTest {
 
     private class TestFetchedAdventureInventory(
         context: KtInventoryPluginContext,
-    ) : KtInventoryFetchedAdventure<Int>(context, 1) {
+    ) : KtInventoryPaginatedFetchedAdventure<Int>(context, 1) {
         private val materials =
             listOf(
                 Material.STONE,
@@ -274,7 +277,7 @@ class AdventureInventoryTest {
         override fun fetch(
             condition: Int,
             limit: Int,
-        ): Page<Int, KtInventoryButton<AbstractKtInventoryFetched.Entry<KtInventoryFetchedAdventure<Int>, Int>>> =
+        ): Page<Int, KtInventoryButton<AbstractKtInventoryPaginatedFetched.Entry<KtInventoryPaginatedFetchedAdventure<Int>, Int>>> =
             Page(
                 entries =
                     materials
@@ -294,7 +297,7 @@ class AdventureInventoryTest {
 
     private class TestLazyFetchedAdventureInventory(
         context: KtInventoryPluginContext.LazyFetchable,
-    ) : KtInventoryLazyFetchedAdventure<Int, Material>(context, 1) {
+    ) : KtInventoryPaginatedLazyFetchedAdventure<Int, Material>(context, 1) {
         private val materials =
             listOf(
                 Material.STONE,
@@ -308,19 +311,16 @@ class AdventureInventoryTest {
         override fun fetch(
             condition: Int,
             limit: Int,
-        ): AbstractKtInventoryFetched.Page<Int, Material> {
+        ): AbstractKtInventoryPaginatedFetched.Page<Int, Material> {
             fetchedConditions += condition
-            return AbstractKtInventoryFetched.Page(
+            return AbstractKtInventoryPaginatedFetched.Page(
                 entries = materials.drop(condition).take(limit),
                 previousCondition = (condition - limit).takeIf { it >= 0 },
                 nextCondition = (condition + limit).takeIf { it < materials.size },
             )
         }
 
-        override fun createButton(
-            data: Material,
-        ): KtInventoryButton<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetchedAdventure<Int, Material>, Int, Material>> =
-            createButton(ItemStack(data)) {}
+        override fun createButton(data: Material): KtInventoryButton<AdventureLazyFetchedEntry> = createButton(ItemStack(data)) {}
 
         override fun title(condition: Int) = Component.text("Adventure $condition")
 
