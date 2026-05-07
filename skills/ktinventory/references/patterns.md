@@ -96,6 +96,7 @@ Rules of thumb:
 
 - reserve a contiguous content area with `paginateSlot(...)`
 - keep navigation buttons outside that area
+- keep fixed buttons, pagination slots, and paged storable slots separate
 - build each row entry with `createButton(...)`
 
 Use `KtInventorySequence` when the entry source is lazy or sequence-backed. Sequence-backed titles receive only the current page:
@@ -125,6 +126,40 @@ class SoundCheckInventory(
 }
 ```
 
+Use `KtInventoryFetched` when the data source should decide page boundaries with an offset, cursor, filter, or other condition:
+
+```kotlin
+class ItemBrowserInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryFetched<String>(context, 6) {
+    override val initialCondition = "start"
+
+    override fun fetch(
+        condition: String,
+        limit: Int,
+    ): Page<String, KtInventoryButton<Entry<String>>> {
+        val page = repository.fetchItems(cursor = condition, limit = limit)
+        return Page(
+            entries = page.items.map { item ->
+                createButton(itemStack(Material.PAPER, item.name)) {}
+            },
+            previousCondition = page.previousCursor,
+            nextCondition = page.nextCursor,
+        )
+    }
+
+    override fun title(condition: String) = "&0&lItems"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "&d<<"))
+        nextPageButton(53, itemStack(Material.ARROW, "&d>>"))
+    }
+}
+```
+
+Use `KtInventoryLazyFetched` with `KtInventoryPluginContext.LazyFetchable` when the inventory should open immediately and fetch data asynchronously. Keep Bukkit API usage out of `fetch`; create item buttons in `createButton`, which runs on the server main thread.
+
 ## Storable Slots Pattern
 
 Use `storable(...)` when players should place or move items inside managed slots:
@@ -138,6 +173,46 @@ storable(
 ```
 
 Keep persistence inside `save` so the inventory class stays focused on UI behavior.
+
+For paginated, sequence-backed, fetched, or lazy fetched inventories, define editable slots on the parent inventory. The callback receiver is the current entry, so use `page` or `condition` directly:
+
+```kotlin
+class EditablePagesInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginated(context, 6) {
+    override val entries = entriesFromRepository()
+
+    override fun title(page: Int, lastPage: Int) =
+        "&0&lEditable ${page + 1}/${lastPage + 1}"
+
+    init {
+        paginateSlot(9 until 45)
+        storable(
+            slots = 0 until 9,
+            initialize = { loadItemsForPage(page) },
+            save = { items -> saveItemsForPage(page, items) },
+        )
+    }
+}
+```
+
+Paged storable slots must not overlap pagination slots or fixed button slots.
+
+## Custom Context Pattern
+
+When implementing `KtInventoryPluginContext` yourself, use a handler id derived from the plugin that registers events:
+
+```kotlin
+class MyInventoryContext(
+    private val plugin: Plugin,
+) : KtInventoryPluginContext {
+    override val handlerId = KtInventoryHandlerId.of(plugin)
+
+    override fun registerEvents(listener: Listener) {
+        plugin.server.pluginManager.registerEvents(listener, plugin)
+    }
+}
+```
 
 ## Viewer And Top Inventory Lookup Pattern
 

@@ -108,6 +108,22 @@ class SimpleMenu(
 The primary constructor that accepts `KtInventoryPluginContext` is for dependency injection.
 Use it when a custom context, a mock context, or a DI framework provides the context directly.
 
+Custom `KtInventoryPluginContext` implementations must expose a stable `handlerId`.
+Use `KtInventoryHandlerId.of(plugin)` with the same plugin that registers events, so internal
+listeners are shared correctly and plugin-disable cleanup can close open inventories.
+
+```kotlin
+class MyInventoryContext(
+    private val plugin: Plugin,
+) : KtInventoryPluginContext {
+    override val handlerId = KtInventoryHandlerId.of(plugin)
+
+    override fun registerEvents(listener: Listener) {
+        plugin.server.pluginManager.registerEvents(listener, plugin)
+    }
+}
+```
+
 
 ---
 
@@ -323,6 +339,7 @@ class SimpleMenuPaper(
 
 Define all entries in `entries`, specify which slots display page items with
 `paginateSlot()`, and add navigation buttons.
+Fixed buttons, pagination slots, and paged storable slots must not overlap.
 
 ```kotlin
 class SoundCheckInventory(
@@ -375,6 +392,76 @@ class SoundCheckSequenceInventory(
 
     override fun title(page: Int) =
         "&0&lSound List (${page + 1})"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "Previous Page"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next Page"))
+    }
+}
+```
+
+Use `KtInventoryFetched` when each page should be loaded by a display condition
+instead of by slicing a prebuilt list. This fits offset, cursor, or filtered
+pagination where the data source decides the next or previous condition.
+
+```kotlin
+class CursorInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryFetched<String>(context, 6) {
+    override val initialCondition = "start"
+
+    override fun fetch(
+        condition: String,
+        limit: Int,
+    ): Page<String, KtInventoryButton<Entry<String>>> {
+        val result = loadPageFromDatabase(condition, limit)
+        return Page(
+            entries = result.rows.map { row ->
+                createButton(itemStack(Material.PAPER, row.name)) {}
+            },
+            previousCondition = result.previousCursor,
+            nextCondition = result.nextCursor,
+        )
+    }
+
+    override fun title(condition: String) = "&0&lItems"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "Previous Page"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next Page"))
+    }
+}
+```
+
+Use `KtInventoryLazyFetched` when the inventory should open immediately and load
+data asynchronously. Construct it with `KtInventoryPluginContext.LazyFetchable`.
+`fetch(condition, limit)` runs asynchronously; `createButton(data)` runs on the
+server main thread.
+
+```kotlin
+class LazyCursorInventory(
+    context: KtInventoryPluginContext.LazyFetchable,
+) : KtInventoryLazyFetched<String, Row>(context, 6) {
+    override val initialCondition = "start"
+
+    override fun fetch(
+        condition: String,
+        limit: Int,
+    ): AbstractKtInventoryFetched.Page<String, Row> {
+        val result = loadPageFromDatabase(condition, limit)
+        return AbstractKtInventoryFetched.Page(
+            entries = result.rows,
+            previousCondition = result.previousCursor,
+            nextCondition = result.nextCursor,
+        )
+    }
+
+    override fun createButton(data: Row) =
+        createButton(itemStack(Material.PAPER, data.name)) {}
+
+    override fun title(condition: String) = "&0&lItems"
 
     init {
         paginateSlot(0 until 45)
@@ -451,6 +538,7 @@ SoundCheckInventory.refreshAll(behavior = RefreshBehavior.OpenFirst)
 
 `storable()` defines a region of slots where players can freely place and take items.
 When the inventory is closed, the `save` callback is invoked for persistence.
+Storable slots cannot overlap fixed button slots.
 
 ```kotlin
 class StorageInventory(
@@ -531,6 +619,43 @@ storable.clear()            // Clear all managed slots
 storable.save()             // Trigger the save callback manually
 storable.contains(slot)     // Whether the given slot is managed by this storable
 ```
+
+### Paged storables
+
+Multi-page inventory base classes can define storables on the parent inventory.
+The storable is applied to each created page entry, and callbacks use the current
+entry as the receiver. This lets initialization and saving depend on `page` for
+paginated/sequence inventories or `condition` for fetched/lazy fetched inventories.
+
+```kotlin
+class EditablePagesInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginated(context, 6) {
+    override val entries = loadEntries().map { createButton(it.icon) {} }
+
+    override fun title(page: Int, lastPage: Int) =
+        "&0&lEditable ${page + 1}/${lastPage + 1}"
+
+    init {
+        paginateSlot(9 until 45)
+
+        storable(
+            slots = 0 until 9,
+            initialize = {
+                // Receiver: KtInventoryPaginated.Entry<EditablePagesInventory>
+                loadSavedItemsForPage(page)
+            },
+            save = { items ->
+                saveItemsForPage(page, items)
+            },
+        )
+    }
+}
+```
+
+Paged storable slots cannot overlap fixed button slots or pagination slots.
+`storable(slots = ...)` returns `KtInventoryPagedStorable<...>`, and the parent
+inventory exposes registered values through `pagedStorables`.
 
 ### ClickEvent and DragEvent properties
 
@@ -840,6 +965,8 @@ paginated entries through their `paginated` inventory before checking
 | Name | Kind | Purpose |
 |------|------|---------|
 | `KtInventoryPluginContext` | interface | Abstracts the plugin dependency; inventory definitions can bridge from `Plugin` with `KtInventoryPluginContext(plugin)` |
+| `KtInventoryPluginContext.LazyFetchable` | interface | Context capability for lazy fetched inventories; provides sync and async scheduling |
+| `KtInventoryHandlerId` | class | Internal handler identity for sharing listeners across contexts from the same plugin |
 | `KtInventoryBase` | abstract class | Root base — button management, event hooks |
 | `AbstractKtInventory` | abstract class | Implements `InventoryHolder`; adds storable and refresh support |
 | `KtInventory` | abstract class | Concrete inventory with a String title |
@@ -850,8 +977,15 @@ paginated entries through their `paginated` inventory before checking
 | `AbstractKtInventorySequence<T>` | abstract class | Base for sequence-backed paginated inventories |
 | `KtInventorySequence` | abstract class | Sequence-backed paginated inventory with a String title |
 | `KtInventorySequenceAdventure` | abstract class | Sequence-backed paginated inventory with a Component title (Paper only) |
+| `AbstractKtInventoryFetched<T, C>` | abstract class | Base for condition-based fetched inventories |
+| `KtInventoryFetched<C>` | abstract class | Fetched inventory with a String title |
+| `KtInventoryFetchedAdventure<C>` | abstract class | Fetched inventory with a Component title (Paper only) |
+| `AbstractKtInventoryLazyFetched<T, C, D>` | abstract class | Base for inventories that open immediately and fetch data asynchronously |
+| `KtInventoryLazyFetched<C, D>` | abstract class | Lazy fetched inventory with a String title |
+| `KtInventoryLazyFetchedAdventure<C, D>` | abstract class | Lazy fetched inventory with a Component title (Paper only) |
 | `KtInventoryButton<T>` | class | A clickable button component |
 | `KtInventoryStorable` | class | A storable-item-slot component |
+| `KtInventoryPagedStorable<T>` | class | Parent-owned storable applied to each page entry |
 | `KtInventoryStorableOption` | interface | Save-timing and callback configuration for storables |
 | `KtInventoryHandler` | class | Internal event handler — do not use directly |
 | `RefreshableInventory<T>` | interface | Interface implemented by `Refreshable` inner classes |
