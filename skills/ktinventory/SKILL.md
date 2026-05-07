@@ -19,12 +19,19 @@ Use this skill when the task is about inventory UIs built with `ktInventory`.
 4. For paginated UIs, define `entries`, call `paginateSlot(...)`, and wire navigation with `previousPageButton(...)` and `nextPageButton(...)`.
 5. For stateful refreshes, follow the repository pattern: `companion object : Refreshable<...>(...)` and rebuild a fresh inventory in `createNew(...)`.
 6. For editable storage areas, use `storable(...)` and keep save behavior inside the provided callback instead of scattering inventory persistence logic.
-7. Start from the smallest working pattern, then add pagination, refresh, or storage only when the user actually needs them.
+7. For top inventory or viewer lookup, use the current APIs:
+   - `getTopInventory<T>(player)` for the top holder a player has open.
+   - `getTopInventoryPaginated<T>(player)` for the paginated inventory itself.
+   - `getTopInventoryPaginatedEntry<T>(player)` when page state is needed.
+   - `getViewers<T>()`, `getViewersPaginated<T>()`, `getViewersPaginatedEntry<T>()`, or `getViewersDeeply<T>()` for viewer maps.
+8. Avoid deprecated lookup APIs in new code: `getOpenInventory`, `getOpenInventoryPaginated`, `getAllViewers`, `getAllViewersPaginated`, and `getAllViewersDeeply`.
+9. Start from the smallest working pattern, then add pagination, refresh, or storage only when the user actually needs them.
 
 ## Repository Guidance
 
 - Prefer small inventories with explicit slot numbers first. Expand to shared buttons, pagination, or refresh only after the basic click flow is correct.
 - Do not make callers wrap a plugin with `KtInventoryPluginContext(plugin)`. If a plugin instance is available, expose a plugin-taking bridge constructor on the inventory and convert there.
+- Deprecated APIs and their removal schedule are documented in `DEPRECATION.md`; preserve old APIs only when maintaining compatibility.
 - Keep examples and docs aligned with the current snapshot version from the root Gradle build.
 - Prefer `./gradlew build` for verification. Use a Paper server launch task only when the task depends on live in-game behavior.
 

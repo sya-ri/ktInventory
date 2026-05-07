@@ -5,7 +5,6 @@ import dev.s7a.ktinventory.AbstractKtInventoryPaginated
 import dev.s7a.ktinventory.HasParentInventory
 import dev.s7a.ktinventory.KtInventory
 import dev.s7a.ktinventory.ParentInventory
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import kotlin.reflect.KClass
 
@@ -17,13 +16,11 @@ import kotlin.reflect.KClass
  * @return Map of players to their open inventories of type T
  * @since 2.0.0
  */
-fun <T : AbstractKtInventory> getAllViewers(clazz: KClass<T>): Map<Player, T> =
-    Bukkit
-        .getOnlinePlayers()
-        .mapNotNull { player ->
-            val inventory = getOpenInventory(clazz, player) ?: return@mapNotNull null
-            player to inventory
-        }.toMap()
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getViewers instead.",
+    ReplaceWith("getViewers(clazz)", "dev.s7a.ktinventory.util.getViewers"),
+)
+fun <T : AbstractKtInventory> getAllViewers(clazz: KClass<T>): Map<Player, T> = getViewers(clazz)
 
 /**
  * Gets all online players currently viewing an inventory of the specified type.
@@ -32,7 +29,11 @@ fun <T : AbstractKtInventory> getAllViewers(clazz: KClass<T>): Map<Player, T> =
  * @return Map of players to their open inventories of type T
  * @since 2.0.0
  */
-inline fun <reified T : AbstractKtInventory> getAllViewers() = getAllViewers(T::class)
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getViewers instead.",
+    ReplaceWith("getViewers<T>()", "dev.s7a.ktinventory.util.getViewers"),
+)
+inline fun <reified T : AbstractKtInventory> getAllViewers() = getViewers<T>()
 
 /**
  * Gets all online players currently viewing a paginated inventory of the specified type.
@@ -42,13 +43,12 @@ inline fun <reified T : AbstractKtInventory> getAllViewers() = getAllViewers(T::
  * @return Map of players to their open paginated inventory entries of type T
  * @since 2.0.0
  */
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getViewersPaginatedEntry instead.",
+    ReplaceWith("getViewersPaginatedEntry(clazz)", "dev.s7a.ktinventory.util.getViewersPaginatedEntry"),
+)
 fun <T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(clazz: KClass<T>): Map<Player, AbstractKtInventoryPaginated.Entry<T>> =
-    Bukkit
-        .getOnlinePlayers()
-        .mapNotNull { player ->
-            val inventory = getOpenInventoryPaginated(clazz, player) ?: return@mapNotNull null
-            player to (inventory)
-        }.toMap()
+    getViewersPaginatedEntry(clazz)
 
 /**
  * Gets all online players currently viewing a paginated inventory of the specified type.
@@ -57,7 +57,11 @@ fun <T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(clazz: KClass<T
  * @return Map of players to their open paginated inventory entries of type T
  * @since 2.0.0
  */
-inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated() = getAllViewersPaginated(T::class)
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getViewersPaginatedEntry instead.",
+    ReplaceWith("getViewersPaginatedEntry<T>()", "dev.s7a.ktinventory.util.getViewersPaginatedEntry"),
+)
+inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated() = getViewersPaginatedEntry<T>()
 
 /**
  * Gets all online players currently viewing an inventory or child inventory of the specified parent type.
@@ -67,8 +71,13 @@ inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(
  * @return Map of players to their open parent inventories of type T
  * @since 2.0.0
  */
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getViewersDeeply instead.",
+    ReplaceWith("getViewersDeeply<T>()", "dev.s7a.ktinventory.util.getViewersDeeply"),
+    level = DeprecationLevel.ERROR,
+)
 inline fun <reified T : ParentInventory> getAllViewersDeeply() =
-    getAllViewers<KtInventory>()
+    getViewers<KtInventory>()
         .mapNotNull { (player, inventory) ->
             val parentInventory =
                 when (inventory) {

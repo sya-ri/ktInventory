@@ -112,6 +112,42 @@ storable(
 
 Keep persistence inside `save` so the inventory class stays focused on UI behavior.
 
+## Viewer And Top Inventory Lookup Pattern
+
+Use `getTopInventory` when checking what a single player has open:
+
+```kotlin
+val menu = getTopInventory<SettingsInventory>(player) ?: return
+```
+
+For paginated inventories, choose the lookup by the value you need:
+
+```kotlin
+// Paginated inventory instance
+val inventory = getTopInventoryPaginated<SoundCheckInventory>(player)
+
+// Current page entry, including page state
+val entry = getTopInventoryPaginatedEntry<SoundCheckInventory>(player)
+```
+
+Use `getViewers` for viewer maps:
+
+```kotlin
+val viewers = getViewers<SettingsInventory>()
+val paginated = getViewersPaginated<SoundCheckInventory>()
+val paginatedEntries = getViewersPaginatedEntry<SoundCheckInventory>()
+```
+
+Use `getViewersDeeply<ParentInventoryType>()` when child inventories or paginated entries should be associated with a parent inventory.
+
+Deprecated lookup aliases should not be used in new code:
+
+- `getOpenInventory`
+- `getOpenInventoryPaginated`
+- `getAllViewers`
+- `getAllViewersPaginated`
+- `getAllViewersDeeply`
+
 ## Verification
 
 - General compile check: `./gradlew build`

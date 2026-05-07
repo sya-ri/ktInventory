@@ -6,7 +6,7 @@ item storage, and real-time refresh support.
 
 - GitHub: https://github.com/sya-ri/ktInventory
 - Maven Central: dev.s7a:ktInventory
-- Current version: 2.1.1
+- Current version: 2.2.0-SNAPSHOT
 - License: MIT
 - Java target: 1.8 / Kotlin JVM target: 1.8
 - Platforms: Spigot, Paper (Adventure API requires Paper)
@@ -41,7 +41,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.1.1")
+    implementation("dev.s7a:ktInventory:2.2.0-SNAPSHOT")
 }
 ```
 
@@ -54,7 +54,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.s7a:ktInventory:2.1.1'
+    implementation 'dev.s7a:ktInventory:2.2.0-SNAPSHOT'
 }
 ```
 
@@ -64,7 +64,7 @@ dependencies {
 <dependency>
     <groupId>dev.s7a</groupId>
     <artifactId>ktInventory</artifactId>
-    <version>2.1.1</version>
+    <version>2.2.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -664,36 +664,56 @@ init {
 
 ## 9. Viewer Lookup Utilities
 
-### getOpenInventory — get the inventory a specific player has open
+### getTopInventory — get the top inventory holder a specific player has open
 
 ```kotlin
-import dev.s7a.ktinventory.util.getOpenInventory
-import dev.s7a.ktinventory.util.getOpenInventoryPaginated
+import dev.s7a.ktinventory.util.getTopInventory
+import dev.s7a.ktinventory.util.getTopInventoryPaginated
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry
 
-// Returns null if the player does not have this inventory open
-val inventory: SimpleMenu? = getOpenInventory<SimpleMenu>(player)
+// Returns null if the player does not have this top inventory holder open
+val inventory: SimpleMenu? = getTopInventory<SimpleMenu>(player)
+
+// For paginated inventories — returns the paginated inventory instance
+val paginated: SoundCheckInventory? =
+    getTopInventoryPaginated<SoundCheckInventory>(player)
 
 // For paginated inventories — returns the Entry (page) the player is on
 val entry: KtInventoryPaginated.Entry<SoundCheckInventory>? =
-    getOpenInventoryPaginated<SoundCheckInventory>(player)
+    getTopInventoryPaginatedEntry<SoundCheckInventory>(player)
 ```
 
-### getAllViewers — get all players currently viewing a given inventory type
+Deprecated aliases:
+
+- `getOpenInventory<T>(player)` → `getTopInventory<T>(player)`
+- `getOpenInventoryPaginated<T>(player)` → `getTopInventoryPaginatedEntry<T>(player)`
+
+### getViewers — get all players currently viewing a given inventory type
 
 ```kotlin
-import dev.s7a.ktinventory.util.getAllViewers
-import dev.s7a.ktinventory.util.getAllViewersPaginated
-import dev.s7a.ktinventory.util.getAllViewersDeeply
+import dev.s7a.ktinventory.util.getViewers
+import dev.s7a.ktinventory.util.getViewersPaginated
+import dev.s7a.ktinventory.util.getViewersPaginatedEntry
+import dev.s7a.ktinventory.util.getViewersDeeply
 
 // Map of every player who has SimpleMenu open → Map<Player, SimpleMenu>
-val viewers: Map<Player, SimpleMenu> = getAllViewers<SimpleMenu>()
+val viewers: Map<Player, SimpleMenu> = getViewers<SimpleMenu>()
 
-// Paginated version — returns Map<Player, Entry<SoundCheckInventory>>
-val paginatedViewers = getAllViewersPaginated<SoundCheckInventory>()
+// Paginated inventory version — returns Map<Player, SoundCheckInventory>
+val paginatedViewers = getViewersPaginated<SoundCheckInventory>()
+
+// Paginated entry version — returns Map<Player, Entry<SoundCheckInventory>>
+val paginatedEntryViewers = getViewersPaginatedEntry<SoundCheckInventory>()
 
 // Deep search — includes players in child inventories that declare parentInventory
-val deepViewers = getAllViewersDeeply<MyParentInventory>()
+val deepViewers = getViewersDeeply<MyParentInventory>()
 ```
+
+Deprecated aliases:
+
+- `getAllViewers<T>()` → `getViewers<T>()`
+- `getAllViewersPaginated<T>()` → `getViewersPaginatedEntry<T>()`
+- `getAllViewersDeeply<T>()` → `getViewersDeeply<T>()` (`DeprecationLevel.ERROR`)
 
 
 ---
@@ -770,9 +790,10 @@ class SubMenu(
 }
 ```
 
-`getAllViewersDeeply<MainMenu>()` traverses `HasParentInventory.parentInventory`
-recursively and returns all players associated with `MainMenu`, including those
-currently viewing a child inventory.
+`getViewersDeeply<MainMenu>()` traverses `HasParentInventory.parentInventory`
+and returns all players associated with `MainMenu`, including those currently
+viewing a child inventory. It also resolves paginated entries through their
+`paginated` inventory before checking `ParentInventory` / `HasParentInventory`.
 
 
 ---
@@ -802,11 +823,13 @@ currently viewing a child inventory.
 | Function | Source file | Purpose |
 |----------|-------------|---------|
 | `slot(y, x)` | `Utils.kt` | Convert row/column to slot number(s) |
-| `getOpenInventory<T>(player)` | `util/GetOpenInventory.kt` | Get the typed inventory a player has open |
-| `getOpenInventoryPaginated<T>(player)` | `util/GetOpenInventory.kt` | Paginated variant |
-| `getAllViewers<T>()` | `util/GetAllViewers.kt` | All players viewing a given inventory type |
-| `getAllViewersPaginated<T>()` | `util/GetAllViewers.kt` | Paginated variant |
-| `getAllViewersDeeply<T>()` | `util/GetAllViewers.kt` | Deep search through parent–child hierarchy |
+| `getTopInventory<T>(player)` | `util/GetTopInventory.kt` | Get the typed top inventory holder a player has open |
+| `getTopInventoryPaginated<T>(player)` | `util/GetTopInventory.kt` | Get the paginated inventory behind the open paginated entry |
+| `getTopInventoryPaginatedEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open paginated entry, including page state |
+| `getViewers<T>()` | `util/GetViewers.kt` | All players viewing a given top inventory holder type |
+| `getViewersPaginated<T>()` | `util/GetViewers.kt` | All players viewing a given paginated inventory type |
+| `getViewersPaginatedEntry<T>()` | `util/GetViewers.kt` | All players viewing a given paginated entry type |
+| `getViewersDeeply<T>()` | `util/GetViewers.kt` | Deep search through parent–child hierarchy |
 | `buildStorableOption { }` | `options/` | DSL builder for `KtInventoryStorableOption` |
 
 

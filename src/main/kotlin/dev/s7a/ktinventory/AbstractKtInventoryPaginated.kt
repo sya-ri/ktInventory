@@ -1,8 +1,8 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
-import dev.s7a.ktinventory.util.getAllViewersPaginated
-import dev.s7a.ktinventory.util.getOpenInventoryPaginated
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry
+import dev.s7a.ktinventory.util.getViewersPaginatedEntry
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -30,7 +30,7 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
      * @param line Number of inventory rows
      * @since 2.0.0
      */
-    @Deprecated("Use KtInventoryPluginContext constructor instead")
+    @Deprecated("Deprecated in v2.1.0. Will be removed in v2.4.0. Use KtInventoryPluginContext constructor instead.")
     constructor(plugin: Plugin, line: Int) : this(KtInventoryPluginContext(plugin), line)
 
     /**
@@ -316,7 +316,7 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
             behavior: RefreshBehavior,
             predicate: (Entry<T>) -> Boolean = { true },
         ): Boolean {
-            val inventory = getOpenInventoryPaginated(clazz, player) ?: return false
+            val inventory = getTopInventoryPaginatedEntry(clazz, player) ?: return false
             if (predicate(inventory).not()) return false
             refresh(player, inventory, behavior)
             return true
@@ -361,7 +361,7 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
             behavior: RefreshBehavior = RefreshBehavior.OpenFirst,
             predicate: (Player, Entry<T>) -> Boolean = { _, _ -> true },
         ) {
-            getAllViewersPaginated(clazz)
+            getViewersPaginatedEntry(clazz)
                 .filter { (player, inventory) ->
                     predicate(player, inventory)
                 }.forEach { (player, inventory) ->

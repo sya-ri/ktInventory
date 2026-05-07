@@ -3,29 +3,7 @@ package dev.s7a.ktinventory.util
 import dev.s7a.ktinventory.AbstractKtInventory
 import dev.s7a.ktinventory.AbstractKtInventoryPaginated
 import org.bukkit.entity.HumanEntity
-import org.bukkit.inventory.Inventory
 import kotlin.reflect.KClass
-import kotlin.reflect.safeCast
-
-/**
- * Get the upper inventory involved in this transaction via reflection.
- *
- * https://www.spigotmc.org/threads/inventoryview-changed-to-interface-backwards-compatibility.651754/#post-4747875
- *
- * @param viewer The human entity whose top inventory to get
- * @return The top inventory
- * @throws RuntimeException if the reflection operation fails
- * @since 2.0.0
- */
-private fun getTopInventory(viewer: HumanEntity) =
-    try {
-        val view = viewer.openInventory
-        val getTopInventory = view.javaClass.getMethod("getTopInventory")
-        getTopInventory.setAccessible(true)
-        getTopInventory.invoke(view) as Inventory
-    } catch (e: Throwable) {
-        throw RuntimeException(e)
-    }
 
 /**
  * Gets the currently open inventory of the specified type for a player.
@@ -36,10 +14,14 @@ private fun getTopInventory(viewer: HumanEntity) =
  * @return The open inventory of type T, or null if not found
  * @since 2.0.0
  */
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getTopInventory instead.",
+    ReplaceWith("getTopInventory(clazz, player)", "dev.s7a.ktinventory.util.getTopInventory"),
+)
 fun <T : AbstractKtInventory> getOpenInventory(
     clazz: KClass<T>,
     player: HumanEntity,
-): T? = clazz.safeCast(getTopInventory(player).holder)
+): T? = getTopInventory(clazz, player)
 
 /**
  * Gets the currently open inventory of the specified type for a player.
@@ -49,7 +31,11 @@ fun <T : AbstractKtInventory> getOpenInventory(
  * @return The open inventory of type T, or null if not found
  * @since 2.0.0
  */
-inline fun <reified T : AbstractKtInventory> getOpenInventory(player: HumanEntity) = getOpenInventory(T::class, player)
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getTopInventory instead.",
+    ReplaceWith("getTopInventory<T>(player)", "dev.s7a.ktinventory.util.getTopInventory"),
+)
+inline fun <reified T : AbstractKtInventory> getOpenInventory(player: HumanEntity) = getTopInventory<T>(player)
 
 /**
  * Gets the currently open paginated inventory entry of the specified type for a player.
@@ -60,15 +46,14 @@ inline fun <reified T : AbstractKtInventory> getOpenInventory(player: HumanEntit
  * @return The open paginated inventory entry of type T, or null if not found
  * @since 2.0.0
  */
-@Suppress("UNCHECKED_CAST")
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getTopInventoryPaginatedEntry instead.",
+    ReplaceWith("getTopInventoryPaginatedEntry(clazz, player)", "dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry"),
+)
 fun <T : AbstractKtInventoryPaginated<*>> getOpenInventoryPaginated(
     clazz: KClass<T>,
     player: HumanEntity,
-): AbstractKtInventoryPaginated.Entry<T>? {
-    val inventory = getTopInventory(player).holder as? AbstractKtInventoryPaginated.Entry<*> ?: return null
-    if (clazz.isInstance(inventory.paginated)) return null
-    return inventory as AbstractKtInventoryPaginated.Entry<T>
-}
+): AbstractKtInventoryPaginated.Entry<T>? = getTopInventoryPaginatedEntry(clazz, player)
 
 /**
  * Gets the currently open paginated inventory entry of the specified type for a player.
@@ -78,5 +63,9 @@ fun <T : AbstractKtInventoryPaginated<*>> getOpenInventoryPaginated(
  * @return The open paginated inventory entry of type T, or null if not found
  * @since 2.0.0
  */
+@Deprecated(
+    "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getTopInventoryPaginatedEntry instead.",
+    ReplaceWith("getTopInventoryPaginatedEntry<T>(player)", "dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry"),
+)
 inline fun <reified T : AbstractKtInventoryPaginated<*>> getOpenInventoryPaginated(player: HumanEntity) =
-    getOpenInventoryPaginated(T::class, player)
+    getTopInventoryPaginatedEntry<T>(player)

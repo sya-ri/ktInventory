@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.1.1")
+    implementation("dev.s7a:ktInventory:2.2.0-SNAPSHOT")
 }
 ```
 

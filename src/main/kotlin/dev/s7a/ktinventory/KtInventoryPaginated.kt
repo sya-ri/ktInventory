@@ -25,7 +25,7 @@ abstract class KtInventoryPaginated(
      * @param altColorChar The alternate color code character for title color formatting, defaults to '&'
      * @since 2.0.0
      */
-    @Deprecated("Use KtInventoryPluginContext constructor instead")
+    @Deprecated("Deprecated in v2.1.0. Will be removed in v2.4.0. Use KtInventoryPluginContext constructor instead.")
     constructor(plugin: Plugin, line: Int, altColorChar: Char? = '&') : this(
         KtInventoryPluginContext(plugin),
         line,

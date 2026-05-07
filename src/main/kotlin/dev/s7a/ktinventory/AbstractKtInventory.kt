@@ -3,8 +3,8 @@ package dev.s7a.ktinventory
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryStorable
 import dev.s7a.ktinventory.options.KtInventoryStorableOption
-import dev.s7a.ktinventory.util.getAllViewers
-import dev.s7a.ktinventory.util.getOpenInventory
+import dev.s7a.ktinventory.util.getTopInventory
+import dev.s7a.ktinventory.util.getViewers
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
@@ -222,7 +222,7 @@ abstract class AbstractKtInventory(
             player: HumanEntity,
             predicate: (T) -> Boolean,
         ): Boolean {
-            val inventory = getOpenInventory(clazz, player) ?: return false
+            val inventory = getTopInventory(clazz, player) ?: return false
             if (predicate(inventory).not()) return false
             refresh(player, inventory)
             return true
@@ -241,7 +241,7 @@ abstract class AbstractKtInventory(
         }
 
         final override fun refreshAll(predicate: (Player, T) -> Boolean) {
-            getAllViewers(clazz)
+            getViewers(clazz)
                 .filter { (player, inventory) ->
                     predicate(player, inventory)
                 }.forEach { (player, inventory) ->
