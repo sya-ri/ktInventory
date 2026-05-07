@@ -13,9 +13,10 @@
 ### Added
 
 - Add `KtInventoryPluginContext` to simplify plugin dependency injection.
-  - Replaced direct `Plugin` injection with `KtInventoryPluginContext`, which packages plugin-dependent data.
+  - Replaced direct `Plugin` injection in ktInventory base classes with `KtInventoryPluginContext`, which packages plugin-dependent data.
   - This simplifies constructor dependencies and makes testing or future dependency swapping easier.
   - Existing `Plugin` constructors are now `@Deprecated` and delegate to `KtInventoryPluginContext(plugin)`.
+    - Scheduled for removal in v2.4.0.
     ```kotlin
     // Before
     class SimpleMenu(

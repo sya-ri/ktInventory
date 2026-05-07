@@ -19,6 +19,8 @@ Use this shape for a normal one-page menu:
 class SimpleMenu(
     context: KtInventoryPluginContext,
 ) : KtInventory(context, 1) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
     override fun title() = "&0&lSelect"
 
     init {
@@ -30,7 +32,8 @@ class SimpleMenu(
 }
 ```
 
-If the caller only has a `Plugin`, create the menu with `KtInventoryPluginContext(plugin)`.
+Callers should pass an injected `KtInventoryPluginContext` directly. If they have a plugin
+instance, call `SimpleMenu(plugin)` and keep the conversion inside the inventory definition.
 
 ## Paper Title Pattern
 

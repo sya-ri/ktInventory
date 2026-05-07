@@ -14,7 +14,7 @@ Use this skill when the task is about inventory UIs built with `ktInventory`.
    - `KtInventoryAdventure`: Adventure `Component` title
    - `KtInventoryPaginated`: paginated string-title inventory
    - `KtInventoryPaginatedAdventure`: paginated Adventure-title inventory
-2. Prefer the primary constructor that accepts `KtInventoryPluginContext`. Only use the deprecated `Plugin` constructor when you are matching older caller code on purpose.
+2. Prefer a primary constructor that accepts `KtInventoryPluginContext`. Callers should pass an injected context directly, or pass a `Plugin` instance when that is what they have; convert `Plugin` to `KtInventoryPluginContext` inside the inventory definition.
 3. Define buttons in `init` with `button(...)` or `createButton(...)`. In click handlers, prefer `event.player` or a safe cast from `event.whoClicked`.
 4. For paginated UIs, define `entries`, call `paginateSlot(...)`, and wire navigation with `previousPageButton(...)` and `nextPageButton(...)`.
 5. For stateful refreshes, follow the repository pattern: `companion object : Refreshable<...>(...)` and rebuild a fresh inventory in `createNew(...)`.
@@ -24,7 +24,7 @@ Use this skill when the task is about inventory UIs built with `ktInventory`.
 ## Repository Guidance
 
 - Prefer small inventories with explicit slot numbers first. Expand to shared buttons, pagination, or refresh only after the basic click flow is correct.
-- If the caller only has a `Plugin`, wrapping it with `KtInventoryPluginContext(plugin)` is the normal bridge.
+- Do not make callers wrap a plugin with `KtInventoryPluginContext(plugin)`. If a plugin instance is available, expose a plugin-taking bridge constructor on the inventory and convert there.
 - Keep examples and docs aligned with the current snapshot version from the root Gradle build.
 - Prefer `./gradlew build` for verification. Use a Paper server launch task only when the task depends on live in-game behavior.
 

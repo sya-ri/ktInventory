@@ -70,29 +70,31 @@ dependencies {
 
 ### Plugin Setup
 
-Each inventory class is expected to expose a `Plugin` constructor as its standard entry point.
-The `Plugin` constructor wraps the argument in a `KtInventoryPluginContext` internally,
-so callers only need to pass `this`.
+Each inventory class should use a `KtInventoryPluginContext` constructor as its primary entry point.
+Callers do not need to wrap a `Plugin` manually. If a DI container or constructor injection already
+provides `KtInventoryPluginContext`, pass it directly. If the caller has a plugin instance, passing
+the plugin is also acceptable; convert the plugin to `KtInventoryPluginContext` inside the
+inventory definition with a bridge constructor.
 
 ```kotlin
 class MyPlugin : JavaPlugin() {
     override fun onEnable() {
         getCommand("menu")?.setExecutor { sender, _, _, _ ->
             val player = sender as? Player ?: return@setExecutor true
-            SimpleMenu(this).open(player)  // pass the plugin directly
+            SimpleMenu(this).open(player)
             true
         }
     }
 }
 ```
 
-Every inventory class should follow this two-constructor pattern:
+Inventory classes can keep a bridge constructor if callers pass `Plugin` directly:
 
 ```kotlin
 class SimpleMenu(
     context: KtInventoryPluginContext,
 ) : KtInventory(context, 1) {
-    // Secondary constructor for normal use — callers pass the plugin
+    // Bridge for callers that have a Plugin instance.
     constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
 
     override fun title() = "&0&lMain Menu"
@@ -104,7 +106,7 @@ class SimpleMenu(
 ```
 
 The primary constructor that accepts `KtInventoryPluginContext` is for dependency injection.
-Use it when you want to inject a custom or mock context (e.g. in tests or a DI framework).
+Use it when a custom context, a mock context, or a DI framework provides the context directly.
 
 
 ---
@@ -779,7 +781,7 @@ currently viewing a child inventory.
 
 | Name | Kind | Purpose |
 |------|------|---------|
-| `KtInventoryPluginContext` | interface | Abstracts the plugin dependency; create via `KtInventoryPluginContext(plugin)` |
+| `KtInventoryPluginContext` | interface | Abstracts the plugin dependency; inventory definitions can bridge from `Plugin` with `KtInventoryPluginContext(plugin)` |
 | `KtInventoryBase` | abstract class | Root base — button management, event hooks |
 | `AbstractKtInventory` | abstract class | Implements `InventoryHolder`; adds storable and refresh support |
 | `KtInventory` | abstract class | Concrete inventory with a String title |
