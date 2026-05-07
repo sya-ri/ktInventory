@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
+import dev.s7a.ktinventory.components.KtInventoryPagedStorable
 import dev.s7a.ktinventory.util.getTopInventoryPaginated
 import dev.s7a.ktinventory.util.getTopInventorySequenceEntry
 import org.bukkit.Material
@@ -84,6 +85,37 @@ class AbstractKtInventorySequenceTest {
         assertFailsWith<IllegalArgumentException> {
             otherInventory.paginateSlot(2)
         }
+    }
+
+    @Test
+    fun `parent storable initializes and saves each sequence entry separately`() {
+        val player = server.addPlayer()
+        val saved = mutableMapOf<Int, List<Material?>>()
+        val inventory = StorableSequenceInventory(KtInventoryPluginContext(plugin), saved)
+
+        assertSame(inventory.pagedStorable, inventory.pagedStorables.single())
+        inventory.open(player, 0)
+        assertEquals(
+            Material.STONE,
+            player.openInventory.topInventory
+                .getItem(0)
+                ?.type,
+        )
+        player.openInventory.topInventory.setItem(0, ItemStack(Material.DIAMOND))
+        player.closeInventory()
+
+        inventory.open(player, 1)
+        assertEquals(
+            Material.DIRT,
+            player.openInventory.topInventory
+                .getItem(0)
+                ?.type,
+        )
+        player.openInventory.topInventory.setItem(0, ItemStack(Material.GOLD_INGOT))
+        player.closeInventory()
+
+        assertEquals(listOf(Material.DIAMOND), saved.getValue(0))
+        assertEquals(listOf(Material.GOLD_INGOT), saved.getValue(1))
     }
 
     @Test
@@ -328,6 +360,45 @@ class AbstractKtInventorySequenceTest {
             paginateSlot(0, 1)
             previousPageButton(7, ItemStack(Material.ARROW))
             nextPageButton(8, ItemStack(Material.ARROW))
+        }
+    }
+
+    private class StorableSequenceInventory(
+        context: KtInventoryPluginContext,
+        private val saved: MutableMap<Int, List<Material?>>,
+    ) : KtInventorySequence(context, 1) {
+        override val entries: Sequence<KtInventoryButton<AbstractKtInventorySequence.Entry<KtInventorySequence>>>
+            get() =
+                sequence {
+                    repeat(2) {
+                        yield(createButton(ItemStack(Material.STONE)) {})
+                    }
+                }
+
+        override fun title(page: Int) = "Storable $page"
+
+        val pagedStorable: KtInventoryPagedStorable<AbstractKtInventorySequence.Entry<KtInventorySequence>>
+
+        init {
+            paginateSlot(8)
+            pagedStorable =
+                storable(
+                    listOf(0),
+                    initialize = {
+                        listOf(
+                            ItemStack(
+                                if (page == 0) {
+                                    Material.STONE
+                                } else {
+                                    Material.DIRT
+                                },
+                            ),
+                        )
+                    },
+                    save = { items ->
+                        saved[page] = items.map { it?.type }
+                    },
+                )
         }
     }
 }

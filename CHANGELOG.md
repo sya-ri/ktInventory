@@ -42,6 +42,9 @@
   - `KtInventoryLazyFetched` for legacy string titles.
   - `KtInventoryLazyFetchedAdventure` for Adventure `Component` titles.
   - These classes open the inventory immediately, run `fetch(condition, limit)` asynchronously through `KtInventoryPluginContext.LazyFetchable`, and place buttons on the server main thread after data is loaded.
+- Add entry-aware storables to multi-page inventory base classes.
+  - Paginated and sequence-backed inventories can initialize and save storable contents per page entry.
+  - Fetched and lazy fetched inventories can initialize and save storable contents per condition entry.
 - Add `KtInventoryPluginContext.LazyFetchable` for lazy fetched inventories.
   - Use `KtInventoryPluginContext.LazyFetchable(plugin)` when constructing lazy fetched inventories.
   - `KtInventoryPluginContext(plugin)` remains the scheduler-free context for existing inventory classes and custom context source compatibility.

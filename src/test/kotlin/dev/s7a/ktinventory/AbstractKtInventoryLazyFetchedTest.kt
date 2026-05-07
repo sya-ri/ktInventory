@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
+import dev.s7a.ktinventory.components.KtInventoryPagedStorable
 import dev.s7a.ktinventory.util.getTopInventoryPaginated
 import org.bukkit.Material
 import org.bukkit.event.Listener
@@ -217,6 +218,40 @@ class AbstractKtInventoryLazyFetchedTest {
         }
     }
 
+    @Test
+    fun `parent storable initializes and saves each lazy fetched entry separately`() {
+        val context = DeferredTaskContext(plugin)
+        val player = server.addPlayer()
+        val saved = mutableMapOf<Int, List<Material?>>()
+        val inventory = StorableLazyFetchedInventory(context, saved)
+
+        assertSame(inventory.pagedStorable, inventory.pagedStorables.single())
+        inventory.open(player, 0)
+        context.runDeferredTasks()
+        assertEquals(
+            Material.STONE,
+            player.openInventory.topInventory
+                .getItem(0)
+                ?.type,
+        )
+        player.openInventory.topInventory.setItem(0, ItemStack(Material.DIAMOND))
+        player.closeInventory()
+
+        inventory.open(player, 1)
+        context.runDeferredTasks()
+        assertEquals(
+            Material.DIRT,
+            player.openInventory.topInventory
+                .getItem(0)
+                ?.type,
+        )
+        player.openInventory.topInventory.setItem(0, ItemStack(Material.GOLD_INGOT))
+        player.closeInventory()
+
+        assertEquals(listOf(Material.DIAMOND), saved.getValue(0))
+        assertEquals(listOf(Material.GOLD_INGOT), saved.getValue(1))
+    }
+
     private class OffsetLazyFetchedInventory(
         context: KtInventoryPluginContext.LazyFetchable,
         private val fetchStarted: CountDownLatch? = null,
@@ -327,6 +362,55 @@ class AbstractKtInventoryLazyFetchedTest {
             paginateSlot(2, 4)
             previousPageButton(7, ItemStack(Material.ARROW))
             nextPageButton(8, ItemStack(Material.ARROW))
+        }
+    }
+
+    private class StorableLazyFetchedInventory(
+        context: KtInventoryPluginContext.LazyFetchable,
+        private val saved: MutableMap<Int, List<Material?>>,
+    ) : KtInventoryLazyFetched<Int, Material>(context, 1) {
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): AbstractKtInventoryFetched.Page<Int, Material> =
+            AbstractKtInventoryFetched.Page(
+                entries = listOf(Material.STONE),
+                previousCondition = (condition - 1).takeIf { it >= 0 },
+                nextCondition = (condition + 1).takeIf { it < 2 },
+            )
+
+        override fun createButton(
+            data: Material,
+        ): KtInventoryButton<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetched<Int, Material>, Int, Material>> =
+            createButton(ItemStack(data)) {}
+
+        override fun title(condition: Int) = "Storable $condition"
+
+        val pagedStorable:
+            KtInventoryPagedStorable<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetched<Int, Material>, Int, Material>>
+
+        init {
+            paginateSlot(8)
+            pagedStorable =
+                storable(
+                    listOf(0),
+                    initialize = {
+                        listOf(
+                            ItemStack(
+                                if (condition == 0) {
+                                    Material.STONE
+                                } else {
+                                    Material.DIRT
+                                },
+                            ),
+                        )
+                    },
+                    save = { items ->
+                        saved[condition] = items.map { it?.type }
+                    },
+                )
         }
     }
 

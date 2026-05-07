@@ -1,6 +1,8 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
+import dev.s7a.ktinventory.components.KtInventoryPagedStorable
+import dev.s7a.ktinventory.components.KtInventoryStorable
 import dev.s7a.ktinventory.util.getTopInventorySequenceEntry
 import dev.s7a.ktinventory.util.getViewersSequenceEntry
 import org.bukkit.entity.HumanEntity
@@ -43,6 +45,16 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
 
     private val pages = ConcurrentHashMap<Int, Entry<T>>()
 
+    private val _pagedStorables = mutableSetOf<KtInventoryPagedStorable<Entry<T>>>()
+
+    /**
+     * Set of all paged storables in this inventory.
+     *
+     * @since 2.2.0
+     */
+    val pagedStorables
+        get() = _pagedStorables.toSet()
+
     /**
      * Creates a new inventory page.
      *
@@ -57,6 +69,9 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
         item: KtInventoryButton<KtInventoryBase>,
     ) {
         require(slot !in paginates) { "button slot must not be used as a pagination slot (actual: $slot)" }
+        require(_pagedStorables.none { slot in it.slots }) {
+            "button slot must not be used as a storable slot (actual: $slot)"
+        }
         super.button(slot, item)
     }
 
@@ -79,7 +94,76 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
     fun paginateSlot(slots: Iterable<Int>) {
         val buttons = this.buttons
         require(slots.none { it in buttons }) { "pagination slots must not contain fixed button slots" }
+        require(slots.all { slot -> _pagedStorables.none { slot in it.slots } }) {
+            "pagination slots must not contain storable slots"
+        }
         this.paginates.addAll(slots)
+    }
+
+    /**
+     * Adds a storable that is applied to each created page entry.
+     *
+     * @param slots Slot numbers to manage
+     * @param initialize Provides initial items for each page entry
+     * @param onPreClick Handler called before click events
+     * @param onClick Handler for click events
+     * @param onPreDrag Handler called before drag events
+     * @param onDrag Handler for drag events
+     * @param save Handler to save page entry state
+     * @since 2.2.0
+     */
+    fun storable(
+        slots: Iterable<Int>,
+        initialize: Entry<T>.() -> List<ItemStack?> = { emptyList() },
+        onPreClick: Entry<T>.(KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = {
+            KtInventoryStorable.EventResult.Allow
+        },
+        onClick: Entry<T>.(KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: Entry<T>.(KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = {
+            KtInventoryStorable.EventResult.Allow
+        },
+        onDrag: Entry<T>.(KtInventoryStorable.DragEvent) -> Unit = {},
+        save: Entry<T>.(List<ItemStack?>) -> Unit = {},
+    ): KtInventoryPagedStorable<Entry<T>> {
+        val slots = slots.toList()
+        require(slots.none { it in paginates }) { "storable slots must not contain pagination slots" }
+        val buttons = this.buttons
+        require(slots.none { it in buttons }) { "storable slots must not contain fixed button slots" }
+        val pagedStorable =
+            KtInventoryPagedStorable(
+                slots = slots,
+                initialize = initialize,
+                onPreClick = onPreClick,
+                onClick = onClick,
+                onPreDrag = onPreDrag,
+                onDrag = onDrag,
+                save = save,
+            )
+        _pagedStorables += pagedStorable
+        pages.values.forEach(pagedStorable::applyTo)
+        return pagedStorable
+    }
+
+    /**
+     * Adds a storable that is applied to each created page entry.
+     *
+     * @param slots Slot numbers to manage
+     * @since 2.2.0
+     */
+    fun storable(
+        vararg slots: Int,
+        initialize: Entry<T>.() -> List<ItemStack?> = { emptyList() },
+        onPreClick: Entry<T>.(KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = {
+            KtInventoryStorable.EventResult.Allow
+        },
+        onClick: Entry<T>.(KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: Entry<T>.(KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = {
+            KtInventoryStorable.EventResult.Allow
+        },
+        onDrag: Entry<T>.(KtInventoryStorable.DragEvent) -> Unit = {},
+        save: Entry<T>.(List<ItemStack?>) -> Unit = {},
+    ) {
+        storable(slots.toList(), initialize, onPreClick, onClick, onPreDrag, onDrag, save)
     }
 
     /**
@@ -212,6 +296,7 @@ abstract class AbstractKtInventorySequence<T : AbstractKtInventorySequence<T>>(
                         this@AbstractKtInventorySequence.buttons.forEach { (slot, item) ->
                             button(slot, item)
                         }
+                        _pagedStorables.forEach { it.applyTo(this) }
                     }
             nextPage += 1
         }

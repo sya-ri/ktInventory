@@ -1,5 +1,6 @@
 package dev.s7a.ktinventory
 
+import dev.s7a.ktinventory.components.KtInventoryPagedStorable
 import dev.s7a.ktinventory.util.getTopInventoryPaginated
 import dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry
 import org.bukkit.Material
@@ -80,6 +81,37 @@ class AbstractKtInventoryPaginatedTest {
         kotlin.test.assertFailsWith<IllegalArgumentException> {
             otherInventory.paginateSlot(2)
         }
+    }
+
+    @Test
+    fun `parent storable initializes and saves each paginated entry separately`() {
+        val player = server.addPlayer()
+        val saved = mutableMapOf<Int, List<Material?>>()
+        val inventory = StorablePaginatedInventory(KtInventoryPluginContext(plugin), saved)
+
+        assertSame(inventory.pagedStorable, inventory.pagedStorables.single())
+        inventory.open(player, 0)
+        assertEquals(
+            Material.STONE,
+            player.openInventory.topInventory
+                .getItem(0)
+                ?.type,
+        )
+        player.openInventory.topInventory.setItem(0, ItemStack(Material.DIAMOND))
+        player.closeInventory()
+
+        inventory.open(player, 1)
+        assertEquals(
+            Material.DIRT,
+            player.openInventory.topInventory
+                .getItem(0)
+                ?.type,
+        )
+        player.openInventory.topInventory.setItem(0, ItemStack(Material.GOLD_INGOT))
+        player.closeInventory()
+
+        assertEquals(listOf(Material.DIAMOND), saved.getValue(0))
+        assertEquals(listOf(Material.GOLD_INGOT), saved.getValue(1))
     }
 
     @Test
@@ -256,6 +288,45 @@ class AbstractKtInventoryPaginatedTest {
             paginateSlot(0, 1)
             previousPageButton(7, ItemStack(Material.ARROW))
             nextPageButton(8, ItemStack(Material.ARROW))
+        }
+    }
+
+    private class StorablePaginatedInventory(
+        context: KtInventoryPluginContext,
+        private val saved: MutableMap<Int, List<Material?>>,
+    ) : KtInventoryPaginated(context, 1) {
+        override val entries =
+            (0 until 2).map {
+                createButton(ItemStack(Material.STONE)) {}
+            }
+
+        override fun title(
+            page: Int,
+            lastPage: Int,
+        ) = "Storable $page"
+
+        val pagedStorable: KtInventoryPagedStorable<AbstractKtInventoryPaginated.Entry<KtInventoryPaginated>>
+
+        init {
+            paginateSlot(8)
+            pagedStorable =
+                storable(
+                    listOf(0),
+                    initialize = {
+                        listOf(
+                            ItemStack(
+                                if (page == 0) {
+                                    Material.STONE
+                                } else {
+                                    Material.DIRT
+                                },
+                            ),
+                        )
+                    },
+                    save = { items ->
+                        saved[page] = items.map { it?.type }
+                    },
+                )
         }
     }
 }

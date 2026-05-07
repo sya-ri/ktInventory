@@ -1,6 +1,8 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
+import dev.s7a.ktinventory.components.KtInventoryPagedStorable
+import dev.s7a.ktinventory.components.KtInventoryStorable
 import dev.s7a.ktinventory.util.getTopInventory
 import org.bukkit.entity.HumanEntity
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -23,6 +25,16 @@ abstract class AbstractKtInventoryLazyFetched<T : AbstractKtInventoryLazyFetched
     line: Int,
 ) : KtInventoryBase(line) {
     private val paginates = mutableListOf<Int>()
+
+    private val _pagedStorables = mutableSetOf<KtInventoryPagedStorable<Entry<T, C, D>>>()
+
+    /**
+     * Set of all paged storables in this inventory.
+     *
+     * @since 2.2.0
+     */
+    val pagedStorables
+        get() = _pagedStorables.toSet()
 
     /**
      * Initial display condition used by [open].
@@ -71,6 +83,9 @@ abstract class AbstractKtInventoryLazyFetched<T : AbstractKtInventoryLazyFetched
         item: KtInventoryButton<KtInventoryBase>,
     ) {
         require(slot !in paginates) { "button slot must not be used as a pagination slot (actual: $slot)" }
+        require(_pagedStorables.none { slot in it.slots }) {
+            "button slot must not be used as a storable slot (actual: $slot)"
+        }
         super.button(slot, item)
     }
 
@@ -93,7 +108,74 @@ abstract class AbstractKtInventoryLazyFetched<T : AbstractKtInventoryLazyFetched
     fun paginateSlot(slots: Iterable<Int>) {
         val buttons = this.buttons
         require(slots.none { it in buttons }) { "pagination slots must not contain fixed button slots" }
+        require(slots.all { slot -> _pagedStorables.none { slot in it.slots } }) {
+            "pagination slots must not contain storable slots"
+        }
         this.paginates.addAll(slots)
+    }
+
+    /**
+     * Adds a storable that is applied to each created condition entry.
+     *
+     * @param slots Slot numbers to manage
+     * @param initialize Provides initial items for each condition entry
+     * @param onPreClick Handler called before click events
+     * @param onClick Handler for click events
+     * @param onPreDrag Handler called before drag events
+     * @param onDrag Handler for drag events
+     * @param save Handler to save condition entry state
+     * @since 2.2.0
+     */
+    fun storable(
+        slots: Iterable<Int>,
+        initialize: Entry<T, C, D>.() -> List<ItemStack?> = { emptyList() },
+        onPreClick: Entry<T, C, D>.(KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = {
+            KtInventoryStorable.EventResult.Allow
+        },
+        onClick: Entry<T, C, D>.(KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: Entry<T, C, D>.(KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = {
+            KtInventoryStorable.EventResult.Allow
+        },
+        onDrag: Entry<T, C, D>.(KtInventoryStorable.DragEvent) -> Unit = {},
+        save: Entry<T, C, D>.(List<ItemStack?>) -> Unit = {},
+    ): KtInventoryPagedStorable<Entry<T, C, D>> {
+        val slots = slots.toList()
+        require(slots.none { it in paginates }) { "storable slots must not contain pagination slots" }
+        val buttons = this.buttons
+        require(slots.none { it in buttons }) { "storable slots must not contain fixed button slots" }
+        return KtInventoryPagedStorable(
+            slots = slots,
+            initialize = initialize,
+            onPreClick = onPreClick,
+            onClick = onClick,
+            onPreDrag = onPreDrag,
+            onDrag = onDrag,
+            save = save,
+        ).also {
+            _pagedStorables += it
+        }
+    }
+
+    /**
+     * Adds a storable that is applied to each created condition entry.
+     *
+     * @param slots Slot numbers to manage
+     * @since 2.2.0
+     */
+    fun storable(
+        vararg slots: Int,
+        initialize: Entry<T, C, D>.() -> List<ItemStack?> = { emptyList() },
+        onPreClick: Entry<T, C, D>.(KtInventoryStorable.ClickEvent) -> KtInventoryStorable.EventResult = {
+            KtInventoryStorable.EventResult.Allow
+        },
+        onClick: Entry<T, C, D>.(KtInventoryStorable.ClickEvent) -> Unit = {},
+        onPreDrag: Entry<T, C, D>.(KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = {
+            KtInventoryStorable.EventResult.Allow
+        },
+        onDrag: Entry<T, C, D>.(KtInventoryStorable.DragEvent) -> Unit = {},
+        save: Entry<T, C, D>.(List<ItemStack?>) -> Unit = {},
+    ) {
+        storable(slots.toList(), initialize, onPreClick, onClick, onPreDrag, onDrag, save)
     }
 
     /**
@@ -200,6 +282,7 @@ abstract class AbstractKtInventoryLazyFetched<T : AbstractKtInventoryLazyFetched
         this@AbstractKtInventoryLazyFetched.buttons.forEach { (slot, item) ->
             entry.button(slot, item)
         }
+        _pagedStorables.forEach { it.applyTo(entry) }
         entry.open(player)
         context.runTaskAsync {
             val page = fetch(condition, limit)
