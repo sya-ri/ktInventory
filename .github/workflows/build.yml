@@ -27,7 +27,7 @@ jobs:
       - name: Dokka
         run: ./gradlew dokkaGenerateHtml
       - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: build/dokka/html
   deploy:
