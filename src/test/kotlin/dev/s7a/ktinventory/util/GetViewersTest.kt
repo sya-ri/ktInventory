@@ -1,0 +1,341 @@
+package dev.s7a.ktinventory.util
+
+import dev.s7a.ktinventory.HasParentInventory
+import dev.s7a.ktinventory.KtInventory
+import dev.s7a.ktinventory.KtInventoryPaginated
+import dev.s7a.ktinventory.KtInventoryPluginContext
+import dev.s7a.ktinventory.KtInventorySequence
+import dev.s7a.ktinventory.ParentInventory
+import org.bukkit.Material
+import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
+import org.mockbukkit.mockbukkit.MockBukkit
+import org.mockbukkit.mockbukkit.ServerMock
+import org.mockbukkit.mockbukkit.plugin.PluginMock
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+
+class GetViewersTest {
+    private lateinit var server: ServerMock
+    private lateinit var plugin: PluginMock
+
+    @BeforeTest
+    fun setUp() {
+        server = MockBukkit.mock()
+        plugin = MockBukkit.createMockPlugin()
+    }
+
+    @AfterTest
+    fun tearDown() {
+        MockBukkit.unmock()
+    }
+
+    @Test
+    fun `getViewers returns players viewing matching top inventories`() {
+        val player = server.addPlayer()
+        val other = server.addPlayer()
+        val inventory = NormalInventory(KtInventoryPluginContext(plugin))
+
+        inventory.open(player)
+        OtherInventory(KtInventoryPluginContext(plugin)).open(other)
+
+        assertEquals(mapOf<Player, NormalInventory>(player to inventory), getViewers<NormalInventory>())
+        assertEquals(emptyMap(), getViewers<ParentInventory>())
+    }
+
+    @Test
+    fun `getViewersPaginated returns paginated owners and entries`() {
+        val player = server.addPlayer()
+        val inventory = PaginatedParentInventory(KtInventoryPluginContext(plugin))
+
+        inventory.open(player, 1)
+
+        val entry = getTopInventoryPaginatedEntry<PaginatedParentInventory>(player)
+        assertSame(inventory, getViewersPaginated<PaginatedParentInventory>().getValue(player))
+        assertSame(entry, getViewersPaginatedEntry<PaginatedParentInventory>().getValue(player))
+    }
+
+    @Test
+    fun `getViewersSequenceEntry returns sequence entries`() {
+        val player = server.addPlayer()
+        val inventory = SequenceParentInventory(KtInventoryPluginContext(plugin))
+
+        inventory.open(player, 1)
+
+        val entry = getTopInventorySequenceEntry<SequenceParentInventory>(player)
+        assertSame(inventory, getViewersPaginated<SequenceParentInventory>().getValue(player))
+        assertSame(entry, getViewersSequenceEntry<SequenceParentInventory>().getValue(player))
+    }
+
+    @Test
+    fun `top inventory lookups return null for mismatched holder types`() {
+        val player = server.addPlayer()
+        val normal = NormalInventory(KtInventoryPluginContext(plugin))
+        val paginated = PaginatedParentInventory(KtInventoryPluginContext(plugin))
+        val sequence = SequenceParentInventory(KtInventoryPluginContext(plugin))
+
+        normal.open(player)
+        assertNull(getTopInventory<OtherInventory>(player))
+        assertNull(getTopInventoryPaginated<PaginatedParentInventory>(player))
+        assertNull(getTopInventoryPaginatedEntry<PaginatedParentInventory>(player))
+        assertNull(getTopInventorySequenceEntry<SequenceParentInventory>(player))
+
+        paginated.open(player)
+        assertNull(getTopInventory<PaginatedParentInventory>(player))
+        assertNull(getTopInventorySequenceEntry<SequenceParentInventory>(player))
+
+        sequence.open(player)
+        assertNull(getTopInventoryPaginatedEntry<PaginatedParentInventory>(player))
+    }
+
+    @Test
+    fun `top inventory lookup returns null after inventory is closed`() {
+        val player = server.addPlayer()
+        val normal = NormalInventory(KtInventoryPluginContext(plugin))
+
+        normal.open(player)
+        player.closeInventory()
+
+        assertNull(getTopInventory<NormalInventory>(player))
+        assertNull(getTopInventoryPaginated<NormalInventory>(player))
+    }
+
+    @Test
+    fun `getViewersDeeply finds direct parent child parent and paginated owners`() {
+        val parentPlayer = server.addPlayer()
+        val childPlayer = server.addPlayer()
+        val paginatedPlayer = server.addPlayer()
+        val sequencePlayer = server.addPlayer()
+        val paginatedChildPlayer = server.addPlayer()
+        val sequenceChildPlayer = server.addPlayer()
+        val parent = ParentNormalInventory(KtInventoryPluginContext(plugin))
+        val child = ChildInventory(KtInventoryPluginContext(plugin), parent)
+        val paginated = PaginatedParentInventory(KtInventoryPluginContext(plugin))
+        val sequence = SequenceParentInventory(KtInventoryPluginContext(plugin))
+        val paginatedChild = PaginatedChildInventory(KtInventoryPluginContext(plugin), parent)
+        val sequenceChild = SequenceChildInventory(KtInventoryPluginContext(plugin), parent)
+
+        parent.open(parentPlayer)
+        child.open(childPlayer)
+        paginated.open(paginatedPlayer)
+        sequence.open(sequencePlayer)
+        paginatedChild.open(paginatedChildPlayer)
+        sequenceChild.open(sequenceChildPlayer)
+
+        val expected: Map<Player, ParentInventory> =
+            mapOf(
+                parentPlayer to parent,
+                childPlayer to parent,
+                paginatedPlayer to paginated,
+                sequencePlayer to sequence,
+                paginatedChildPlayer to parent,
+                sequenceChildPlayer to parent,
+            )
+
+        assertEquals(expected, getViewersDeeply<ParentInventory>())
+    }
+
+    @Test
+    fun `getViewersDeeply ignores child inventories whose parent has a different type`() {
+        val childPlayer = server.addPlayer()
+        val paginatedChildPlayer = server.addPlayer()
+        val sequenceChildPlayer = server.addPlayer()
+        val otherParent = OtherParentInventory(KtInventoryPluginContext(plugin))
+        val child = ChildWithOtherParentInventory(KtInventoryPluginContext(plugin), otherParent)
+        val paginatedChild = PaginatedChildWithOtherParentInventory(KtInventoryPluginContext(plugin), otherParent)
+        val sequenceChild = SequenceChildWithOtherParentInventory(KtInventoryPluginContext(plugin), otherParent)
+
+        child.open(childPlayer)
+        paginatedChild.open(paginatedChildPlayer)
+        sequenceChild.open(sequenceChildPlayer)
+
+        assertEquals(emptyMap(), getViewersDeeply<ParentNormalInventory>())
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `deprecated viewer and open inventory aliases delegate to replacements`() {
+        val player = server.addPlayer()
+        val normal = NormalInventory(KtInventoryPluginContext(plugin))
+        val paginated = PaginatedParentInventory(KtInventoryPluginContext(plugin))
+
+        normal.open(player)
+        assertSame(getTopInventory<NormalInventory>(player), getOpenInventory<NormalInventory>(player))
+        assertSame(getTopInventory(NormalInventory::class, player), getOpenInventory(NormalInventory::class, player))
+        assertEquals(getViewers<NormalInventory>(), getAllViewers<NormalInventory>())
+        assertEquals(getViewers(NormalInventory::class), getAllViewers(NormalInventory::class))
+
+        paginated.open(player)
+        assertSame(
+            getTopInventoryPaginatedEntry<PaginatedParentInventory>(player),
+            getOpenInventoryPaginated<PaginatedParentInventory>(player),
+        )
+        assertSame(
+            getTopInventoryPaginatedEntry(PaginatedParentInventory::class, player),
+            getOpenInventoryPaginated(PaginatedParentInventory::class, player),
+        )
+        assertEquals(getViewersPaginatedEntry<PaginatedParentInventory>(), getAllViewersPaginated<PaginatedParentInventory>())
+        assertEquals(
+            getViewersPaginatedEntry(PaginatedParentInventory::class),
+            getAllViewersPaginated(PaginatedParentInventory::class),
+        )
+    }
+
+    private class NormalInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventory(context, 1) {
+        override fun title() = "Normal"
+    }
+
+    private class OtherInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventory(context, 1) {
+        override fun title() = "Other"
+    }
+
+    private class ParentNormalInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventory(context, 1),
+        ParentInventory {
+        override fun title() = "Parent"
+    }
+
+    private class ChildInventory(
+        context: KtInventoryPluginContext,
+        override val parentInventory: ParentNormalInventory,
+    ) : KtInventory(context, 1),
+        HasParentInventory<ParentNormalInventory> {
+        override fun title() = "Child"
+    }
+
+    private class OtherParentInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventory(context, 1),
+        ParentInventory {
+        override fun title() = "Other Parent"
+    }
+
+    private class ChildWithOtherParentInventory(
+        context: KtInventoryPluginContext,
+        override val parentInventory: OtherParentInventory,
+    ) : KtInventory(context, 1),
+        HasParentInventory<OtherParentInventory> {
+        override fun title() = "Child With Other Parent"
+    }
+
+    private class PaginatedParentInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventoryPaginated(context, 1),
+        ParentInventory {
+        override val entries =
+            (0 until 4).map {
+                createButton(ItemStack(Material.STONE)) {}
+            }
+
+        override fun title(
+            page: Int,
+            lastPage: Int,
+        ) = "Paginated"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class PaginatedChildInventory(
+        context: KtInventoryPluginContext,
+        override val parentInventory: ParentNormalInventory,
+    ) : KtInventoryPaginated(context, 1),
+        HasParentInventory<ParentNormalInventory> {
+        override val entries =
+            (0 until 2).map {
+                createButton(ItemStack(Material.STONE)) {}
+            }
+
+        override fun title(
+            page: Int,
+            lastPage: Int,
+        ) = "Paginated Child"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class PaginatedChildWithOtherParentInventory(
+        context: KtInventoryPluginContext,
+        override val parentInventory: OtherParentInventory,
+    ) : KtInventoryPaginated(context, 1),
+        HasParentInventory<OtherParentInventory> {
+        override val entries =
+            (0 until 2).map {
+                createButton(ItemStack(Material.STONE)) {}
+            }
+
+        override fun title(
+            page: Int,
+            lastPage: Int,
+        ) = "Paginated Child With Other Parent"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class SequenceParentInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventorySequence(context, 1),
+        ParentInventory {
+        override val entries
+            get() =
+                generateSequence {
+                    createButton(ItemStack(Material.STONE)) {}
+                }
+
+        override fun title(page: Int) = "Sequence"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class SequenceChildInventory(
+        context: KtInventoryPluginContext,
+        override val parentInventory: ParentNormalInventory,
+    ) : KtInventorySequence(context, 1),
+        HasParentInventory<ParentNormalInventory> {
+        override val entries
+            get() =
+                generateSequence {
+                    createButton(ItemStack(Material.STONE)) {}
+                }
+
+        override fun title(page: Int) = "Sequence Child"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private class SequenceChildWithOtherParentInventory(
+        context: KtInventoryPluginContext,
+        override val parentInventory: OtherParentInventory,
+    ) : KtInventorySequence(context, 1),
+        HasParentInventory<OtherParentInventory> {
+        override val entries
+            get() =
+                generateSequence {
+                    createButton(ItemStack(Material.STONE)) {}
+                }
+
+        override fun title(page: Int) = "Sequence Child With Other Parent"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+}

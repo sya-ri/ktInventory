@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.dokka)
     alias(libs.plugins.dokka.javadoc)
     alias(libs.plugins.kotlinter)
+    alias(libs.plugins.kover)
     alias(libs.plugins.pluginYml.bukkit) apply false
     alias(libs.plugins.minecraftServer) apply false
     alias(libs.plugins.shadow) apply false
@@ -38,6 +39,20 @@ allprojects {
 
 dependencies {
     compileOnly(libs.paper)
+    testImplementation(libs.paper.mockbukkit)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.mockbukkit)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+tasks.compileTestKotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 mavenPublishing {
