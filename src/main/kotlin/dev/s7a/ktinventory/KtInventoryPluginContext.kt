@@ -12,6 +12,16 @@ import org.bukkit.plugin.Plugin
  */
 interface KtInventoryPluginContext {
     /**
+     * Identifier used to share the internal inventory event handler.
+     *
+     * Contexts created with [KtInventoryPluginContext.invoke] share this identifier per plugin instance.
+     * Custom contexts should use [KtInventoryHandlerId.of] with the plugin that registers events.
+     *
+     * @since 2.2.0
+     */
+    val handlerId: KtInventoryHandlerId
+
+    /**
      * Registers an event listener with the plugin.
      *
      * @param listener The Bukkit event listener to be registered
@@ -25,9 +35,10 @@ interface KtInventoryPluginContext {
          *
          * @since 2.1.0
          */
-
         operator fun invoke(plugin: Plugin) =
             object : KtInventoryPluginContext {
+                override val handlerId = KtInventoryHandlerId.of(plugin)
+
                 override fun registerEvents(listener: Listener) {
                     plugin.server.pluginManager.registerEvents(listener, plugin)
                 }

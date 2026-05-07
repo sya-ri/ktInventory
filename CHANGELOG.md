@@ -34,9 +34,15 @@
   - `KtInventorySequence` for legacy string titles.
   - `KtInventorySequenceAdventure` for Adventure `Component` titles.
   - These classes use `entries: Sequence<KtInventoryButton<Entry<T>>>` and intentionally do not expose `lastPage`.
+- Add `KtInventoryPluginContext.handlerId` and `KtInventoryHandlerId` for internal event handler sharing.
+  - Contexts created with `KtInventoryPluginContext(plugin)` share the same handler id per plugin instance.
+  - Custom context implementations should use `KtInventoryHandlerId.of(plugin)` with the plugin that registers events.
+  - This keeps listener registration stable when multiple context wrappers are created for the same plugin.
 
 ### Fixed
 
+- Fix plugin-disable cleanup for custom `KtInventoryPluginContext` implementations.
+  - Custom contexts could previously create handler ids that were not associated with the plugin instance, so inventories were not closed automatically when the plugin was disabled.
 - `getTopInventory` now returns `null` when the viewer has no available top inventory.
   - This prevents lookup calls from throwing when an inventory view has already been closed or the platform returns no top inventory.
 - `getViewersDeeply<T>()` now searches from `KtInventoryBase` holders and resolves paginated entries through their `paginated` inventory.

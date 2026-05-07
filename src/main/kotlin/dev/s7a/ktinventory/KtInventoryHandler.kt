@@ -1,6 +1,7 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryStorable
+import dev.s7a.ktinventory.util.getTopInventory
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -9,6 +10,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.server.PluginDisableEvent
+import java.util.IdentityHashMap
 
 /**
  * Internal handler for KtInventory events.
@@ -87,22 +89,24 @@ internal class KtInventoryHandler(
 
     @EventHandler
     fun on(event: PluginDisableEvent) {
-        if (context === event.plugin) {
+        val disabledHandlerKey = KtInventoryHandlerId.find(event.plugin) ?: return
+        if (context.handlerId === disabledHandlerKey) {
             Bukkit.getOnlinePlayers().forEach { player ->
-                val inventory = player.openInventory.topInventory
-                if (inventory.holder !is AbstractKtInventory) return@forEach
-                player.closeInventory()
+                if (getTopInventory<KtInventoryBase>(player) != null) {
+                    player.closeInventory()
+                }
             }
-            handlers.remove(context)
+            handlers.remove(context.handlerId)
+            KtInventoryHandlerId.remove(event.plugin)
         }
     }
 
     companion object {
-        private val handlers = mutableMapOf<KtInventoryPluginContext, KtInventoryHandler>()
+        private val handlers = IdentityHashMap<KtInventoryHandlerId, KtInventoryHandler>()
 
         @Synchronized
-        fun register(context: KtInventoryPluginContext) =
-            handlers.getOrPut(context) {
+        fun register(context: KtInventoryPluginContext): KtInventoryHandler? =
+            handlers.getOrPut(context.handlerId) {
                 KtInventoryHandler(context).apply {
                     context.registerEvents(this)
                 }
