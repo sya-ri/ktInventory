@@ -32,7 +32,7 @@ jobs:
           path: build/dokka/html
   deploy:
     needs: dokka
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/releases/v2'
     permissions:
       pages: write
       id-token: write
