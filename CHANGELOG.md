@@ -37,6 +37,8 @@
 
 ### Fixed
 
+- `getTopInventory` now returns `null` when the viewer has no available top inventory.
+  - This prevents lookup calls from throwing when an inventory view has already been closed or the platform returns no top inventory.
 - `getViewersDeeply<T>()` now searches from `KtInventoryBase` holders and resolves paginated entries through their `paginated` inventory.
   - The old deep viewer search was based on `KtInventory`, so it only supported some inventory implementations.
   - It also did not handle paginated inventories correctly because the opened holder is the paginated entry, while the target parent type is attached to the paginated inventory itself.

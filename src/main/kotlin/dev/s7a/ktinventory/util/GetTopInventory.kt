@@ -13,16 +13,16 @@ import kotlin.reflect.safeCast
  * https://www.spigotmc.org/threads/inventoryview-changed-to-interface-backwards-compatibility.651754/#post-4747875
  *
  * @param viewer The human entity whose top inventory to get
- * @return The top inventory
+ * @return The top inventory, or null if the viewer has no top inventory
  * @throws RuntimeException if the reflection operation fails
  * @since 2.0.0
  */
-private fun getTopBukkitInventory(viewer: HumanEntity) =
+private fun getTopBukkitInventory(viewer: HumanEntity): Inventory? =
     try {
         val view = viewer.openInventory
         val getTopInventory = view.javaClass.getMethod("getTopInventory")
         getTopInventory.setAccessible(true)
-        getTopInventory.invoke(view) as Inventory
+        getTopInventory.invoke(view) as? Inventory
     } catch (e: Throwable) {
         throw RuntimeException(e)
     }
@@ -39,7 +39,7 @@ private fun getTopBukkitInventory(viewer: HumanEntity) =
 fun <T : Any> getTopInventory(
     clazz: KClass<T>,
     player: HumanEntity,
-): T? = clazz.safeCast(getTopBukkitInventory(player).holder)
+): T? = clazz.safeCast(getTopBukkitInventory(player)?.holder)
 
 /**
  * Gets the holder of the top inventory in the currently open inventory view.
