@@ -83,6 +83,22 @@ class SimpleMenu(
 }
 ```
 
+### Choosing a multi-page inventory class
+
+ktInventory has four multi-page inventory patterns. Start with `KtInventoryPaginated`
+unless your data source needs one of the more specialized models.
+
+| Class | Use when | Recommended for |
+|------|----------|-----------------|
+| `KtInventoryPaginated` | You can build all entries up front as a `List` or collection. | Most static or small-to-medium menus. This is the simplest and most recommended default. |
+| `KtInventorySequence` | Entries are produced lazily as a `Sequence` and you do not need `lastPage` in the title. | Large generated lists where calculating everything immediately is unnecessary. |
+| `KtInventoryFetched` | Each page is loaded from a condition such as an offset, cursor, filter, or search key. | Database/API pagination where the data source decides previous and next page conditions. |
+| `KtInventoryLazyFetched` | The inventory should open immediately while page data loads asynchronously. | Slow database/API calls. Use `KtInventoryPluginContext.LazyFetchable`; keep Bukkit API work out of `fetch`. |
+
+Paper/Adventure title variants are also available:
+`KtInventoryPaginatedAdventure`, `KtInventorySequenceAdventure`,
+`KtInventoryFetchedAdventure`, and `KtInventoryLazyFetchedAdventure`.
+
 ## Skill
 
 This repository includes an installable skill at `skills/ktinventory`.

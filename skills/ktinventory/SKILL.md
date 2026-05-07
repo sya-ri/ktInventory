@@ -20,6 +20,11 @@ Use this skill when the task is about inventory UIs built with `ktInventory`.
    - `KtInventoryFetchedAdventure`: condition-based fetched Adventure-title inventory
    - `KtInventoryLazyFetched`: fetched inventory that opens immediately and loads data asynchronously
    - `KtInventoryLazyFetchedAdventure`: lazy fetched Adventure-title inventory
+   Recommendation for multi-page inventories:
+   - Start with `KtInventoryPaginated` / `KtInventoryPaginatedAdventure` for ordinary static lists or lists that can be built up front.
+   - Use `KtInventorySequence` / `KtInventorySequenceAdventure` only when entries should be lazy and `lastPage` is not needed.
+   - Use `KtInventoryFetched` / `KtInventoryFetchedAdventure` when an offset, cursor, filter, or search condition controls page loading.
+   - Use `KtInventoryLazyFetched` / `KtInventoryLazyFetchedAdventure` when opening should be immediate and slow IO should run asynchronously.
 2. Prefer a primary constructor that accepts `KtInventoryPluginContext`. Callers should pass an injected context directly, or pass a `Plugin` instance when that is what they have; convert `Plugin` to `KtInventoryPluginContext` inside the inventory definition.
    - Use `KtInventoryPluginContext.LazyFetchable` only for lazy fetched inventories.
 3. Define buttons in `init` with `button(...)` or `createButton(...)`. In click handlers, prefer `event.player` or a safe cast from `event.whoClicked`.
@@ -38,6 +43,7 @@ Use this skill when the task is about inventory UIs built with `ktInventory`.
 ## Repository Guidance
 
 - Prefer small inventories with explicit slot numbers first. Expand to shared buttons, pagination, or refresh only after the basic click flow is correct.
+- For multi-page inventories, prefer the least specialized class that matches the data source: prebuilt collection -> `KtInventoryPaginated`, lazy generated source -> `KtInventorySequence`, condition/cursor source -> `KtInventoryFetched`, slow IO after opening -> `KtInventoryLazyFetched`.
 - Do not make callers wrap a plugin with `KtInventoryPluginContext(plugin)`. If a plugin instance is available, expose a plugin-taking bridge constructor on the inventory and convert there.
 - Custom `KtInventoryPluginContext` implementations must use `KtInventoryHandlerId.of(plugin)` for `handlerId` with the same plugin used to register events.
 - Fixed buttons, pagination slots, and storable slots are exclusive. Do not assign the same slot to more than one role.

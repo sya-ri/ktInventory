@@ -335,6 +335,29 @@ class SimpleMenuPaper(
 
 ## 5. Pagination
 
+### Choosing a multi-page inventory class
+
+ktInventory has four multi-page inventory models. Prefer the simplest model that
+matches the data source; do not use fetched or lazy fetched inventories for a
+static list.
+
+| Model | String-title class | Adventure-title class | Use when | Recommendation |
+|------|--------------------|-----------------------|----------|----------------|
+| Prebuilt entries | `KtInventoryPaginated` | `KtInventoryPaginatedAdventure` | All entries can be created up front and split by the library. | Recommended default for most menus. It exposes `page` and `lastPage` in titles. |
+| Sequence-backed entries | `KtInventorySequence` | `KtInventorySequenceAdventure` | Entries should be produced lazily from a `Sequence`. | Use for large generated sources when `lastPage` is not needed. Titles receive only `page`. |
+| Condition-fetched pages | `KtInventoryFetched<C>` | `KtInventoryFetchedAdventure<C>` | The page is loaded by a condition such as an offset, cursor, filter, or search key. | Use for database/API pagination where the data source decides previous and next conditions. |
+| Async lazy-fetched pages | `KtInventoryLazyFetched<C, D>` | `KtInventoryLazyFetchedAdventure<C, D>` | The inventory should open immediately and load page data asynchronously. | Use for slow IO. Requires `KtInventoryPluginContext.LazyFetchable`; `fetch` runs asynchronously and `createButton(data)` runs on the server main thread. |
+
+Decision rules:
+
+- Use `KtInventoryPaginated` first for normal lists. It is the easiest to read,
+  test, refresh, and debug.
+- Use `KtInventorySequence` only when laziness matters and a last-page count is
+  unavailable or expensive.
+- Use `KtInventoryFetched` when the repository/API owns page boundaries.
+- Use `KtInventoryLazyFetched` when blocking page loads would make opening the
+  inventory feel slow. Do not call Bukkit API from its asynchronous `fetch`.
+
 ### KtInventoryPaginated (String title)
 
 Define all entries in `entries`, specify which slots display page items with

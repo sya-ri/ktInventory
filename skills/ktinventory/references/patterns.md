@@ -7,9 +7,24 @@
 - `KtInventoryAdventure`
   Use on Paper when the title should be an Adventure `Component`.
 - `KtInventoryPaginated`
-  Use when the menu is a list split across multiple pages.
+  Use when the menu is a list split across multiple pages. This is the recommended default for ordinary multi-page menus.
 - `KtInventoryPaginatedAdventure`
   Use when you need both pagination and an Adventure title.
+- `KtInventorySequence`
+  Use when entries should be produced lazily from a `Sequence` and the title does not need `lastPage`.
+- `KtInventoryFetched`
+  Use when a repository or API loads each page from a condition such as an offset, cursor, filter, or search key.
+- `KtInventoryLazyFetched`
+  Use when the inventory should open immediately and slow page loading should run asynchronously.
+
+Multi-page recommendation:
+
+| Data source | Recommended class | Notes |
+|-------------|-------------------|-------|
+| Prebuilt collection | `KtInventoryPaginated` | Best default. Simple, exposes `page` and `lastPage`, and is easiest to refresh. |
+| Lazy generated source | `KtInventorySequence` | Avoids building everything immediately, but titles receive only `page`. |
+| Cursor, offset, filter, or search condition | `KtInventoryFetched` | Let the data source return previous and next conditions. |
+| Slow database/API call | `KtInventoryLazyFetched` | Requires `KtInventoryPluginContext.LazyFetchable`; keep Bukkit API usage out of async `fetch`. |
 
 ## Minimal Menu
 
