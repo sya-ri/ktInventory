@@ -202,6 +202,21 @@ class AbstractKtInventoryLazyFetchedTest {
         assertEquals(listOf("start", "cursor-2", "start"), inventory.fetchedConditions)
     }
 
+    @Test
+    fun `fixed buttons cannot share lazy fetched pagination slots`() {
+        val context = DeferredTaskContext(plugin)
+        val inventory = OffsetLazyFetchedInventory(context)
+        val otherInventory = OffsetLazyFetchedWithoutSlotsInventory(context)
+
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            inventory.button(2, ItemStack(Material.EMERALD))
+        }
+        otherInventory.button(2, ItemStack(Material.EMERALD))
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            otherInventory.paginateSlot(2)
+        }
+    }
+
     private class OffsetLazyFetchedInventory(
         context: KtInventoryPluginContext.LazyFetchable,
         private val fetchStarted: CountDownLatch? = null,
@@ -252,6 +267,24 @@ class AbstractKtInventoryLazyFetchedTest {
             previousPageButton(7, ItemStack(Material.ARROW))
             nextPageButton(8, ItemStack(Material.ARROW))
         }
+    }
+
+    private class OffsetLazyFetchedWithoutSlotsInventory(
+        context: KtInventoryPluginContext.LazyFetchable,
+    ) : KtInventoryLazyFetched<Int, Material>(context, 1) {
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): AbstractKtInventoryFetched.Page<Int, Material> = AbstractKtInventoryFetched.Page(emptyList())
+
+        override fun createButton(
+            data: Material,
+        ): KtInventoryButton<AbstractKtInventoryLazyFetched.Entry<KtInventoryLazyFetched<Int, Material>, Int, Material>> =
+            createButton(ItemStack(data)) {}
+
+        override fun title(condition: Int) = "Lazy $condition"
     }
 
     private class CursorLazyFetchedInventory(

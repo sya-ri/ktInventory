@@ -69,6 +69,20 @@ class AbstractKtInventoryPaginatedTest {
     }
 
     @Test
+    fun `fixed buttons cannot share paginated slots`() {
+        val inventory = SlottedPaginatedInventory(KtInventoryPluginContext(plugin))
+        val otherInventory = TestPaginatedInventory(KtInventoryPluginContext(plugin))
+
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            inventory.button(2, ItemStack(Material.EMERALD))
+        }
+        otherInventory.button(2, ItemStack(Material.EMERALD))
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            otherInventory.paginateSlot(2)
+        }
+    }
+
+    @Test
     @Suppress("DEPRECATION")
     fun `deprecated plugin constructor still opens requested page`() {
         val player = server.addPlayer()

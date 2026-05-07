@@ -71,6 +71,7 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
         slot: Int,
         item: KtInventoryButton<KtInventoryBase>,
     ) {
+        require(slot !in paginates) { "button slot must not be used as a pagination slot (actual: $slot)" }
         super.button(slot, item)
         pages.values.forEach { page ->
             page.button(slot, item)
@@ -94,6 +95,8 @@ abstract class AbstractKtInventoryPaginated<T : AbstractKtInventoryPaginated<T>>
      * @since 2.0.0
      */
     fun paginateSlot(slots: Iterable<Int>) {
+        val buttons = this.buttons
+        require(slots.none { it in buttons }) { "pagination slots must not contain fixed button slots" }
         this.paginates.addAll(slots)
     }
 

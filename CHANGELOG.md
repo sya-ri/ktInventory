@@ -52,6 +52,8 @@
 
 ### Fixed
 
+- Fixed buttons can no longer use pagination slots in paginated inventories.
+- Fixed buttons can no longer use storable slots.
 - Fix plugin-disable cleanup for custom `KtInventoryPluginContext` implementations.
   - Custom contexts could previously create handler ids that were not associated with the plugin instance, so inventories were not closed automatically when the plugin was disabled.
 - `getTopInventory` now returns `null` when the viewer has no available top inventory.

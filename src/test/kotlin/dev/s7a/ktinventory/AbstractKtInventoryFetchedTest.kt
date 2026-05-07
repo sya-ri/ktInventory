@@ -97,6 +97,20 @@ class AbstractKtInventoryFetchedTest {
         )
     }
 
+    @Test
+    fun `fixed buttons cannot share fetched pagination slots`() {
+        val inventory = OffsetFetchedInventory(KtInventoryPluginContext(plugin))
+        val otherInventory = OffsetFetchedWithoutSlotsInventory(KtInventoryPluginContext(plugin))
+
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            inventory.button(2, ItemStack(Material.EMERALD))
+        }
+        otherInventory.button(2, ItemStack(Material.EMERALD))
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            otherInventory.paginateSlot(2)
+        }
+    }
+
     private class OffsetFetchedInventory(
         context: KtInventoryPluginContext,
     ) : KtInventoryFetched<Int>(context, 1) {
@@ -136,6 +150,19 @@ class AbstractKtInventoryFetchedTest {
             previousPageButton(7, ItemStack(Material.ARROW))
             nextPageButton(8, ItemStack(Material.ARROW))
         }
+    }
+
+    private class OffsetFetchedWithoutSlotsInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventoryFetched<Int>(context, 1) {
+        override val initialCondition = 0
+
+        override fun fetch(
+            condition: Int,
+            limit: Int,
+        ): Page<Int, KtInventoryButton<AbstractKtInventoryFetched.Entry<KtInventoryFetched<Int>, Int>>> = Page(emptyList())
+
+        override fun title(condition: Int) = "Offset $condition"
     }
 
     private class CursorFetchedInventory(

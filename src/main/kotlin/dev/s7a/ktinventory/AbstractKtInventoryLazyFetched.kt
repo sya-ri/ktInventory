@@ -66,6 +66,14 @@ abstract class AbstractKtInventoryLazyFetched<T : AbstractKtInventoryLazyFetched
      */
     protected abstract fun createEntry(condition: C): Entry<T, C, D>
 
+    final override fun button(
+        slot: Int,
+        item: KtInventoryButton<KtInventoryBase>,
+    ) {
+        require(slot !in paginates) { "button slot must not be used as a pagination slot (actual: $slot)" }
+        super.button(slot, item)
+    }
+
     /**
      * Sets slots to be used for pagination.
      *
@@ -83,6 +91,8 @@ abstract class AbstractKtInventoryLazyFetched<T : AbstractKtInventoryLazyFetched
      * @since 2.2.0
      */
     fun paginateSlot(slots: Iterable<Int>) {
+        val buttons = this.buttons
+        require(slots.none { it in buttons }) { "pagination slots must not contain fixed button slots" }
         this.paginates.addAll(slots)
     }
 

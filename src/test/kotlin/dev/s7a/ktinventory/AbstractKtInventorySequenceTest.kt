@@ -73,6 +73,20 @@ class AbstractKtInventorySequenceTest {
     }
 
     @Test
+    fun `fixed buttons cannot share sequence pagination slots`() {
+        val inventory = SlottedSequenceInventory(KtInventoryPluginContext(plugin))
+        val otherInventory = TestSequenceInventory(KtInventoryPluginContext(plugin))
+
+        assertFailsWith<IllegalArgumentException> {
+            inventory.button(2, ItemStack(Material.EMERALD))
+        }
+        otherInventory.button(2, ItemStack(Material.EMERALD))
+        assertFailsWith<IllegalArgumentException> {
+            otherInventory.paginateSlot(2)
+        }
+    }
+
+    @Test
     fun `open creates skipped sequence pages while consuming entries once`() {
         val player = server.addPlayer()
         val inventory = TestSequenceInventory(KtInventoryPluginContext(plugin))

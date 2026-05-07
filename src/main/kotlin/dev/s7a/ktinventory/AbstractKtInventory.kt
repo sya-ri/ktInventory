@@ -68,6 +68,7 @@ abstract class AbstractKtInventory(
         slot: Int,
         item: KtInventoryButton<KtInventoryBase>,
     ) {
+        require(getStorables(slot).isEmpty()) { "button slot must not be used as a storable slot (actual: $slot)" }
         super.button(slot, item)
         inventory.setItem(slot, item.itemStack)
     }
@@ -179,11 +180,16 @@ abstract class AbstractKtInventory(
         onPreDrag: (KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = { KtInventoryStorable.EventResult.Allow },
         onDrag: (KtInventoryStorable.DragEvent) -> Unit = {},
         save: (List<ItemStack?>) -> Unit = {},
-    ) = KtInventoryStorable(this, slots.toList(), onPreClick, onClick, onPreDrag, onDrag, save)
-        .apply {
-            update(initialize())
-            _storables.add(this)
-        }
+    ): KtInventoryStorable {
+        val slots = slots.toList()
+        val buttons = this.buttons
+        require(slots.none { it in buttons }) { "storable slots must not contain fixed button slots" }
+        return KtInventoryStorable(this, slots, onPreClick, onClick, onPreDrag, onDrag, save)
+            .apply {
+                update(initialize())
+                _storables.add(this)
+            }
+    }
 
     /**
      * Saves the state of all storable components in this inventory

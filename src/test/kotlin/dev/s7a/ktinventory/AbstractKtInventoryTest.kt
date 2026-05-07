@@ -183,7 +183,7 @@ class AbstractKtInventoryTest {
 
     @Test
     fun `storable exposes contains update clear get and lookup helpers`() {
-        val inventory = TestInventory(KtInventoryPluginContext(plugin))
+        val inventory = EmptyInventory(KtInventoryPluginContext(plugin))
         val storable =
             inventory.storable(
                 0 until 9,
@@ -199,6 +199,21 @@ class AbstractKtInventoryTest {
         assertEquals(listOf(storable), inventory.getStorables(0))
         assertEquals(listOf(storable), inventory.getStorables(listOf(0, 8)))
         assertEquals(List<ItemStack?>(9) { null }, storable.get())
+    }
+
+    @Test
+    fun `fixed buttons cannot share storable slots`() {
+        val inventory = EmptyInventory(KtInventoryPluginContext(plugin))
+        val otherInventory = EmptyInventory(KtInventoryPluginContext(plugin))
+
+        inventory.button(0, ItemStack(Material.EMERALD))
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            inventory.storable(0)
+        }
+        otherInventory.storable(listOf(0))
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            otherInventory.button(0, ItemStack(Material.EMERALD))
+        }
     }
 
     @Test
