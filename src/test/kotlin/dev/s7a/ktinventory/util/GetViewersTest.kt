@@ -11,8 +11,11 @@ import dev.s7a.ktinventory.KtInventoryPaginatedSequence
 import dev.s7a.ktinventory.KtInventoryPluginContext
 import dev.s7a.ktinventory.ParentInventory
 import dev.s7a.ktinventory.components.KtInventoryButton
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.inventory.Inventory
+import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import org.mockbukkit.mockbukkit.MockBukkit
 import org.mockbukkit.mockbukkit.ServerMock
@@ -56,6 +59,33 @@ class GetViewersTest {
 
         assertEquals(mapOf<Player, NormalInventory>(player to inventory), getViewers<NormalInventory>())
         assertEquals(emptyMap(), getViewers<ParentInventory>())
+    }
+
+    @Test
+    fun `getTopInventory and getViewers support shared interfaces across ktinventory and custom holders`() {
+        val player = server.addPlayer()
+        val other = server.addPlayer()
+        val paginatedPlayer = server.addPlayer()
+        val inventory = InterfaceInventory(KtInventoryPluginContext(plugin))
+        val paginatedInventory = InterfacePaginatedInventory(KtInventoryPluginContext(plugin))
+        val holder = CustomInterfaceHolderInventory("primary")
+
+        player.openInventory(holder.topInventory)
+        inventory.open(other)
+        paginatedInventory.open(paginatedPlayer, 1)
+
+        assertSame(holder, getTopInventory<CustomHolderMarker>(player))
+        assertSame(inventory, getTopInventory<CustomHolderMarker>(other))
+        assertSame(paginatedInventory, getTopInventory<CustomHolderMarker>(paginatedPlayer))
+        assertEquals(
+            mapOf<Player, CustomHolderMarker>(
+                player to holder,
+                other to inventory,
+                paginatedPlayer to paginatedInventory,
+            ),
+            getViewers<CustomHolderMarker>(),
+        )
+        assertEquals(emptyMap(), getViewers<OtherCustomHolderMarker>())
     }
 
     @Test
@@ -236,6 +266,45 @@ class GetViewersTest {
         context: KtInventoryPluginContext,
     ) : KtInventory(context, 1) {
         override fun title() = "Other"
+    }
+
+    private class InterfaceInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventory(context, 1),
+        CustomHolderMarker {
+        override fun title() = "Interface Inventory"
+    }
+
+    private class InterfacePaginatedInventory(
+        context: KtInventoryPluginContext,
+    ) : KtInventoryPaginated(context, 1),
+        CustomHolderMarker {
+        override val entries =
+            (0 until 4).map {
+                createButton(ItemStack(Material.STONE)) {}
+            }
+
+        override fun title(
+            page: Int,
+            lastPage: Int,
+        ) = "Interface Paginated"
+
+        init {
+            paginateSlot(0, 1)
+        }
+    }
+
+    private interface CustomHolderMarker
+
+    private interface OtherCustomHolderMarker
+
+    private class CustomInterfaceHolderInventory(
+        val id: String,
+    ) : InventoryHolder,
+        CustomHolderMarker {
+        val topInventory: Inventory = Bukkit.createInventory(this, 9, id)
+
+        override fun getInventory(): Inventory = topInventory
     }
 
     private class ParentNormalInventory(
