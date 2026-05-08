@@ -1,7 +1,7 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryPagedStorable
-import dev.s7a.ktinventory.util.getTopInventoryPaginated
+import dev.s7a.ktinventory.util.getTopInventory
 import dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
@@ -42,7 +42,7 @@ class AbstractKtInventoryPaginatedTest {
         assertSame(inventory, entry.paginated)
         assertEquals(1, entry.page)
         assertEquals(2, entry.lastPage)
-        assertSame(inventory, getTopInventoryPaginated<TestPaginatedInventory>(player))
+        assertSame(inventory, getTopInventory<TestPaginatedInventory>(player))
         assertSame(entry as Any?, getTopInventoryPaginatedEntry<TestPaginatedInventory>(player))
         assertNotNull(player.openInventory.topInventory.getItem(0))
     }

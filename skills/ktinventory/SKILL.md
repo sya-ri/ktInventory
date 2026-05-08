@@ -32,13 +32,17 @@ Use this skill when the task is about inventory UIs built with `ktInventory`.
 5. For stateful refreshes, follow the repository pattern: `companion object : Refreshable<...>(...)` and rebuild a fresh inventory in `createNew(...)`. Paginated fetched and lazy fetched refreshables use `RefreshBehavior.Keep` to preserve the current condition and `RefreshBehavior.OpenFirst` to reopen from `initialCondition`.
 6. For editable storage areas, use `storable(...)` and keep save behavior inside the provided callback instead of scattering inventory persistence logic. In multi-page inventories, define the storable on the parent inventory; callbacks receive the page entry as the receiver, so use `page` or `condition` directly inside `initialize` and `save`.
 7. For top inventory or viewer lookup, use the current APIs:
-   - `getTopInventory<T>(player)` for the top holder a player has open.
-   - `getTopInventoryPaginated<T>(player)` for the paginated inventory itself.
+   - `getTopInventory<T>(player)` for the top holder a player has open, including the paginated inventory behind paginated entries.
    - `getTopInventoryPaginatedEntry<T>(player)` when page state is needed.
    - `getTopInventoryPaginatedSequenceEntry<T>(player)` for sequence-backed page state.
    - `getTopInventoryPaginatedFetchedEntry<T>(player)` for condition-fetched page state.
    - `getTopInventoryPaginatedLazyFetchedEntry<T>(player)` for lazy-fetched page/load state.
-   - `getViewers<T>()`, `getViewersPaginated<T>()`, `getViewersPaginatedEntry<T>()`, `getViewersPaginatedSequenceEntry<T>()`, `getViewersPaginatedFetchedEntry<T>()`, `getViewersPaginatedLazyFetchedEntry<T>()`, or `getViewersDeeply<T>()` for viewer maps.
+   - `getViewers<T>()` for viewer maps of top inventory holders.
+   - `getViewersPaginatedEntry<T>()` for viewer maps of paginated entries.
+   - `getViewersPaginatedSequenceEntry<T>()` for viewer maps of sequence-backed paginated entries.
+   - `getViewersPaginatedFetchedEntry<T>()` for viewer maps of condition-fetched paginated entries.
+   - `getViewersPaginatedLazyFetchedEntry<T>()` for viewer maps of lazy-fetched paginated entries.
+   - `getViewersDeeply<T>()` for viewer maps resolved through parent inventory relationships.
 8. Avoid deprecated lookup APIs in new code: `getOpenInventory`, `getOpenInventoryPaginated`, `getAllViewers`, `getAllViewersPaginated`, and `getAllViewersDeeply`.
 9. Start from the smallest working pattern, then add pagination, refresh, or storage only when the user actually needs them.
 

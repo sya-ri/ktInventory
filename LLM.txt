@@ -854,16 +854,15 @@ init {
 import dev.s7a.ktinventory.util.getTopInventory
 import dev.s7a.ktinventory.util.getTopInventoryPaginatedFetchedEntry
 import dev.s7a.ktinventory.util.getTopInventoryPaginatedLazyFetchedEntry
-import dev.s7a.ktinventory.util.getTopInventoryPaginated
 import dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry
 import dev.s7a.ktinventory.util.getTopInventoryPaginatedSequenceEntry
 
 // Returns null if the player does not have this top inventory holder open
 val inventory: SimpleMenu? = getTopInventory<SimpleMenu>(player)
 
-// For paginated inventories — returns the paginated inventory instance
+// For paginated inventories — also returns the paginated inventory instance
 val paginated: SoundCheckInventory? =
-    getTopInventoryPaginated<SoundCheckInventory>(player)
+    getTopInventory<SoundCheckInventory>(player)
 
 // For paginated inventories — returns the Entry (page) the player is on
 val entry: KtInventoryPaginated.Entry<SoundCheckInventory>? =
@@ -891,7 +890,6 @@ Deprecated aliases:
 import dev.s7a.ktinventory.util.getViewers
 import dev.s7a.ktinventory.util.getViewersPaginatedFetchedEntry
 import dev.s7a.ktinventory.util.getViewersPaginatedLazyFetchedEntry
-import dev.s7a.ktinventory.util.getViewersPaginated
 import dev.s7a.ktinventory.util.getViewersPaginatedEntry
 import dev.s7a.ktinventory.util.getViewersPaginatedSequenceEntry
 import dev.s7a.ktinventory.util.getViewersDeeply
@@ -900,7 +898,7 @@ import dev.s7a.ktinventory.util.getViewersDeeply
 val viewers: Map<Player, SimpleMenu> = getViewers<SimpleMenu>()
 
 // Paginated inventory version — returns Map<Player, SoundCheckInventory>
-val paginatedViewers = getViewersPaginated<SoundCheckInventory>()
+val paginatedViewers = getViewers<SoundCheckInventory>()
 
 // Paginated entry version — returns Map<Player, Entry<SoundCheckInventory>>
 val paginatedEntryViewers = getViewersPaginatedEntry<SoundCheckInventory>()
@@ -1044,13 +1042,11 @@ paginated entries through their `paginated` inventory before checking
 |----------|-------------|---------|
 | `slot(y, x)` | `Utils.kt` | Convert row/column to slot number(s) |
 | `getTopInventory<T>(player)` | `util/GetTopInventory.kt` | Get the typed top inventory holder a player has open |
-| `getTopInventoryPaginated<T>(player)` | `util/GetTopInventory.kt` | Get the paginated inventory behind the open paginated entry |
 | `getTopInventoryPaginatedEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open paginated entry, including page state |
 | `getTopInventoryPaginatedSequenceEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open sequence-backed paginated entry, including page state |
 | `getTopInventoryPaginatedFetchedEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open condition-fetched paginated entry, including condition/page state |
 | `getTopInventoryPaginatedLazyFetchedEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open lazy-fetched paginated entry, including condition/load state |
 | `getViewers<T>()` | `util/GetViewers.kt` | All players viewing a given top inventory holder type |
-| `getViewersPaginated<T>()` | `util/GetViewers.kt` | All players viewing a given paginated inventory type |
 | `getViewersPaginatedEntry<T>()` | `util/GetViewers.kt` | All players viewing a given paginated entry type |
 | `getViewersPaginatedSequenceEntry<T>()` | `util/GetViewers.kt` | All players viewing a given sequence-backed paginated entry type |
 | `getViewersPaginatedFetchedEntry<T>()` | `util/GetViewers.kt` | All players viewing a given condition-fetched paginated entry type |

@@ -41,7 +41,19 @@ private fun getTopBukkitInventory(viewer: HumanEntity): Inventory? =
 fun <T : Any> getTopInventory(
     clazz: KClass<T>,
     player: HumanEntity,
-): T? = clazz.safeCast(getTopBukkitInventory(player)?.holder)
+): T? {
+    val holder = getTopBukkitInventory(player)?.holder ?: return null
+    if (clazz.isInstance(holder)) return clazz.safeCast(holder)
+    val inventory =
+        when (holder) {
+            is AbstractKtInventoryPaginated.Entry<*> -> holder.paginated
+            is AbstractKtInventoryPaginatedSequence.Entry<*> -> holder.paginated
+            is AbstractKtInventoryPaginatedFetched.Entry<*, *> -> holder.paginated
+            is AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *> -> holder.paginated
+            else -> return null
+        }
+    return clazz.safeCast(inventory)
+}
 
 /**
  * Gets the holder of the top inventory in the currently open inventory view.
@@ -52,41 +64,6 @@ fun <T : Any> getTopInventory(
  * @since 2.2.0
  */
 inline fun <reified T : Any> getTopInventory(player: HumanEntity) = getTopInventory(T::class, player)
-
-/**
- * Gets the paginated inventory associated with the top inventory in the currently open inventory view.
- *
- * @param T The paginated inventory type
- * @param clazz The KClass of the paginated inventory type
- * @param player The player whose top inventory to check
- * @return The paginated inventory of type T, or null if not found
- * @since 2.2.0
- */
-fun <T : Any> getTopInventoryPaginated(
-    clazz: KClass<T>,
-    player: HumanEntity,
-): T? {
-    val holder = getTopInventory<Any>(player) ?: return null
-    val paginated =
-        when (holder) {
-            is AbstractKtInventoryPaginated.Entry<*> -> holder.paginated
-            is AbstractKtInventoryPaginatedSequence.Entry<*> -> holder.paginated
-            is AbstractKtInventoryPaginatedFetched.Entry<*, *> -> holder.paginated
-            is AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *> -> holder.paginated
-            else -> return null
-        }
-    return clazz.safeCast(paginated)
-}
-
-/**
- * Gets the paginated inventory associated with the top inventory in the currently open inventory view.
- *
- * @param T The paginated inventory type
- * @param player The player whose top inventory to check
- * @return The paginated inventory of type T, or null if not found
- * @since 2.2.0
- */
-inline fun <reified T : Any> getTopInventoryPaginated(player: HumanEntity) = getTopInventoryPaginated(T::class, player)
 
 /**
  * Gets the paginated inventory entry of the top inventory in the currently open inventory view.

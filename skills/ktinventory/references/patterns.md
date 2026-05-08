@@ -241,7 +241,7 @@ For paginated inventories, choose the lookup by the value you need:
 
 ```kotlin
 // Paginated inventory instance
-val inventory = getTopInventoryPaginated<SoundCheckInventory>(player)
+val inventory = getTopInventory<SoundCheckInventory>(player)
 
 // Current page entry, including page state
 val entry = getTopInventoryPaginatedEntry<SoundCheckInventory>(player)
@@ -256,7 +256,7 @@ Use `getViewers` for viewer maps:
 
 ```kotlin
 val viewers = getViewers<SettingsInventory>()
-val paginated = getViewersPaginated<SoundCheckInventory>()
+val paginated = getViewers<SoundCheckInventory>()
 val paginatedEntries = getViewersPaginatedEntry<SoundCheckInventory>()
 val sequenceEntries = getViewersPaginatedSequenceEntry<SoundCheckSequenceInventory>()
 val fetchedEntries = getViewersPaginatedFetchedEntry<ItemBrowserInventory>()

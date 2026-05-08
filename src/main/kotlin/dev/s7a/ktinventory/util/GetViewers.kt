@@ -37,31 +37,6 @@ fun <T : Any> getViewers(clazz: KClass<T>): Map<Player, T> =
 inline fun <reified T : Any> getViewers() = getViewers(T::class)
 
 /**
- * Gets all online players currently viewing a paginated inventory of the specified type.
- *
- * @param T The paginated inventory type
- * @param clazz The KClass of the paginated inventory type
- * @return Map of players to their open paginated inventories of type T
- * @since 2.2.0
- */
-fun <T : Any> getViewersPaginated(clazz: KClass<T>): Map<Player, T> =
-    Bukkit
-        .getOnlinePlayers()
-        .mapNotNull { player ->
-            val inventory = getTopInventoryPaginated(clazz, player) ?: return@mapNotNull null
-            player to inventory
-        }.toMap()
-
-/**
- * Gets all online players currently viewing a paginated inventory of the specified type.
- *
- * @param T The paginated inventory type
- * @return Map of players to their open paginated inventories of type T
- * @since 2.2.0
- */
-inline fun <reified T : Any> getViewersPaginated() = getViewersPaginated(T::class)
-
-/**
  * Gets all online players currently viewing a paginated inventory entry of the specified type.
  *
  * @param T The type of inventory extending [AbstractKtInventoryPaginated]

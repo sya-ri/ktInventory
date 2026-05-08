@@ -2,7 +2,7 @@ package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryPagedStorable
-import dev.s7a.ktinventory.util.getTopInventoryPaginated
+import dev.s7a.ktinventory.util.getTopInventory
 import org.bukkit.Material
 import org.bukkit.event.Listener
 import org.bukkit.inventory.ItemStack
@@ -58,7 +58,7 @@ class AbstractKtInventoryPaginatedLazyFetchedTest {
 
         val entry = player.openInventory.topInventory.holder as AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *>
         assertSame(inventory, entry.paginated)
-        assertSame(inventory, getTopInventoryPaginated<OffsetLazyFetchedInventory>(player))
+        assertSame(inventory, getTopInventory<OffsetLazyFetchedInventory>(player))
         assertEquals(2, entry.condition)
         assertNull(player.openInventory.topInventory.getItem(0))
         assertNull(player.openInventory.topInventory.getItem(2))

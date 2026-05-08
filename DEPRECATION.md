@@ -84,6 +84,7 @@ val entry = getOpenInventoryPaginated<MyPaginatedInventory>(player)
 val entry = getTopInventoryPaginatedEntry<MyPaginatedInventory>(player)
 ```
 
+
 ## Viewer Lookup APIs
 
 ### `getAllViewers`

@@ -1,7 +1,7 @@
 package dev.s7a.ktinventory
 
 import dev.s7a.ktinventory.components.KtInventoryButton
-import dev.s7a.ktinventory.util.getTopInventoryPaginated
+import dev.s7a.ktinventory.util.getTopInventory
 import dev.s7a.ktinventory.util.getTopInventoryPaginatedSequenceEntry
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
@@ -71,7 +71,7 @@ class AdventureInventoryTest {
         assertSame(inventory, entry.paginated)
         assertEquals(1, entry.page)
         assertEquals(Component.text("Adventure 2/2"), player.openInventory.title())
-        assertSame(inventory, getTopInventoryPaginated<TestPaginatedAdventureInventory>(player))
+        assertSame(inventory, getTopInventory<TestPaginatedAdventureInventory>(player))
         assertNotNull(player.openInventory.topInventory.getItem(0))
     }
 
@@ -140,7 +140,7 @@ class AdventureInventoryTest {
         assertSame(inventory, entry.paginated)
         assertEquals(2, entry.condition)
         assertEquals(Component.text("Adventure 2"), player.openInventory.title())
-        assertSame(inventory, getTopInventoryPaginated<TestFetchedAdventureInventory>(player))
+        assertSame(inventory, getTopInventory<TestFetchedAdventureInventory>(player))
         assertEquals(
             Material.DIAMOND,
             player.openInventory.topInventory
@@ -161,7 +161,7 @@ class AdventureInventoryTest {
         assertSame(inventory, entry.paginated)
         assertEquals(2, entry.condition)
         assertEquals(Component.text("Adventure 2"), player.openInventory.title())
-        assertSame(inventory, getTopInventoryPaginated<TestLazyFetchedAdventureInventory>(player))
+        assertSame(inventory, getTopInventory<TestLazyFetchedAdventureInventory>(player))
         assertEquals(emptyList(), inventory.fetchedConditions)
         assertNull(player.openInventory.topInventory.getItem(0))
 

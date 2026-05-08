@@ -59,14 +59,14 @@ class GetViewersTest {
     }
 
     @Test
-    fun `getViewersPaginated returns paginated owners and entries`() {
+    fun `getViewers returns paginated owners and getViewersPaginatedEntry returns entries`() {
         val player = server.addPlayer()
         val inventory = PaginatedParentInventory(KtInventoryPluginContext(plugin))
 
         inventory.open(player, 1)
 
         val entry = getTopInventoryPaginatedEntry<PaginatedParentInventory>(player)
-        assertSame(inventory, getViewersPaginated<PaginatedParentInventory>().getValue(player))
+        assertSame(inventory, getViewers<PaginatedParentInventory>().getValue(player))
         assertSame(entry, getViewersPaginatedEntry<PaginatedParentInventory>().getValue(player))
     }
 
@@ -78,7 +78,7 @@ class GetViewersTest {
         inventory.open(player, 1)
 
         val entry = getTopInventoryPaginatedSequenceEntry<SequenceParentInventory>(player)
-        assertSame(inventory, getViewersPaginated<SequenceParentInventory>().getValue(player))
+        assertSame(inventory, getViewers<SequenceParentInventory>().getValue(player))
         assertSame(entry, getViewersPaginatedSequenceEntry<SequenceParentInventory>().getValue(player))
     }
 
@@ -90,7 +90,7 @@ class GetViewersTest {
         inventory.open(player)
 
         val entry = getTopInventoryPaginatedFetchedEntry<FetchedParentInventory>(player)
-        assertSame(inventory, getViewersPaginated<FetchedParentInventory>().getValue(player))
+        assertSame(inventory, getViewers<FetchedParentInventory>().getValue(player))
         assertSame(entry, getViewersPaginatedFetchedEntry<FetchedParentInventory>().getValue(player))
     }
 
@@ -102,7 +102,7 @@ class GetViewersTest {
         inventory.open(player)
 
         val entry = getTopInventoryPaginatedLazyFetchedEntry<LazyFetchedParentInventory>(player)
-        assertSame(inventory, getViewersPaginated<LazyFetchedParentInventory>().getValue(player))
+        assertSame(inventory, getViewers<LazyFetchedParentInventory>().getValue(player))
         assertSame(entry, getViewersPaginatedLazyFetchedEntry<LazyFetchedParentInventory>().getValue(player))
     }
 
@@ -115,14 +115,14 @@ class GetViewersTest {
 
         normal.open(player)
         assertNull(getTopInventory<OtherInventory>(player))
-        assertNull(getTopInventoryPaginated<PaginatedParentInventory>(player))
+        assertNull(getTopInventory<PaginatedParentInventory>(player))
         assertNull(getTopInventoryPaginatedEntry<PaginatedParentInventory>(player))
         assertNull(getTopInventoryPaginatedSequenceEntry<SequenceParentInventory>(player))
         assertNull(getTopInventoryPaginatedFetchedEntry<FetchedParentInventory>(player))
         assertNull(getTopInventoryPaginatedLazyFetchedEntry<LazyFetchedParentInventory>(player))
 
         paginated.open(player)
-        assertNull(getTopInventory<PaginatedParentInventory>(player))
+        assertSame(paginated, getTopInventory<PaginatedParentInventory>(player))
         assertNull(getTopInventoryPaginatedSequenceEntry<SequenceParentInventory>(player))
         assertNull(getTopInventoryPaginatedFetchedEntry<FetchedParentInventory>(player))
         assertNull(getTopInventoryPaginatedLazyFetchedEntry<LazyFetchedParentInventory>(player))
@@ -142,7 +142,7 @@ class GetViewersTest {
         player.closeInventory()
 
         assertNull(getTopInventory<NormalInventory>(player))
-        assertNull(getTopInventoryPaginated<NormalInventory>(player))
+        assertNull(getTopInventory<PaginatedParentInventory>(player))
     }
 
     @Test

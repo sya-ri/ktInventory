@@ -10,10 +10,7 @@
   - `getTopInventory<T>()`
   - `getTopInventory(clazz, player)`
 - Add paginated top inventory lookup APIs.
-  - These APIs make the distinction between a paginated inventory instance and the currently opened page entry explicit.
-  - Use `getTopInventoryPaginated` when you need the paginated inventory itself, and `getTopInventoryPaginatedEntry` when you need page state such as the current page.
-  - `getTopInventoryPaginated<T>()`
-  - `getTopInventoryPaginated(clazz, player)`
+  - These APIs make paginated entry lookup explicit when page state such as the current page is needed.
   - `getTopInventoryPaginatedEntry<T>()`
   - `getTopInventoryPaginatedEntry(clazz, player)`
   - `getTopInventoryPaginatedSequenceEntry<T>()`
@@ -24,11 +21,9 @@
   - `getTopInventoryPaginatedLazyFetchedEntry(clazz, player)`
 - Add generic viewer lookup APIs.
   - These APIs generalize viewer lookup beyond `AbstractKtInventory`, matching the new top inventory lookup behavior.
-  - The paginated variants provide both paginated inventory lookup and paginated entry lookup.
+  - The paginated variants provide paginated entry lookup.
   - `getViewers<T>()`
   - `getViewers(clazz)`
-  - `getViewersPaginated<T>()`
-  - `getViewersPaginated(clazz)`
   - `getViewersPaginatedEntry<T>()`
   - `getViewersPaginatedEntry(clazz)`
   - `getViewersPaginatedSequenceEntry<T>()`
@@ -80,6 +75,7 @@
 ### Changed
 
 - Internal refresh logic now uses the new `getTopInventory` and `getViewers` APIs.
+- `getTopInventory<T>()` now resolves paginated inventories directly when the open holder is a paginated entry.
 
 ### Deprecated
 
