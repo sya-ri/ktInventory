@@ -42,7 +42,7 @@ Use this skill when the task is about inventory UIs built with `ktInventory`.
    - `getViewersPaginatedSequenceEntry<T>()` for viewer maps of sequence-backed paginated entries.
    - `getViewersPaginatedFetchedEntry<T>()` for viewer maps of condition-fetched paginated entries.
    - `getViewersPaginatedLazyFetchedEntry<T>()` for viewer maps of lazy-fetched paginated entries.
-   - `getViewersDeeply<T>()` or `getViewersDeeply(clazz)` for viewer maps resolved through parent inventory relationships.
+   - `getViewersDeeply<T>()` for viewer maps resolved through parent inventory relationships.
 8. Avoid deprecated lookup APIs in new code: `getOpenInventory`, `getOpenInventoryPaginated`, `getAllViewers`, `getAllViewersPaginated`, and `getAllViewersDeeply`.
 9. Start from the smallest working pattern, then add pagination, refresh, or storage only when the user actually needs them.
 
