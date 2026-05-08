@@ -912,6 +912,7 @@ val lazyFetchedEntryViewers = getViewersPaginatedLazyFetchedEntry<AsyncItemBrows
 
 // Deep search — includes players in child inventories that declare parentInventory
 val deepViewers = getViewersDeeply<MyParentInventory>()
+val deepViewersByClass = getViewersDeeply(MyParentInventory::class)
 ```
 
 Deprecated aliases:

@@ -10,6 +10,7 @@ import dev.s7a.ktinventory.ParentInventory
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import kotlin.reflect.KClass
+import kotlin.reflect.safeCast
 
 /**
  * Gets all online players currently viewing an inventory holder of the specified type.
@@ -150,89 +151,84 @@ inline fun <reified T : AbstractKtInventoryPaginatedLazyFetched<*, *, *>> getVie
  * This function searches through the inventory hierarchy to find parent inventories of the specified type.
  *
  * @param T The type of parent inventory
+ * @param clazz The KClass of the parent inventory type
  * @return Map of players to their open parent inventories of type T
  * @since 2.2.0
  */
-inline fun <reified T : ParentInventory> getViewersDeeply() =
+fun <T : ParentInventory> getViewersDeeply(clazz: KClass<T>): Map<Player, T> =
     getViewers<KtInventoryBase>()
         .mapNotNull { (player, inventory) ->
             val parentInventory =
                 when (inventory) {
-                    is T -> {
-                        inventory
-                    }
-
-                    is HasParentInventory<*> -> {
-                        inventory.parentInventory as? T
-                    }
-
-                    is AbstractKtInventoryPaginated.Entry<*> -> {
-                        when (val paginated = inventory.paginated) {
-                            is T -> {
-                                paginated
-                            }
-
-                            is HasParentInventory<*> -> {
-                                paginated.parentInventory as? T
-                            }
-
-                            else -> {
-                                null
-                            }
-                        }
-                    }
-
-                    is AbstractKtInventoryPaginatedSequence.Entry<*> -> {
-                        when (val paginated = inventory.paginated) {
-                            is T -> {
-                                paginated
-                            }
-
-                            is HasParentInventory<*> -> {
-                                paginated.parentInventory as? T
-                            }
-
-                            else -> {
-                                null
-                            }
-                        }
-                    }
-
-                    is AbstractKtInventoryPaginatedFetched.Entry<*, *> -> {
-                        when (val paginated = inventory.paginated) {
-                            is T -> {
-                                paginated
-                            }
-
-                            is HasParentInventory<*> -> {
-                                paginated.parentInventory as? T
-                            }
-
-                            else -> {
-                                null
-                            }
-                        }
-                    }
-
-                    is AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *> -> {
-                        when (val paginated = inventory.paginated) {
-                            is T -> {
-                                paginated
-                            }
-
-                            is HasParentInventory<*> -> {
-                                paginated.parentInventory as? T
-                            }
-
-                            else -> {
-                                null
-                            }
-                        }
-                    }
-
                     else -> {
-                        null
+                        when (inventory) {
+                            is HasParentInventory<*> -> {
+                                clazz.safeCast(inventory.parentInventory)
+                            }
+
+                            is AbstractKtInventoryPaginated.Entry<*> -> {
+                                when (val paginated = inventory.paginated) {
+                                    is HasParentInventory<*> -> {
+                                        clazz.safeCast(paginated.parentInventory)
+                                    }
+
+                                    else -> {
+                                        clazz.safeCast(paginated)
+                                    }
+                                }
+                            }
+
+                            is AbstractKtInventoryPaginatedSequence.Entry<*> -> {
+                                when (val paginated = inventory.paginated) {
+                                    is HasParentInventory<*> -> {
+                                        clazz.safeCast(paginated.parentInventory)
+                                    }
+
+                                    else -> {
+                                        clazz.safeCast(paginated)
+                                    }
+                                }
+                            }
+
+                            is AbstractKtInventoryPaginatedFetched.Entry<*, *> -> {
+                                when (val paginated = inventory.paginated) {
+                                    is HasParentInventory<*> -> {
+                                        clazz.safeCast(paginated.parentInventory)
+                                    }
+
+                                    else -> {
+                                        clazz.safeCast(paginated)
+                                    }
+                                }
+                            }
+
+                            is AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *> -> {
+                                when (val paginated = inventory.paginated) {
+                                    is HasParentInventory<*> -> {
+                                        clazz.safeCast(paginated.parentInventory)
+                                    }
+
+                                    else -> {
+                                        clazz.safeCast(paginated)
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                clazz.safeCast(inventory)
+                            }
+                        }
                     }
                 } ?: return@mapNotNull null
             player to parentInventory
         }.toMap()
+
+/**
+ * Gets all online players currently viewing an inventory or child inventory of the specified parent type.
+ * This function searches through the inventory hierarchy to find parent inventories of the specified type.
+ *
+ * @param T The type of parent inventory
+ * @return Map of players to their open parent inventories of type T
+ * @since 2.2.0
+ */
+inline fun <reified T : ParentInventory> getViewersDeeply() = getViewersDeeply(T::class)

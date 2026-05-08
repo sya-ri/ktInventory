@@ -263,7 +263,7 @@ val fetchedEntries = getViewersPaginatedFetchedEntry<ItemBrowserInventory>()
 val lazyFetchedEntries = getViewersPaginatedLazyFetchedEntry<AsyncItemBrowserInventory>()
 ```
 
-Use `getViewersDeeply<ParentInventoryType>()` when child inventories or paginated entries should be associated with a parent inventory.
+Use `getViewersDeeply<ParentInventoryType>()` or `getViewersDeeply(ParentInventoryType::class)` when child inventories or paginated entries should be associated with a parent inventory.
 
 Deprecated lookup aliases should not be used in new code:
 

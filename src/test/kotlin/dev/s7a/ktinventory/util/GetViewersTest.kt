@@ -208,6 +208,7 @@ class GetViewersTest {
             )
 
         assertEquals(expected, getViewersDeeply<ParentInventory>())
+        assertEquals(expected, getViewersDeeply(ParentInventory::class))
     }
 
     @Test
@@ -225,6 +226,7 @@ class GetViewersTest {
         sequenceChild.open(sequenceChildPlayer)
 
         assertEquals(emptyMap(), getViewersDeeply<ParentNormalInventory>())
+        assertEquals(emptyMap(), getViewersDeeply(ParentNormalInventory::class))
     }
 
     @Test
