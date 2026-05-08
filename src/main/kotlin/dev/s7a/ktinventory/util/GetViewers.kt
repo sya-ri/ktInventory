@@ -160,64 +160,60 @@ fun <T : ParentInventory> getViewersDeeply(clazz: KClass<T>): Map<Player, T> =
         .mapNotNull { (player, inventory) ->
             val parentInventory =
                 when (inventory) {
-                    else -> {
-                        when (inventory) {
+                    is HasParentInventory<*> -> {
+                        clazz.safeCast(inventory.parentInventory)
+                    }
+
+                    is AbstractKtInventoryPaginated.Entry<*> -> {
+                        when (val paginated = inventory.paginated) {
                             is HasParentInventory<*> -> {
-                                clazz.safeCast(inventory.parentInventory)
-                            }
-
-                            is AbstractKtInventoryPaginated.Entry<*> -> {
-                                when (val paginated = inventory.paginated) {
-                                    is HasParentInventory<*> -> {
-                                        clazz.safeCast(paginated.parentInventory)
-                                    }
-
-                                    else -> {
-                                        clazz.safeCast(paginated)
-                                    }
-                                }
-                            }
-
-                            is AbstractKtInventoryPaginatedSequence.Entry<*> -> {
-                                when (val paginated = inventory.paginated) {
-                                    is HasParentInventory<*> -> {
-                                        clazz.safeCast(paginated.parentInventory)
-                                    }
-
-                                    else -> {
-                                        clazz.safeCast(paginated)
-                                    }
-                                }
-                            }
-
-                            is AbstractKtInventoryPaginatedFetched.Entry<*, *> -> {
-                                when (val paginated = inventory.paginated) {
-                                    is HasParentInventory<*> -> {
-                                        clazz.safeCast(paginated.parentInventory)
-                                    }
-
-                                    else -> {
-                                        clazz.safeCast(paginated)
-                                    }
-                                }
-                            }
-
-                            is AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *> -> {
-                                when (val paginated = inventory.paginated) {
-                                    is HasParentInventory<*> -> {
-                                        clazz.safeCast(paginated.parentInventory)
-                                    }
-
-                                    else -> {
-                                        clazz.safeCast(paginated)
-                                    }
-                                }
+                                clazz.safeCast(paginated.parentInventory)
                             }
 
                             else -> {
-                                clazz.safeCast(inventory)
+                                clazz.safeCast(paginated)
                             }
                         }
+                    }
+
+                    is AbstractKtInventoryPaginatedSequence.Entry<*> -> {
+                        when (val paginated = inventory.paginated) {
+                            is HasParentInventory<*> -> {
+                                clazz.safeCast(paginated.parentInventory)
+                            }
+
+                            else -> {
+                                clazz.safeCast(paginated)
+                            }
+                        }
+                    }
+
+                    is AbstractKtInventoryPaginatedFetched.Entry<*, *> -> {
+                        when (val paginated = inventory.paginated) {
+                            is HasParentInventory<*> -> {
+                                clazz.safeCast(paginated.parentInventory)
+                            }
+
+                            else -> {
+                                clazz.safeCast(paginated)
+                            }
+                        }
+                    }
+
+                    is AbstractKtInventoryPaginatedLazyFetched.Entry<*, *, *> -> {
+                        when (val paginated = inventory.paginated) {
+                            is HasParentInventory<*> -> {
+                                clazz.safeCast(paginated.parentInventory)
+                            }
+
+                            else -> {
+                                clazz.safeCast(paginated)
+                            }
+                        }
+                    }
+
+                    else -> {
+                        clazz.safeCast(inventory)
                     }
                 } ?: return@mapNotNull null
             player to parentInventory
