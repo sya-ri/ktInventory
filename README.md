@@ -17,11 +17,14 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.1.1")
+    implementation("dev.s7a:ktInventory:2.2.0")
 }
 ```
 
 ## Usage
+
+Upgrading from v2.1.1 with a custom `KtInventoryPluginContext` implementation requires
+adding `handlerId` and recompiling. See the [v2.2.0 migration guide](DEPRECATION.md#required-migration-in-v220).
 
 ### For spigot servers
 
@@ -82,6 +85,18 @@ class SimpleMenu(
     }
 }
 ```
+
+### Choosing a multi-page inventory class
+
+ktInventory has four multi-page inventory patterns. Start with `KtInventoryPaginated`
+unless your data source needs one of the more specialized models.
+
+| String-title class | Adventure-title class | Use when | Recommended for |
+|--------------------|-----------------------|----------|-----------------|
+| `KtInventoryPaginated` | `KtInventoryPaginatedAdventure` | You can build all entries up front as a `List` or collection. | Most static or small-to-medium menus. This is the simplest and most recommended default. |
+| `KtInventoryPaginatedSequence` | `KtInventoryPaginatedSequenceAdventure` | Entries are produced lazily as a `Sequence` and you do not need `lastPage` in the title. | Large generated lists where calculating everything immediately is unnecessary. |
+| `KtInventoryPaginatedFetched` | `KtInventoryPaginatedFetchedAdventure` | Each page is loaded from a condition such as an offset, cursor, filter, or search key. | Database/API pagination where the data source decides previous and next page conditions. |
+| `KtInventoryPaginatedLazyFetched` | `KtInventoryPaginatedLazyFetchedAdventure` | The inventory should open immediately while page data loads asynchronously. | Slow database/API calls. Use `KtInventoryPluginContext.LazyFetchable`; keep Bukkit API work out of `fetch`. |
 
 ## Skill
 

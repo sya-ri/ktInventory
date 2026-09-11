@@ -22,7 +22,7 @@ abstract class KtInventoryPaginatedAdventure(
      * @param line Number of inventory lines (1-6)
      * @since 2.0.0
      */
-    @Deprecated("Use KtInventoryPluginContext constructor instead")
+    @Deprecated("Deprecated in v2.1.0. Will be removed in v2.4.0. Use KtInventoryPluginContext constructor instead.")
     constructor(plugin: Plugin, line: Int) : this(
         KtInventoryPluginContext(plugin),
         line,

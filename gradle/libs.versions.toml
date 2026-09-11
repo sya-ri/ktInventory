@@ -7,11 +7,13 @@ pluginYml = "0.6.0"
 minecraftServer = "4.0.2"
 shadow = "9.3.2"
 mavenPublish = "0.35.0"
+kover = "0.9.8"
 
 # Libraries
-spigot8 = "1.8.8-R0.1-SNAPSHOT"
-spigotLatest = "1.21.4-R0.1-SNAPSHOT"
 paper = "1.16.5-R0.1-SNAPSHOT"
+paper-mockbukkit = "1.21.11-R0.1-SNAPSHOT"
+junit = "6.0.3"
+mockbukkit = "4.109.0"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -22,8 +24,11 @@ pluginYml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "plug
 minecraftServer = { id = "dev.s7a.gradle.minecraft.server", version.ref = "minecraftServer" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
 [libraries]
-spigot8 = { group = "org.spigotmc", name = "spigot-api", version.ref = "spigot8" }
-spigotLatest = { group = "org.spigotmc", name = "spigot-api", version.ref = "spigotLatest" }
 paper = { group = "com.destroystokyo.paper", name = "paper-api", version.ref = "paper" }
+paper-mockbukkit = { group = "io.papermc.paper", name = "paper-api", version.ref = "paper-mockbukkit" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit5", version.ref = "kotlin" }
+mockbukkit = { group = "org.mockbukkit.mockbukkit", name = "mockbukkit-v1.21", version.ref = "mockbukkit" }

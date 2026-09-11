@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.dokka)
     alias(libs.plugins.dokka.javadoc)
     alias(libs.plugins.kotlinter)
+    alias(libs.plugins.kover)
     alias(libs.plugins.pluginYml.bukkit) apply false
     alias(libs.plugins.minecraftServer) apply false
     alias(libs.plugins.shadow) apply false
@@ -14,7 +15,7 @@ plugins {
 }
 
 group = "dev.s7a"
-version = "2.1.1"
+version = "2.2.0"
 
 allprojects {
     apply(plugin = "kotlin")
@@ -38,6 +39,20 @@ allprojects {
 
 dependencies {
     compileOnly(libs.paper)
+    testImplementation(libs.paper.mockbukkit)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.mockbukkit)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+tasks.compileTestKotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 mavenPublishing {
@@ -57,8 +72,8 @@ mavenPublishing {
         url.set("https://github.com/sya-ri/ktInventory")
         licenses {
             license {
-                name.set("MIT License")
-                url.set("https://github.com/sya-ri/ktInventory/blob/master/LICENSE")
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
             }
         }
         developers {

@@ -24,7 +24,7 @@ abstract class KtInventory(
      * @param altColorChar Character used for color codes in the title. Default is '&'. Set to null to disable color code translation.
      * @since 2.0.0
      */
-    @Deprecated("Use KtInventoryPluginContext constructor instead")
+    @Deprecated("Deprecated in v2.1.0. Will be removed in v2.4.0. Use KtInventoryPluginContext constructor instead.")
     constructor(plugin: Plugin, line: Int, altColorChar: Char? = '&') : this(
         KtInventoryPluginContext(plugin),
         line,

@@ -3,8 +3,8 @@ package dev.s7a.ktinventory
 import dev.s7a.ktinventory.components.KtInventoryButton
 import dev.s7a.ktinventory.components.KtInventoryStorable
 import dev.s7a.ktinventory.options.KtInventoryStorableOption
-import dev.s7a.ktinventory.util.getAllViewers
-import dev.s7a.ktinventory.util.getOpenInventory
+import dev.s7a.ktinventory.util.getTopInventory
+import dev.s7a.ktinventory.util.getViewers
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.InventoryHolder
@@ -22,6 +22,9 @@ abstract class AbstractKtInventory(
     line: Int,
 ) : KtInventoryBase(line),
     InventoryHolder {
+    internal val handlerId: KtInventoryHandlerId
+        get() = context.handlerId
+
     /**
      * List of entities currently viewing this inventory
      *
@@ -68,6 +71,7 @@ abstract class AbstractKtInventory(
         slot: Int,
         item: KtInventoryButton<KtInventoryBase>,
     ) {
+        require(getStorables(slot).isEmpty()) { "button slot must not be used as a storable slot (actual: $slot)" }
         super.button(slot, item)
         inventory.setItem(slot, item.itemStack)
     }
@@ -179,11 +183,16 @@ abstract class AbstractKtInventory(
         onPreDrag: (KtInventoryStorable.DragEvent) -> KtInventoryStorable.EventResult = { KtInventoryStorable.EventResult.Allow },
         onDrag: (KtInventoryStorable.DragEvent) -> Unit = {},
         save: (List<ItemStack?>) -> Unit = {},
-    ) = KtInventoryStorable(this, slots.toList(), onPreClick, onClick, onPreDrag, onDrag, save)
-        .apply {
-            update(initialize())
-            _storables.add(this)
-        }
+    ): KtInventoryStorable {
+        val slots = slots.toList()
+        val buttons = this.buttons
+        require(slots.none { it in buttons }) { "storable slots must not contain fixed button slots" }
+        return KtInventoryStorable(this, slots, onPreClick, onClick, onPreDrag, onDrag, save)
+            .apply {
+                update(initialize())
+                _storables.add(this)
+            }
+    }
 
     /**
      * Saves the state of all storable components in this inventory
@@ -222,7 +231,7 @@ abstract class AbstractKtInventory(
             player: HumanEntity,
             predicate: (T) -> Boolean,
         ): Boolean {
-            val inventory = getOpenInventory(clazz, player) ?: return false
+            val inventory = getTopInventory(clazz, player) ?: return false
             if (predicate(inventory).not()) return false
             refresh(player, inventory)
             return true
@@ -241,7 +250,7 @@ abstract class AbstractKtInventory(
         }
 
         final override fun refreshAll(predicate: (Player, T) -> Boolean) {
-            getAllViewers(clazz)
+            getViewers(clazz)
                 .filter { (player, inventory) ->
                     predicate(player, inventory)
                 }.forEach { (player, inventory) ->

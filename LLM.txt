@@ -6,7 +6,7 @@ item storage, and real-time refresh support.
 
 - GitHub: https://github.com/sya-ri/ktInventory
 - Maven Central: dev.s7a:ktInventory
-- Current version: 2.1.1
+- Current version: 2.2.0
 - License: MIT
 - Java target: 1.8 / Kotlin JVM target: 1.8
 - Platforms: Spigot, Paper (Adventure API requires Paper)
@@ -41,7 +41,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.1.1")
+    implementation("dev.s7a:ktInventory:2.2.0")
 }
 ```
 
@@ -54,7 +54,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.s7a:ktInventory:2.1.1'
+    implementation 'dev.s7a:ktInventory:2.2.0'
 }
 ```
 
@@ -64,35 +64,37 @@ dependencies {
 <dependency>
     <groupId>dev.s7a</groupId>
     <artifactId>ktInventory</artifactId>
-    <version>2.1.1</version>
+    <version>2.2.0</version>
 </dependency>
 ```
 
 ### Plugin Setup
 
-Each inventory class is expected to expose a `Plugin` constructor as its standard entry point.
-The `Plugin` constructor wraps the argument in a `KtInventoryPluginContext` internally,
-so callers only need to pass `this`.
+Each inventory class should use a `KtInventoryPluginContext` constructor as its primary entry point.
+Callers do not need to wrap a `Plugin` manually. If a DI container or constructor injection already
+provides `KtInventoryPluginContext`, pass it directly. If the caller has a plugin instance, passing
+the plugin is also acceptable; convert the plugin to `KtInventoryPluginContext` inside the
+inventory definition with a bridge constructor.
 
 ```kotlin
 class MyPlugin : JavaPlugin() {
     override fun onEnable() {
         getCommand("menu")?.setExecutor { sender, _, _, _ ->
             val player = sender as? Player ?: return@setExecutor true
-            SimpleMenu(this).open(player)  // pass the plugin directly
+            SimpleMenu(this).open(player)
             true
         }
     }
 }
 ```
 
-Every inventory class should follow this two-constructor pattern:
+Inventory classes can keep a bridge constructor if callers pass `Plugin` directly:
 
 ```kotlin
 class SimpleMenu(
     context: KtInventoryPluginContext,
 ) : KtInventory(context, 1) {
-    // Secondary constructor for normal use — callers pass the plugin
+    // Bridge for callers that have a Plugin instance.
     constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
 
     override fun title() = "&0&lMain Menu"
@@ -104,7 +106,25 @@ class SimpleMenu(
 ```
 
 The primary constructor that accepts `KtInventoryPluginContext` is for dependency injection.
-Use it when you want to inject a custom or mock context (e.g. in tests or a DI framework).
+Use it when a custom context, a mock context, or a DI framework provides the context directly.
+
+Custom `KtInventoryPluginContext` implementations must expose a stable `handlerId`.
+When upgrading from v2.1.1, add this property and recompile the custom implementation
+against v2.2.0; existing compiled custom implementations are not binary compatible.
+Use `KtInventoryHandlerId.of(plugin)` with the same plugin that registers events, so internal
+listeners are shared correctly and plugin-disable cleanup can close open inventories.
+
+```kotlin
+class MyInventoryContext(
+    private val plugin: Plugin,
+) : KtInventoryPluginContext {
+    override val handlerId = KtInventoryHandlerId.of(plugin)
+
+    override fun registerEvents(listener: Listener) {
+        plugin.server.pluginManager.registerEvents(listener, plugin)
+    }
+}
+```
 
 
 ---
@@ -317,10 +337,34 @@ class SimpleMenuPaper(
 
 ## 5. Pagination
 
+### Choosing a multi-page inventory class
+
+ktInventory has four multi-page inventory models. Prefer the simplest model that
+matches the data source; do not use fetched or lazy fetched inventories for a
+static list.
+
+| Model | String-title class | Adventure-title class | Use when | Recommendation |
+|------|--------------------|-----------------------|----------|----------------|
+| Prebuilt entries | `KtInventoryPaginated` | `KtInventoryPaginatedAdventure` | All entries can be created up front and split by the library. | Recommended default for most menus. It exposes `page` and `lastPage` in titles. |
+| Sequence-backed entries | `KtInventoryPaginatedSequence` | `KtInventoryPaginatedSequenceAdventure` | Entries should be produced lazily from a `Sequence`. | Use for large generated sources when `lastPage` is not needed. Titles receive only `page`. |
+| Condition-fetched pages | `KtInventoryPaginatedFetched<C>` | `KtInventoryPaginatedFetchedAdventure<C>` | The page is loaded by a condition such as an offset, cursor, filter, or search key. | Use for database/API pagination where the data source decides previous and next conditions. |
+| Async lazy-fetched pages | `KtInventoryPaginatedLazyFetched<C, D>` | `KtInventoryPaginatedLazyFetchedAdventure<C, D>` | The inventory should open immediately and load page data asynchronously. | Use for slow IO. Requires `KtInventoryPluginContext.LazyFetchable`; `fetch` runs asynchronously and `createButton(data)` runs on the server main thread. |
+
+Decision rules:
+
+- Use `KtInventoryPaginated` first for normal lists. It is the easiest to read,
+  test, refresh, and debug.
+- Use `KtInventoryPaginatedSequence` only when laziness matters and a last-page count is
+  unavailable or expensive.
+- Use `KtInventoryPaginatedFetched` when the repository/API owns page boundaries.
+- Use `KtInventoryPaginatedLazyFetched` when blocking page loads would make opening the
+  inventory feel slow. Do not call Bukkit API from its asynchronous `fetch`.
+
 ### KtInventoryPaginated (String title)
 
 Define all entries in `entries`, specify which slots display page items with
 `paginateSlot()`, and add navigation buttons.
+Fixed buttons, pagination slots, and paged storable slots must not overlap.
 
 ```kotlin
 class SoundCheckInventory(
@@ -351,6 +395,103 @@ class SoundCheckInventory(
         button(49, itemStack(Material.BARRIER, "Close")) { event ->
             event.player.closeInventory()
         }
+    }
+}
+```
+
+Use `KtInventoryPaginatedSequence` when entries should be produced from a `Sequence`.
+Sequence-backed inventories do not expose `lastPage`, so titles receive only `page`.
+
+```kotlin
+class SoundCheckSequenceInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginatedSequence(context, 6) {
+    constructor(plugin: Plugin) : this(KtInventoryPluginContext(plugin))
+
+    override val entries = Registry.SOUNDS.asSequence().map { sound ->
+        createButton(itemStack(Material.MUSIC_DISC_CAT, sound.key().value())) { event ->
+            val player = event.player as? Player ?: return@createButton
+            player.playSound(player.location, sound, 1F, 1F)
+        }
+    }
+
+    override fun title(page: Int) =
+        "&0&lSound List (${page + 1})"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "Previous Page"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next Page"))
+    }
+}
+```
+
+Use `KtInventoryPaginatedFetched` when each page should be loaded by a display condition
+instead of by slicing a prebuilt list. This fits offset, cursor, or filtered
+pagination where the data source decides the next or previous condition.
+
+```kotlin
+class CursorInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginatedFetched<String>(context, 6) {
+    override val initialCondition = "start"
+
+    override fun fetch(
+        condition: String,
+        limit: Int,
+    ): Page<String, KtInventoryButton<Entry<String>>> {
+        val result = loadPageFromDatabase(condition, limit)
+        return Page(
+            entries = result.rows.map { row ->
+                createButton(itemStack(Material.PAPER, row.name)) {}
+            },
+            previousCondition = result.previousCursor,
+            nextCondition = result.nextCursor,
+        )
+    }
+
+    override fun title(condition: String) = "&0&lItems"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "Previous Page"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next Page"))
+    }
+}
+```
+
+Use `KtInventoryPaginatedLazyFetched` when the inventory should open immediately and load
+data asynchronously. Construct it with `KtInventoryPluginContext.LazyFetchable`.
+`fetch(condition, limit)` runs asynchronously; `createButton(data)` runs on the
+server main thread.
+
+```kotlin
+class LazyCursorInventory(
+    context: KtInventoryPluginContext.LazyFetchable,
+) : KtInventoryPaginatedLazyFetched<String, Row>(context, 6) {
+    override val initialCondition = "start"
+
+    override fun fetch(
+        condition: String,
+        limit: Int,
+    ): AbstractKtInventoryPaginatedFetched.Page<String, Row> {
+        val result = loadPageFromDatabase(condition, limit)
+        return AbstractKtInventoryPaginatedFetched.Page(
+            entries = result.rows,
+            previousCondition = result.previousCursor,
+            nextCondition = result.nextCursor,
+        )
+    }
+
+    override fun createButton(data: Row) =
+        createButton(itemStack(Material.PAPER, data.name)) {}
+
+    override fun title(condition: String) = "&0&lItems"
+
+    init {
+        paginateSlot(0 until 45)
+        previousPageButton(45, itemStack(Material.ARROW, "Previous Page"))
+        nextPageButton(53, itemStack(Material.ARROW, "Next Page"))
     }
 }
 ```
@@ -415,6 +556,11 @@ SoundCheckInventory.refreshAll(behavior = RefreshBehavior.Keep)
 SoundCheckInventory.refreshAll(behavior = RefreshBehavior.OpenFirst)
 ```
 
+`KtInventoryPaginatedFetched.Refreshable` and
+`KtInventoryPaginatedLazyFetched.Refreshable` use the same behavior names. For
+these condition-based inventories, `RefreshBehavior.Keep` preserves the current
+condition and `RefreshBehavior.OpenFirst` reopens from `initialCondition`.
+
 
 ---
 
@@ -422,6 +568,7 @@ SoundCheckInventory.refreshAll(behavior = RefreshBehavior.OpenFirst)
 
 `storable()` defines a region of slots where players can freely place and take items.
 When the inventory is closed, the `save` callback is invoked for persistence.
+Storable slots cannot overlap fixed button slots.
 
 ```kotlin
 class StorageInventory(
@@ -503,6 +650,43 @@ storable.save()             // Trigger the save callback manually
 storable.contains(slot)     // Whether the given slot is managed by this storable
 ```
 
+### Paged storables
+
+Multi-page inventory base classes can define storables on the parent inventory.
+The storable is applied to each created page entry, and callbacks use the current
+entry as the receiver. This lets initialization and saving depend on `page` for
+paginated/sequence inventories or `condition` for fetched/lazy fetched inventories.
+
+```kotlin
+class EditablePagesInventory(
+    context: KtInventoryPluginContext,
+) : KtInventoryPaginated(context, 6) {
+    override val entries = loadEntries().map { createButton(it.icon) {} }
+
+    override fun title(page: Int, lastPage: Int) =
+        "&0&lEditable ${page + 1}/${lastPage + 1}"
+
+    init {
+        paginateSlot(9 until 45)
+
+        storable(
+            slots = 0 until 9,
+            initialize = {
+                // Receiver: KtInventoryPaginated.Entry<EditablePagesInventory>
+                loadSavedItemsForPage(page)
+            },
+            save = { items ->
+                saveItemsForPage(page, items)
+            },
+        )
+    }
+}
+```
+
+Paged storable slots cannot overlap fixed button slots or pagination slots.
+`storable(slots = ...)` returns `KtInventoryPagedStorable<...>`, and the parent
+inventory exposes registered values through `pagedStorables`.
+
 ### ClickEvent and DragEvent properties
 
 ```kotlin
@@ -581,6 +765,10 @@ SettingsInventory.refresh(player, inventoryInstance)
 SettingsInventory.refreshAll()
 SettingsInventory.refreshAll { player, inventory -> player.hasPermission("myplugin.settings") }
 ```
+
+For paginated fetched and lazy fetched inventories, use their companion
+`Refreshable` classes when the current condition should be preserved or reset
+during refresh.
 
 
 ---
@@ -662,36 +850,78 @@ init {
 
 ## 9. Viewer Lookup Utilities
 
-### getOpenInventory — get the inventory a specific player has open
+### getTopInventory — get the top inventory holder a specific player has open
 
 ```kotlin
-import dev.s7a.ktinventory.util.getOpenInventory
-import dev.s7a.ktinventory.util.getOpenInventoryPaginated
+import dev.s7a.ktinventory.util.getTopInventory
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedFetchedEntry
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedLazyFetchedEntry
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedEntry
+import dev.s7a.ktinventory.util.getTopInventoryPaginatedSequenceEntry
 
-// Returns null if the player does not have this inventory open
-val inventory: SimpleMenu? = getOpenInventory<SimpleMenu>(player)
+// Returns null if the player does not have this top inventory holder open
+val inventory: SimpleMenu? = getTopInventory<SimpleMenu>(player)
+
+// For paginated inventories — also returns the paginated inventory instance
+val paginated: SoundCheckInventory? =
+    getTopInventory<SoundCheckInventory>(player)
 
 // For paginated inventories — returns the Entry (page) the player is on
 val entry: KtInventoryPaginated.Entry<SoundCheckInventory>? =
-    getOpenInventoryPaginated<SoundCheckInventory>(player)
+    getTopInventoryPaginatedEntry<SoundCheckInventory>(player)
+
+// For sequence-backed inventories — returns the Entry (page) the player is on
+val sequenceEntry: AbstractKtInventoryPaginatedSequence.Entry<SoundCheckSequenceInventory>? =
+    getTopInventoryPaginatedSequenceEntry<SoundCheckSequenceInventory>(player)
+
+// For condition-fetched inventories — returns the Entry with condition/page state
+val fetchedEntry = getTopInventoryPaginatedFetchedEntry<ItemBrowserInventory>(player)
+
+// For lazy-fetched inventories — returns the Entry with condition/load state
+val lazyFetchedEntry = getTopInventoryPaginatedLazyFetchedEntry<AsyncItemBrowserInventory>(player)
 ```
 
-### getAllViewers — get all players currently viewing a given inventory type
+Deprecated aliases:
+
+- `getOpenInventory<T>(player)` → `getTopInventory<T>(player)`
+- `getOpenInventoryPaginated<T>(player)` → `getTopInventoryPaginatedEntry<T>(player)`
+
+### getViewers — get all players currently viewing a given inventory type
 
 ```kotlin
-import dev.s7a.ktinventory.util.getAllViewers
-import dev.s7a.ktinventory.util.getAllViewersPaginated
-import dev.s7a.ktinventory.util.getAllViewersDeeply
+import dev.s7a.ktinventory.util.getViewers
+import dev.s7a.ktinventory.util.getViewersPaginatedFetchedEntry
+import dev.s7a.ktinventory.util.getViewersPaginatedLazyFetchedEntry
+import dev.s7a.ktinventory.util.getViewersPaginatedEntry
+import dev.s7a.ktinventory.util.getViewersPaginatedSequenceEntry
+import dev.s7a.ktinventory.util.getViewersDeeply
 
 // Map of every player who has SimpleMenu open → Map<Player, SimpleMenu>
-val viewers: Map<Player, SimpleMenu> = getAllViewers<SimpleMenu>()
+val viewers: Map<Player, SimpleMenu> = getViewers<SimpleMenu>()
 
-// Paginated version — returns Map<Player, Entry<SoundCheckInventory>>
-val paginatedViewers = getAllViewersPaginated<SoundCheckInventory>()
+// Paginated inventory version — returns Map<Player, SoundCheckInventory>
+val paginatedViewers = getViewers<SoundCheckInventory>()
+
+// Paginated entry version — returns Map<Player, Entry<SoundCheckInventory>>
+val paginatedEntryViewers = getViewersPaginatedEntry<SoundCheckInventory>()
+
+// Sequence-backed entry version — returns Map<Player, Entry<SoundCheckSequenceInventory>>
+val sequenceEntryViewers = getViewersPaginatedSequenceEntry<SoundCheckSequenceInventory>()
+
+// Condition-fetched and lazy-fetched entry versions
+val fetchedEntryViewers = getViewersPaginatedFetchedEntry<ItemBrowserInventory>()
+val lazyFetchedEntryViewers = getViewersPaginatedLazyFetchedEntry<AsyncItemBrowserInventory>()
 
 // Deep search — includes players in child inventories that declare parentInventory
-val deepViewers = getAllViewersDeeply<MyParentInventory>()
+val deepViewers = getViewersDeeply<MyParentInventory>()
+val deepViewersByClass = getViewersDeeply(MyParentInventory::class)
 ```
+
+Deprecated aliases:
+
+- `getAllViewers<T>()` → `getViewers<T>()`
+- `getAllViewersPaginated<T>()` → `getViewersPaginatedEntry<T>()`
+- `getAllViewersDeeply<T>()` → `getViewersDeeply<T>()` (`DeprecationLevel.WARNING`)
 
 
 ---
@@ -768,9 +998,11 @@ class SubMenu(
 }
 ```
 
-`getAllViewersDeeply<MainMenu>()` traverses `HasParentInventory.parentInventory`
-recursively and returns all players associated with `MainMenu`, including those
-currently viewing a child inventory.
+`getViewersDeeply<MainMenu>()` traverses `HasParentInventory.parentInventory`
+and returns all players associated with `MainMenu`, including those currently
+viewing a child inventory. It also resolves List-backed and sequence-backed
+paginated entries through their `paginated` inventory before checking
+`ParentInventory` / `HasParentInventory`.
 
 
 ---
@@ -779,7 +1011,9 @@ currently viewing a child inventory.
 
 | Name | Kind | Purpose |
 |------|------|---------|
-| `KtInventoryPluginContext` | interface | Abstracts the plugin dependency; create via `KtInventoryPluginContext(plugin)` |
+| `KtInventoryPluginContext` | interface | Abstracts the plugin dependency; inventory definitions can bridge from `Plugin` with `KtInventoryPluginContext(plugin)` |
+| `KtInventoryPluginContext.LazyFetchable` | interface | Context capability for lazy fetched inventories; provides sync and async scheduling |
+| `KtInventoryHandlerId` | class | Internal handler identity for sharing listeners across contexts from the same plugin |
 | `KtInventoryBase` | abstract class | Root base — button management, event hooks |
 | `AbstractKtInventory` | abstract class | Implements `InventoryHolder`; adds storable and refresh support |
 | `KtInventory` | abstract class | Concrete inventory with a String title |
@@ -787,8 +1021,18 @@ currently viewing a child inventory.
 | `AbstractKtInventoryPaginated<T>` | abstract class | Base for paginated inventories |
 | `KtInventoryPaginated` | abstract class | Paginated inventory with a String title |
 | `KtInventoryPaginatedAdventure` | abstract class | Paginated inventory with a Component title (Paper only) |
+| `AbstractKtInventoryPaginatedSequence<T>` | abstract class | Base for sequence-backed paginated inventories |
+| `KtInventoryPaginatedSequence` | abstract class | Sequence-backed paginated inventory with a String title |
+| `KtInventoryPaginatedSequenceAdventure` | abstract class | Sequence-backed paginated inventory with a Component title (Paper only) |
+| `AbstractKtInventoryPaginatedFetched<T, C>` | abstract class | Base for condition-based fetched inventories |
+| `KtInventoryPaginatedFetched<C>` | abstract class | Fetched inventory with a String title |
+| `KtInventoryPaginatedFetchedAdventure<C>` | abstract class | Fetched inventory with a Component title (Paper only) |
+| `AbstractKtInventoryPaginatedLazyFetched<T, C, D>` | abstract class | Base for inventories that open immediately and fetch data asynchronously |
+| `KtInventoryPaginatedLazyFetched<C, D>` | abstract class | Lazy fetched inventory with a String title |
+| `KtInventoryPaginatedLazyFetchedAdventure<C, D>` | abstract class | Lazy fetched inventory with a Component title (Paper only) |
 | `KtInventoryButton<T>` | class | A clickable button component |
 | `KtInventoryStorable` | class | A storable-item-slot component |
+| `KtInventoryPagedStorable<T>` | class | Parent-owned storable applied to each page entry |
 | `KtInventoryStorableOption` | interface | Save-timing and callback configuration for storables |
 | `KtInventoryHandler` | class | Internal event handler — do not use directly |
 | `RefreshableInventory<T>` | interface | Interface implemented by `Refreshable` inner classes |
@@ -800,11 +1044,17 @@ currently viewing a child inventory.
 | Function | Source file | Purpose |
 |----------|-------------|---------|
 | `slot(y, x)` | `Utils.kt` | Convert row/column to slot number(s) |
-| `getOpenInventory<T>(player)` | `util/GetOpenInventory.kt` | Get the typed inventory a player has open |
-| `getOpenInventoryPaginated<T>(player)` | `util/GetOpenInventory.kt` | Paginated variant |
-| `getAllViewers<T>()` | `util/GetAllViewers.kt` | All players viewing a given inventory type |
-| `getAllViewersPaginated<T>()` | `util/GetAllViewers.kt` | Paginated variant |
-| `getAllViewersDeeply<T>()` | `util/GetAllViewers.kt` | Deep search through parent–child hierarchy |
+| `getTopInventory<T>(player)` | `util/GetTopInventory.kt` | Get the typed top inventory holder a player has open |
+| `getTopInventoryPaginatedEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open paginated entry, including page state |
+| `getTopInventoryPaginatedSequenceEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open sequence-backed paginated entry, including page state |
+| `getTopInventoryPaginatedFetchedEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open condition-fetched paginated entry, including condition/page state |
+| `getTopInventoryPaginatedLazyFetchedEntry<T>(player)` | `util/GetTopInventory.kt` | Get the open lazy-fetched paginated entry, including condition/load state |
+| `getViewers<T>()` | `util/GetViewers.kt` | All players viewing a given top inventory holder type |
+| `getViewersPaginatedEntry<T>()` | `util/GetViewers.kt` | All players viewing a given paginated entry type |
+| `getViewersPaginatedSequenceEntry<T>()` | `util/GetViewers.kt` | All players viewing a given sequence-backed paginated entry type |
+| `getViewersPaginatedFetchedEntry<T>()` | `util/GetViewers.kt` | All players viewing a given condition-fetched paginated entry type |
+| `getViewersPaginatedLazyFetchedEntry<T>()` | `util/GetViewers.kt` | All players viewing a given lazy-fetched paginated entry type |
+| `getViewersDeeply<T>()` | `util/GetViewers.kt` | Deep search through parent–child hierarchy |
 | `buildStorableOption { }` | `options/` | DSL builder for `KtInventoryStorableOption` |
 
 
