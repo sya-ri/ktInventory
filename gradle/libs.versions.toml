@@ -2,7 +2,7 @@
 # Plugins
 kotlin = "2.4.20"
 dokka = "2.2.0"
-kotlinter = "5.4.2"
+kotlinter = "5.7.0"
 pluginYml = "0.6.0"
 minecraftServer = "4.0.2"
 shadow = "9.6.1"
