@@ -7,7 +7,7 @@ pluginYml = "0.6.0"
 minecraftServer = "4.0.2"
 shadow = "9.3.2"
 mavenPublish = "0.35.0"
-kover = "0.9.8"
+kover = "0.9.9"
 
 # Libraries
 paper = "1.16.5-R0.1-SNAPSHOT"
