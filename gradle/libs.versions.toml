@@ -13,7 +13,7 @@ kover = "0.9.9"
 paper = "1.16.5-R0.1-SNAPSHOT"
 paper-mockbukkit = "1.21.11-R0.1-SNAPSHOT"
 junit = "6.1.3"
-mockbukkit = "4.109.0"
+mockbukkit = "4.116.3"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
