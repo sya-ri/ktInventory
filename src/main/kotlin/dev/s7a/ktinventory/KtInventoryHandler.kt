@@ -24,12 +24,14 @@ internal class KtInventoryHandler(
     @EventHandler
     fun on(event: InventoryOpenEvent) {
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
+        if (inventory.handlerId !== context.handlerId) return
         inventory.onOpen(event)
     }
 
     @EventHandler
     fun on(event: InventoryClickEvent) {
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
+        if (inventory.handlerId !== context.handlerId) return
 
         if (inventory.inventory === event.clickedInventory) {
             // Storable OnPreClick
@@ -57,6 +59,7 @@ internal class KtInventoryHandler(
     @EventHandler
     fun on(event: InventoryDragEvent) {
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
+        if (inventory.handlerId !== context.handlerId) return
 
         // Storable PreDrag
         val storables = inventory.getStorables(event.inventorySlots)
@@ -77,6 +80,7 @@ internal class KtInventoryHandler(
     @EventHandler
     fun on(event: InventoryCloseEvent) {
         val inventory = event.inventory.holder as? AbstractKtInventory ?: return
+        if (inventory.handlerId !== context.handlerId) return
 
         // Storable Save
         if (inventory.storableOption.allowSave(event)) {
@@ -92,7 +96,7 @@ internal class KtInventoryHandler(
         val disabledHandlerKey = KtInventoryHandlerId.find(event.plugin) ?: return
         if (context.handlerId === disabledHandlerKey) {
             Bukkit.getOnlinePlayers().forEach { player ->
-                if (getTopInventory<KtInventoryBase>(player) != null) {
+                if (getTopInventory<AbstractKtInventory>(player)?.handlerId === disabledHandlerKey) {
                     player.closeInventory()
                 }
             }

@@ -22,6 +22,9 @@ abstract class AbstractKtInventory(
     line: Int,
 ) : KtInventoryBase(line),
     InventoryHolder {
+    internal val handlerId: KtInventoryHandlerId
+        get() = context.handlerId
+
     /**
      * List of entities currently viewing this inventory
      *

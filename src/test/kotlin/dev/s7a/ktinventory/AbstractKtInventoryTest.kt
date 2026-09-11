@@ -346,15 +346,21 @@ class AbstractKtInventoryTest {
     fun `plugin disable closes paginated and sequence viewers once with shared handler identity`() {
         val paginatedPlayer = server.addPlayer()
         val sequencePlayer = server.addPlayer()
+        val otherPlayer = server.addPlayer()
+        val otherPlugin = MockBukkit.createMockPlugin("OtherInventoryOwner")
+        val otherInventory = CloseTrackingInventory(KtInventoryPluginContext(otherPlugin))
         val paginated = CloseTrackingPaginatedInventory(KtInventoryPluginContext(plugin))
         val sequence = CloseTrackingSequenceInventory(KtInventoryPluginContext(plugin))
 
         paginated.open(paginatedPlayer)
         sequence.open(sequencePlayer)
+        otherInventory.open(otherPlayer)
         server.pluginManager.callEvent(PluginDisableEvent(plugin))
 
         assertEquals(1, paginated.closeCount)
         assertEquals(1, sequence.closeCount)
+        assertEquals(0, otherInventory.closeCount)
+        assertSame(otherInventory, getTopInventory<CloseTrackingInventory>(otherPlayer))
     }
 
     @Test
