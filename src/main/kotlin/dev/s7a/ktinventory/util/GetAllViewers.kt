@@ -74,7 +74,7 @@ inline fun <reified T : AbstractKtInventoryPaginated<*>> getAllViewersPaginated(
 @Deprecated(
     "Deprecated in v2.2.0. Will be removed in v2.5.0. Use getViewersDeeply instead.",
     ReplaceWith("getViewersDeeply<T>()", "dev.s7a.ktinventory.util.getViewersDeeply"),
-    level = DeprecationLevel.ERROR,
+    level = DeprecationLevel.WARNING,
 )
 inline fun <reified T : ParentInventory> getAllViewersDeeply() =
     getViewers<KtInventory>()

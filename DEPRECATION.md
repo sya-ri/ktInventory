@@ -2,6 +2,28 @@
 
 This document lists features and APIs that have been deprecated in `ktInventory`.
 
+## Required Migration in v2.2.0
+
+Custom implementations of `KtInventoryPluginContext` must implement the new `handlerId`
+property and be recompiled against v2.2.0. Existing compiled custom implementations are
+not binary compatible with this interface change.
+
+Use the same plugin instance for the handler identifier and listener registration:
+
+```kotlin
+class MyInventoryContext(
+    private val plugin: Plugin,
+) : KtInventoryPluginContext {
+    override val handlerId = KtInventoryHandlerId.of(plugin)
+
+    override fun registerEvents(listener: Listener) {
+        plugin.server.pluginManager.registerEvents(listener, plugin)
+    }
+}
+```
+
+The built-in `KtInventoryPluginContext(plugin)` factory handles this automatically.
+
 ## Constructors
 
 ### Base class `Plugin` constructors
@@ -128,7 +150,7 @@ val viewers = getViewersPaginatedEntry<MyPaginatedInventory>()
 - **Deprecated in**: v2.2.0
 - **Scheduled for removal**: v2.5.0
 - **Replacement**: `getViewersDeeply`
-- **Deprecation level**: `ERROR`
+- **Deprecation level**: `WARNING`
 
 `getAllViewersDeeply` keeps its previous `KtInventory`-based behavior for compatibility, but that behavior only supported some inventory implementations and did not handle paginated inventories correctly. Use `getViewersDeeply`, which searches from `KtInventoryBase` holders and resolves paginated entries through their `paginated` inventory.
 

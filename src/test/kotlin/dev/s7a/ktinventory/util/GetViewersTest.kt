@@ -231,6 +231,25 @@ class GetViewersTest {
 
     @Test
     @Suppress("DEPRECATION")
+    fun `deprecated deep viewer lookup remains callable with its original behavior`() {
+        val parentPlayer = server.addPlayer()
+        val childPlayer = server.addPlayer()
+        val paginatedPlayer = server.addPlayer()
+        val parent = ParentNormalInventory(KtInventoryPluginContext(plugin))
+        val child = ChildInventory(KtInventoryPluginContext(plugin), parent)
+        val paginated = PaginatedParentInventory(KtInventoryPluginContext(plugin))
+
+        parent.open(parentPlayer)
+        child.open(childPlayer)
+        paginated.open(paginatedPlayer)
+
+        val expected: Map<Player, ParentInventory> = mapOf(parentPlayer to parent, childPlayer to parent)
+        assertEquals(expected, getAllViewersDeeply<ParentInventory>())
+        assertEquals(expected + (paginatedPlayer to paginated), getViewersDeeply<ParentInventory>())
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
     fun `deprecated viewer and open inventory aliases delegate to replacements`() {
         val player = server.addPlayer()
         val normal = NormalInventory(KtInventoryPluginContext(plugin))

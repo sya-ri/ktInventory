@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "dev.s7a"
-version = "2.2.0-SNAPSHOT"
+version = "2.2.0"
 
 allprojects {
     apply(plugin = "kotlin")
@@ -72,8 +72,8 @@ mavenPublishing {
         url.set("https://github.com/sya-ri/ktInventory")
         licenses {
             license {
-                name.set("MIT License")
-                url.set("https://github.com/sya-ri/ktInventory/blob/master/LICENSE")
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
             }
         }
         developers {

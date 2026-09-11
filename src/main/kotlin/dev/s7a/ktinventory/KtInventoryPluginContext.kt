@@ -17,6 +17,7 @@ interface KtInventoryPluginContext {
      *
      * Contexts created with [KtInventoryPluginContext.invoke] share this identifier per plugin instance.
      * Custom contexts should use [KtInventoryHandlerId.of] with the plugin that registers events.
+     * Custom implementations compiled against v2.1.1 must add this property and be recompiled for v2.2.0.
      *
      * @since 2.2.0
      */

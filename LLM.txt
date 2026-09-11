@@ -6,7 +6,7 @@ item storage, and real-time refresh support.
 
 - GitHub: https://github.com/sya-ri/ktInventory
 - Maven Central: dev.s7a:ktInventory
-- Current version: 2.2.0-SNAPSHOT
+- Current version: 2.2.0
 - License: MIT
 - Java target: 1.8 / Kotlin JVM target: 1.8
 - Platforms: Spigot, Paper (Adventure API requires Paper)
@@ -41,7 +41,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.2.0-SNAPSHOT")
+    implementation("dev.s7a:ktInventory:2.2.0")
 }
 ```
 
@@ -54,7 +54,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'dev.s7a:ktInventory:2.2.0-SNAPSHOT'
+    implementation 'dev.s7a:ktInventory:2.2.0'
 }
 ```
 
@@ -64,7 +64,7 @@ dependencies {
 <dependency>
     <groupId>dev.s7a</groupId>
     <artifactId>ktInventory</artifactId>
-    <version>2.2.0-SNAPSHOT</version>
+    <version>2.2.0</version>
 </dependency>
 ```
 
@@ -109,6 +109,8 @@ The primary constructor that accepts `KtInventoryPluginContext` is for dependenc
 Use it when a custom context, a mock context, or a DI framework provides the context directly.
 
 Custom `KtInventoryPluginContext` implementations must expose a stable `handlerId`.
+When upgrading from v2.1.1, add this property and recompile the custom implementation
+against v2.2.0; existing compiled custom implementations are not binary compatible.
 Use `KtInventoryHandlerId.of(plugin)` with the same plugin that registers events, so internal
 listeners are shared correctly and plugin-disable cleanup can close open inventories.
 
@@ -919,7 +921,7 @@ Deprecated aliases:
 
 - `getAllViewers<T>()` → `getViewers<T>()`
 - `getAllViewersPaginated<T>()` → `getViewersPaginatedEntry<T>()`
-- `getAllViewersDeeply<T>()` → `getViewersDeeply<T>()` (`DeprecationLevel.ERROR`)
+- `getAllViewersDeeply<T>()` → `getViewersDeeply<T>()` (`DeprecationLevel.WARNING`)
 
 
 ---

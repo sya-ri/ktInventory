@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.2.0-SNAPSHOT
+## v2.2.0
 
 ### Added
 
@@ -53,7 +53,7 @@
   - Fetched and lazy fetched inventories can initialize and save storable contents per condition entry.
 - Add `KtInventoryPluginContext.LazyFetchable` for lazy fetched inventories.
   - Use `KtInventoryPluginContext.LazyFetchable(plugin)` when constructing lazy fetched inventories.
-  - `KtInventoryPluginContext(plugin)` remains the scheduler-free context for existing inventory classes and custom context source compatibility.
+  - `KtInventoryPluginContext(plugin)` remains the scheduler-free context for existing inventory classes.
 - Add `KtInventoryPluginContext.handlerId` and `KtInventoryHandlerId` for internal event handler sharing.
   - Contexts created with `KtInventoryPluginContext(plugin)` share the same handler id per plugin instance.
   - Custom context implementations should use `KtInventoryHandlerId.of(plugin)` with the plugin that registers events.
@@ -63,8 +63,10 @@
 
 - Fixed buttons can no longer use pagination slots in paginated inventories.
 - Fixed buttons can no longer use storable slots.
+- Only the owning plugin's handler processes inventory events and saves storable contents, preventing duplicate callbacks when multiple plugins use ktInventory.
+- Disabling a plugin closes only its own inventories and leaves other plugins' menus open.
 - Fix plugin-disable cleanup for custom `KtInventoryPluginContext` implementations.
-  - Custom contexts could previously create handler ids that were not associated with the plugin instance, so inventories were not closed automatically when the plugin was disabled.
+  - Cleanup now matches the context's plugin-associated handler id instead of comparing the context object directly with the plugin.
 - `getTopInventory` now returns `null` when the viewer has no available top inventory.
   - This prevents lookup calls from throwing when an inventory view has already been closed or the platform returns no top inventory.
 - `getViewersDeeply<T>()` now searches from `KtInventoryBase` holders and resolves paginated entries through their `paginated` inventory.
@@ -74,6 +76,9 @@
 
 ### Changed
 
+- Custom `KtInventoryPluginContext` implementations must add `override val handlerId = KtInventoryHandlerId.of(plugin)` and be recompiled against v2.2.0.
+  - This is a source and binary compatibility change for custom implementations. See [the migration guide](DEPRECATION.md#required-migration-in-v220).
+  - The built-in `KtInventoryPluginContext(plugin)` factory requires no caller changes.
 - Internal refresh logic now uses the new `getTopInventory` and `getViewers` APIs.
 - `getTopInventory<T>()` now resolves paginated inventories directly when the open holder is a paginated entry.
 
@@ -87,7 +92,7 @@
   - Scheduled for removal in v2.5.0.
 - Deprecate `getAllViewersPaginated` in favor of `getViewersPaginatedEntry`.
   - Scheduled for removal in v2.5.0.
-- Deprecate `getAllViewersDeeply` in favor of `getViewersDeeply` with `DeprecationLevel.ERROR`.
+- Deprecate `getAllViewersDeeply` in favor of `getViewersDeeply` with `DeprecationLevel.WARNING`.
   - Scheduled for removal in v2.5.0.
   - `getAllViewersDeeply` keeps its previous `KtInventory`-based behavior for binary/source compatibility semantics.
   - Migration to `getViewersDeeply` is intentionally a behavior fix, but it is not fully behavior-compatible: the new API searches from `KtInventoryBase` and supports paginated inventories, so the returned viewer map can include inventories that the old API missed.

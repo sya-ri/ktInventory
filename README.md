@@ -17,11 +17,14 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.s7a:ktInventory:2.2.0-SNAPSHOT")
+    implementation("dev.s7a:ktInventory:2.2.0")
 }
 ```
 
 ## Usage
+
+Upgrading from v2.1.1 with a custom `KtInventoryPluginContext` implementation requires
+adding `handlerId` and recompiling. See the [v2.2.0 migration guide](DEPRECATION.md#required-migration-in-v220).
 
 ### For spigot servers
 
