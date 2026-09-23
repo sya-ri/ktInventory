@@ -67,22 +67,10 @@ For Adventure titles and multi-page menus, see [Inventory variants](docs/invento
 
 ## Skill
 
-This repository includes an installable skill at `skills/ktinventory`.
+The [ktInventory skill](skills/ktinventory/SKILL.md) provides usage guidance for AI agents. Install it with either command:
 
-### Install with `gh skill`
-
-Install from the repository:
-
-```bash
-gh skill install sya-ri/ktInventory ktinventory
-```
-
-### Install with `npx skills`
-
-Install from GitHub:
-
-```bash
+```sh
+gh skill install sya-ri/ktInventory skills/ktinventory
+# Alternative:
 npx skills add sya-ri/ktInventory --skill ktinventory
 ```
-
-After installing the skill, restart your agent tooling so it picks up the new metadata.
